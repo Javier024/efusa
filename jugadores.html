@@ -4,159 +4,432 @@
   <meta charset="UTF-8" />
   <title>Jugadores – EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- Librería Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    tr { transition: background-color 0.2s; }
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-50 min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-green-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">EFUSA – Jugadores</h1>
-    <a href="index.html" class="underline">Volver</a>
+  <header class="bg-green-700 text-white shadow-md sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="ph ph-users-three text-2xl"></i>
+        <h1 class="text-xl font-bold">Gestión de Jugadores</h1>
+      </div>
+      <a href="index.html" class="flex items-center gap-1 text-sm hover:underline opacity-80 hover:opacity-100 transition">
+        <i class="ph ph-arrow-left"></i> Volver al Panel
+      </a>
+    </div>
   </header>
 
-  <main class="p-6 max-w-6xl mx-auto">
+  <main class="flex-grow container mx-auto px-4 py-8 max-w-[1400px]">
 
-    <!-- Formulario -->
-    <form id="formJugador" class="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
-      <input type="hidden" id="id">
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      
+      <!-- FORMULARIO -->
+      <div class="xl:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800" id="form-title">Nuevo Jugador</h2>
+            <button id="btn-cancelar" onclick="resetForm()" class="text-xs text-red-500 hidden hover:underline">Cancelar</button>
+          </div>
 
-      <input id="nombre" placeholder="Nombre del jugador" class="input" required>
-      <input id="categoria" placeholder="Categoría" class="input" required>
-      <input id="mensualidad" type="number" placeholder="Mensualidad" class="input" required>
+          <form id="formJugador" class="space-y-4">
+            <input type="hidden" id="id">
 
-      <input id="acudiente" placeholder="Nombre acudiente" class="input" required>
-      <input id="telefono" placeholder="Teléfono" class="input" required>
-      <input id="direccion" placeholder="Dirección" class="input" required>
-      <input id="sangre" placeholder="Tipo de sangre" class="input" required>
+            <!-- Datos Básicos -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Nombre y Apellidos *</label>
+              <input id="nombre" placeholder="Nombre completo" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:outline-none" required>
+            </div>
 
-      <button type="submit"
-        class="col-span-1 md:col-span-3 bg-green-600 text-white py-2 rounded hover:bg-green-700">
-        Guardar jugador
-      </button>
-    </form>
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Fecha de Nacimiento *</label>
+              <input type="date" id="fecha_nacimiento" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none" required>
+            </div>
 
-    <!-- Tabla -->
-    <div class="bg-white shadow rounded overflow-x-auto">
-      <table class="w-full text-sm">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="p-3 text-left">Nombre</th>
-            <th class="p-3 text-left">Categoría</th>
-            <th class="p-3 text-left">Mensualidad</th>
-            <th class="p-3 text-left">Estado</th>
-            <th class="p-3 text-left">Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="tabla"></tbody>
-      </table>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Identificación</label>
+                <input id="identificacion" placeholder="Doc. ID" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
+                <select id="categoria" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none bg-white">
+                  <option value="Sub 18-17">Sub 18-17</option>
+                  <option value="Sub 16-15">Sub 16-15</option>
+                  <option value="Sub 12-11">Sub 12-11</option>
+                  <option value="Sub 10-9">Sub 10-9</option>
+                  <option value="Sub 8-9">Sub 8-9</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ESTADÍSTICAS DEPORTIVAS (NUEVO) -->
+            <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
+              <h4 class="text-xs font-bold text-blue-800 uppercase mb-2 flex items-center gap-1">
+                <i class="ph ph-trophy"></i> Rendimiento Deportivo
+              </h4>
+              <div class="grid grid-cols-3 gap-2">
+                <div>
+                  <label class="text-[10px] text-gray-500">Goles</label>
+                  <input type="number" id="goles" value="0" class="w-full text-center border border-gray-300 rounded text-sm p-1">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500">Asist.</label>
+                  <input type="number" id="asistencias" value="0" class="w-full text-center border border-gray-300 rounded text-sm p-1">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500">Partidos</label>
+                  <input type="number" id="partidos" value="0" class="w-full text-center border border-gray-300 rounded text-sm p-1">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500 text-yellow-700">Amarilla</label>
+                  <input type="number" id="amarillas" value="0" class="w-full text-center border border-gray-300 rounded text-sm p-1">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-500 text-red-700">Roja</label>
+                  <input type="number" id="rojas" value="0" class="w-full text-center border border-gray-300 rounded text-sm p-1">
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Tipo Sangre</label>
+                <select id="sangre" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none bg-white">
+                  <option value="">---</option>
+                  <option value="A+">A+</option><option value="A-">A-</option>
+                  <option value="B+">B+</option><option value="B-">B-</option>
+                  <option value="O+">O+</option><option value="O-">O-</option>
+                  <option value="AB+">AB+</option><option value="AB-">AB-</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Mensualidad</label>
+                <input id="mensualidad" type="number" step="0.01" placeholder="$" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+              </div>
+            </div>
+
+            <hr class="border-gray-100 my-2">
+            
+            <!-- Acudiente -->
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Acudiente</label>
+              <input id="acudiente" placeholder="Nombre" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Teléfono</label>
+                <input id="telefono" placeholder="Celular" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Barrio/Dir</label>
+                <input id="direccion" placeholder="Dirección" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit"
+              class="w-full bg-green-600 text-white font-bold py-3 rounded-lg shadow hover:bg-green-700 active:scale-95 transition flex justify-center items-center gap-2 mt-4">
+              <i class="ph ph-floppy-disk text-lg"></i> <span>Guardar</span>
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="xl:col-span-2 flex flex-col">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-grow flex flex-col">
+          
+          <!-- Barra Herramientas -->
+          <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-gray-50">
+            <div class="relative w-full sm:w-64">
+              <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
+              <input type="text" id="buscador" placeholder="Buscar jugador..." 
+                     class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+            </div>
+            <button onclick="exportToExcel()" class="flex items-center gap-2 text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
+              <i class="ph ph-file-xls"></i> Descargar Excel
+            </button>
+          </div>
+          
+          <!-- Contenedor Tabla -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
+                <tr>
+                  <th class="p-4">Jugador</th>
+                  <th class="p-4 text-center">Edad</th>
+                  <th class="p-4">Categoría</th>
+                  <th class="p-4 text-center">Goles</th>
+                  <th class="p-4 text-center">Asist.</th>
+                  <th class="p-4 text-center">Part.</th>
+                  <th class="p-4 text-center">Tarjetas</th>
+                  <th class="p-4 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody id="tabla" class="divide-y divide-gray-100">
+                <!-- JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Paginación -->
+          <div class="p-4 border-t border-gray-100 bg-gray-50 flex justify-between items-center text-sm">
+            <span class="text-gray-500" id="info-paginacion">Mostrando 0-0 de 0</span>
+            <div class="flex gap-2">
+              <button id="btn-prev" onclick="changePage(-1)" class="px-3 py-1 border rounded hover:bg-gray-200 disabled:opacity-50">Anterior</button>
+              <span id="pagina-actual" class="px-3 py-1 font-bold bg-white border rounded">1</span>
+              <button id="btn-next" onclick="changePage(1)" class="px-3 py-1 border rounded hover:bg-gray-200 disabled:opacity-50">Siguiente</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
   </main>
 
-<script type="module">
-import { formatearMoneda } from './recursos/js/configuracion.js';
+<script>
+  const form = document.getElementById('formJugador');
+  const tabla = document.getElementById('tabla');
+  const buscadorInput = document.getElementById('buscador');
+  let jugadoresData = []; 
+  let filteredData = []; 
+  let editando = false;
 
-let editando = false;
-const tabla = document.getElementById('tabla');
-const form = document.getElementById('formJugador');
+  const itemsPorPagina = 10;
+  let paginaActual = 1;
 
-document.addEventListener('DOMContentLoaded', cargar);
-
-/* ======================================================
-   📥 CARGAR JUGADORES
-====================================================== */
-async function cargar() {
-  const res = await fetch('/api/jugadores');
-  const data = await res.json();
-
-  tabla.innerHTML = '';
-
-  data.forEach(j => {
-    tabla.innerHTML += `
-      <tr class="border-b hover:bg-gray-50">
-        <td class="p-2">${j.nombre}</td>
-        <td class="p-2">${j.categoria}</td>
-        <td class="p-2">${formatearMoneda(j.mensualidad)}</td>
-        <td class="p-2">
-          <span class="px-2 py-1 rounded text-xs ${
-            j.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-          }">
-            ${j.activo ? 'Activo' : 'Inactivo'}
-          </span>
-        </td>
-        <td class="p-2 space-x-2">
-          <button onclick='editar(${JSON.stringify(j)})'
-            class="text-blue-600 hover:underline">Editar</button>
-          <button onclick='eliminarJugador(${j.id})'
-            class="text-red-600 hover:underline">Eliminar</button>
-        </td>
-      </tr>
-    `;
-  });
-}
-
-/* ======================================================
-   ✏️ EDITAR
-====================================================== */
-window.editar = function (j) {
-  editando = true;
-  id.value = j.id;
-  nombre.value = j.nombre;
-  categoria.value = j.categoria;
-  mensualidad.value = j.mensualidad;
-  acudiente.value = j.nombre_acudiente;
-  telefono.value = j.telefono;
-  direccion.value = j.direccion;
-  sangre.value = j.tipo_sangre;
-};
-
-/* ======================================================
-   🗑️ ELIMINAR
-====================================================== */
-window.eliminarJugador = async function (idJugador) {
-  if (!confirm('¿Eliminar jugador?')) return;
-  await fetch(`/api/jugadores?id=${idJugador}`, { method: 'DELETE' });
-  cargar();
-};
-
-/* ======================================================
-   💾 GUARDAR
-====================================================== */
-form.onsubmit = async e => {
-  e.preventDefault();
-
-  const data = {
-    id: id.value,
-    nombre: nombre.value,
-    categoria: categoria.value,
-    mensualidad: mensualidad.value,
-    nombre_acudiente: acudiente.value,
-    telefono: telefono.value,
-    direccion: direccion.value,
-    tipo_sangre: sangre.value,
-    activo: true
+  const formatMoney = (amount) => new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(amount || 0);
+  
+  const calcularEdad = (fechaString) => {
+    if (!fechaString) return '?';
+    const hoy = new Date();
+    const fechaNac = new Date(fechaString);
+    let edad = hoy.getFullYear() - fechaNac.getFullYear();
+    const m = hoy.getMonth() - fechaNac.getMonth();
+    if (m < 0 || (m === 0 && hoy.getDate() < fechaNac.getDate())) edad--;
+    return edad + ' años';
   };
 
-  await fetch('/api/jugadores', {
-    method: editando ? 'PUT' : 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(data)
+  // --- LÓGICA PRINCIPAL ---
+
+  async function cargar() {
+    try {
+      const res = await fetch('/api/jugadores');
+      jugadoresData = await res.json();
+      filtrarYRenderizar(); 
+    } catch (error) {
+      console.error(error);
+      tabla.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-red-500">Error cargando datos.</td></tr>`;
+    }
+  }
+
+  buscadorInput.addEventListener('input', (e) => {
+    paginaActual = 1;
+    filtrarYRenderizar();
   });
 
-  editando = false;
-  form.reset();
-  cargar();
-};
+  function filtrarYRenderizar() {
+    const termino = buscadorInput.value.toLowerCase();
+    filteredData = jugadoresData.filter(j => 
+      j.nombre.toLowerCase().includes(termino) || 
+      (j.identificacion && j.identificacion.includes(termino))
+    );
+    renderTable();
+    updatePaginationControls();
+  }
+
+  function renderTable() {
+    tabla.innerHTML = '';
+    if (filteredData.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="8" class="p-8 text-center text-gray-400">No se encontraron jugadores.</td></tr>`;
+      return;
+    }
+
+    const inicio = (paginaActual - 1) * itemsPorPagina;
+    const fin = inicio + itemsPorPagina;
+    const paginaDatos = filteredData.slice(inicio, fin);
+
+    paginaDatos.forEach(j => {
+      // Calcular tarjetas para visualización
+      const tarjetaHTML = (j.tarjetas_amarillas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-yellow-400" title="Amarillas"></span>` : '') + 
+                          (j.tarjetas_rojas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-red-600 ml-1" title="Rojas"></span>` : '') +
+                          (j.tarjetas_amarillas === 0 && j.tarjetas_rojas === 0 ? '-' : '');
+
+      tabla.innerHTML += `
+        <tr class="hover:bg-gray-50 group">
+          <td class="p-4">
+            <div class="font-bold text-gray-800">${j.nombre}</div>
+            <div class="text-xs text-gray-500">ID: ${j.identificacion || '-'}</div>
+          </td>
+          <td class="p-4 text-center"><span class="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-full font-bold">${calcularEdad(j.fecha_nacimiento)}</span></td>
+          <td class="p-4"><span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">${j.categoria}</span></td>
+          <td class="p-4 text-center font-bold text-green-700">${j.goles}</td>
+          <td class="p-4 text-center text-gray-600">${j.asistencias}</td>
+          <td class="p-4 text-center text-gray-600">${j.partidos_jugados}</td>
+          <td class="p-4 text-center text-sm">${tarjetaHTML}</td>
+          <td class="p-4 text-right">
+            <div class="flex justify-end gap-2">
+              <button onclick='editar(${JSON.stringify(j)})' class="p-2 text-blue-600 hover:bg-blue-50 rounded transition"><i class="ph ph-pencil-simple text-lg"></i></button>
+              <button onclick='eliminarJugador(${j.id})' class="p-2 text-red-600 hover:bg-red-50 rounded transition"><i class="ph ph-trash text-lg"></i></button>
+            </div>
+          </td>
+        </tr>
+      `;
+    });
+  }
+
+  function changePage(delta) {
+    const maxPagina = Math.ceil(filteredData.length / itemsPorPagina);
+    const nuevaPag = paginaActual + delta;
+    if (nuevaPag >= 1 && nuevaPag <= maxPagina) {
+      paginaActual = nuevaPag;
+      renderTable();
+      updatePaginationControls();
+    }
+  }
+
+  function updatePaginationControls() {
+    const maxPagina = Math.ceil(filteredData.length / itemsPorPagina) || 1;
+    const inicio = (paginaActual - 1) * itemsPorPagina + 1;
+    const fin = Math.min(paginaActual * itemsPorPagina, filteredData.length);
+    document.getElementById('pagina-actual').innerText = `${paginaActual} / ${maxPagina}`;
+    document.getElementById('info-paginacion').innerText = `Mostrando ${filteredData.length > 0 ? inicio : 0}-${fin} de ${filteredData.length}`;
+    document.getElementById('btn-prev').disabled = paginaActual === 1;
+    document.getElementById('btn-next').disabled = paginaActual === maxPagina;
+  }
+
+  // --- CRUD ---
+
+  window.editar = function (j) {
+    editando = true;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('id').value = j.id;
+    document.getElementById('nombre').value = j.nombre;
+    document.getElementById('fecha_nacimiento').value = j.fecha_nacimiento || '';
+    document.getElementById('identificacion').value = j.identificacion || '';
+    document.getElementById('categoria').value = j.categoria || '';
+    document.getElementById('mensualidad').value = j.mensualidad || '';
+    document.getElementById('acudiente').value = j.nombre_acudiente || '';
+    document.getElementById('telefono').value = j.telefono || '';
+    document.getElementById('direccion').value = j.direccion || '';
+    document.getElementById('sangre').value = j.tipo_sangre || '';
+    
+    // Cargar estadísticas
+    document.getElementById('goles').value = j.goles || 0;
+    document.getElementById('asistencias').value = j.asistencias || 0;
+    document.getElementById('partidos').value = j.partidos_jugados || 0;
+    document.getElementById('amarillas').value = j.tarjetas_amarillas || 0;
+    document.getElementById('rojas').value = j.tarjetas_rojas || 0;
+
+    document.getElementById('form-title').innerText = "Editar Jugador";
+    document.getElementById('form-title').classList.add('text-blue-600');
+    document.getElementById('btn-submit').innerHTML = `<i class="ph ph-arrows-clockwise text-lg"></i> <span>Actualizar</span>`;
+    document.getElementById('btn-submit').classList.replace('bg-green-600', 'bg-blue-600');
+    document.getElementById('btn-cancelar').classList.remove('hidden');
+  };
+
+  window.resetForm = function () {
+    editando = false;
+    form.reset();
+    document.getElementById('id').value = '';
+    // Reset stats to 0 visualmente
+    document.getElementById('goles').value = 0;
+    document.getElementById('asistencias').value = 0;
+    document.getElementById('partidos').value = 0;
+    document.getElementById('amarillas').value = 0;
+    document.getElementById('rojas').value = 0;
+    
+    document.getElementById('form-title').innerText = "Nuevo Jugador";
+    document.getElementById('btn-submit').innerHTML = `<i class="ph ph-floppy-disk text-lg"></i> <span>Guardar</span>`;
+    document.getElementById('btn-submit').classList.replace('bg-blue-600', 'bg-green-600');
+    document.getElementById('btn-cancelar').classList.add('hidden');
+  };
+
+  window.eliminarJugador = async function (id) {
+    if (!confirm('¿Eliminar este jugador?')) return;
+    await fetch(`/api/jugadores?id=${id}`, { method: 'DELETE' });
+    cargar();
+  };
+
+  form.onsubmit = async e => {
+    e.preventDefault();
+    const btn = document.getElementById('btn-submit');
+    const originalHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i>`;
+
+    const data = {
+      id: document.getElementById('id').value || null,
+      nombre: document.getElementById('nombre').value,
+      fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+      identificacion: document.getElementById('identificacion').value,
+      categoria: document.getElementById('categoria').value,
+      mensualidad: parseFloat(document.getElementById('mensualidad').value) || 0,
+      nombre_acudiente: document.getElementById('acudiente').value,
+      telefono: document.getElementById('telefono').value,
+      direccion: document.getElementById('direccion').value,
+      tipo_sangre: document.getElementById('sangre').value,
+      // Estadísticas
+      goles: parseInt(document.getElementById('goles').value) || 0,
+      asistencias: parseInt(document.getElementById('asistencias').value) || 0,
+      partidos_jugados: parseInt(document.getElementById('partidos').value) || 0,
+      tarjetas_amarillas: parseInt(document.getElementById('amarillas').value) || 0,
+      tarjetas_rojas: parseInt(document.getElementById('rojas').value) || 0,
+      activo: true
+    };
+
+    try {
+      await fetch('/api/jugadores', {
+        method: editando ? 'PUT' : 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      resetForm();
+      cargar();
+    } catch (error) {
+      alert('Error al guardar');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalHtml;
+    }
+  };
+
+  // Exportar Excel incluyendo estadísticas
+  window.exportToExcel = function() {
+    if (filteredData.length === 0) return alert("No hay datos para exportar");
+    
+    const dataToExport = filteredData.map(j => ({
+      Nombre: j.nombre,
+      ID: j.identificacion,
+      Categoria: j.categoria,
+      Goles: j.goles,
+      Asistencias: j.asistencias,
+      Partidos: j.partidos_jugados,
+      Amarillas: j.tarjetas_amarillas,
+      Rojas: j.tarjetas_rojas,
+      Acudiente: j.nombre_acudiente,
+      Telefono: j.telefono
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
+    XLSX.writeFile(wb, "Jugadores_EFUSA_Stats.xlsx");
+  }
+
+  document.addEventListener('DOMContentLoaded', cargar);
 </script>
-
-<style>
-.input {
-  @apply border p-2 rounded w-full;
-}
-</style>
-
 </body>
 </html>
