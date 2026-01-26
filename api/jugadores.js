@@ -7,9 +7,15 @@ export default async function handler(req, res) {
   });
 
   try {
-    const result = await pool.query(`
-      SELECT 
-        id,
+    if (req.method === "GET") {
+      const result = await pool.query(
+        "SELECT * FROM jugadores ORDER BY creado_en DESC"
+      );
+      return res.status(200).json(result.rows);
+    }
+
+    if (req.method === "POST") {
+      const {
         nombre,
         categoria,
         mensualidad,
@@ -17,13 +23,28 @@ export default async function handler(req, res) {
         telefono,
         direccion,
         tipo_sangre,
-        activo,
-        fecha_inscripcion
-      FROM jugadores
-      ORDER BY creado_en DESC
-    `);
+      } = req.body;
 
-    res.status(200).json(result.rows);
+      const result = await pool.query(
+        `INSERT INTO jugadores
+        (nombre, categoria, mensualidad, nombre_acudiente, telefono, direccion, tipo_sangre, activo, fecha_inscripcion)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,true,CURRENT_DATE)
+        RETURNING *`,
+        [
+          nombre,
+          categoria,
+          mensualidad,
+          nombre_acudiente,
+          telefono,
+          direccion,
+          tipo_sangre,
+        ]
+      );
+
+      return res.status(201).json(result.rows[0]);
+    }
+
+    res.status(405).json({ error: "Método no permitido" });
   } catch (error) {
     console.error("ERROR NEON:", error);
     res.status(500).json({ error: error.message });
