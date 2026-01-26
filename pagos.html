@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Pagos - EFUSA</title>
+</head>
+<body>
+
+<h1>Pagos</h1>
+
+<form id="formPago">
+  <select id="jugador" required></select>
+  <input id="monto" type="number" placeholder="Monto" required>
+  <button type="submit">Registrar pago</button>
+</form>
+
+<table border="1" width="100%">
+  <thead>
+    <tr>
+      <th>Jugador</th>
+      <th>Monto</th>
+      <th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody id="tabla"></tbody>
+</table>
+
+<script>
+async function cargarJugadores() {
+  const res = await fetch('/api/jugadores');
+  const data = await res.json();
+
+  jugador.innerHTML = '<option value="">Seleccione jugador</option>';
+  data.forEach(j => {
+    jugador.innerHTML += `<option value="${j.id}">${j.nombre}</option>`;
+  });
+}
+
+async function cargarPagos() {
+  const res = await fetch('/api/pagos');
+  const data = await res.json();
+
+  tabla.innerHTML = '';
+  data.forEach(p => {
+    tabla.innerHTML += `
+      <tr>
+        <td>${p.nombre}</td>
+        <td>${p.monto}</td>
+        <td>${new Date(p.fecha).toLocaleDateString()}</td>
+      </tr>
+    `;
+  });
+}
+
+formPago.onsubmit = async e => {
+  e.preventDefault();
+
+  await fetch('/api/pagos', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      jugador_id: jugador.value,
+      monto: monto.value
+    })
+  });
+
+  formPago.reset();
+  cargarPagos();
+};
+
+cargarJugadores();
+cargarPagos();
+</script>
+
+</body>
+</html>
