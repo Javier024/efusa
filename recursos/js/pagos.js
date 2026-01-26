@@ -1,14 +1,13 @@
-// --- 1. IMPORTACIONES ---
 import { getPagos, crearPago, getJugadores } from './api.js';
 
-// --- 2. VARIABLES GLOBALES ---
+// --- 1. VARIABLES GLOBALES ---
 let todosLosPagos = [];
 let pagosFiltrados = [];
 let jugadoresMap = new Map();
 let paginaActual = 1;
 const itemsPorPagina = 10;
 
-// --- 3. ELEMENTOS DOM (Cargados al inicio para asegurar que existan) ---
+// --- 2. ELEMENTOS DOM ---
 const form = document.getElementById('formPago');
 const tabla = document.getElementById('tabla-pagos');
 const select = document.getElementById('jugador_id');
@@ -22,7 +21,7 @@ const elInfoPaginacion = document.getElementById('info-paginacion');
 const elPaginaActual = document.getElementById('pagina-actual');
 const divAlerta = document.getElementById('alerta');
 
-// --- 4. FUNCIONES AUXILIARES ---
+// --- 3. FUNCIONES AUXILIARES ---
 
 function mostrarAlerta(mensaje, tipo) {
   if (!divAlerta) return;
@@ -58,27 +57,7 @@ function actualizarControles(totalItems) {
   btnNext.disabled = paginaActual === totalPaginas;
 }
 
-// --- 5. FUNCIONES CORE (Definidas antes de su uso) ---
-
-// Función de Paginación
-window.cambiarPagina = (delta) => {
-  const totalPaginas = Math.ceil(pagosFiltrados.length / itemsPorPagina);
-  const nuevaPag = paginaActual + delta;
-  if (nuevaPag >= 1 && nuevaPag <= totalPaginas) {
-    paginaActual = nuevaPag;
-    renderTable();
-  }
-};
-
-// Función de Limpieza
-window.limpiarFiltros = () => {
-  if (!inputBuscador || !inputFiltroInicio || !inputFiltroFin) return;
-  inputBuscador.value = '';
-  inputFiltroInicio.value = '';
-  inputFiltroFin.value = '';
-  paginaActual = 1;
-  aplicarFiltros();
-};
+// --- 4. FUNCIONES CORE (Definidas antes de ser usadas) ---
 
 // Lógica de Filtrado
 function aplicarFiltros() {
@@ -90,11 +69,13 @@ function aplicarFiltros() {
 
   if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
 
-  pagosFiltrados = todosLosPagos.filter(p => {
-    const nombreJugador = jugadoresMap.get(p.jugador_id)?.toLowerCase() || '';
+  pagosFiltrados = todosLosPagos.filter(pago => {
+    // 1. Filtro por Texto
+    const nombreJugador = jugadoresMap.get(pago.jugador_id)?.toLowerCase() || '';
     const coincideTexto = nombreJugador.includes(textoBusqueda);
 
-    const fechaPago = new Date(p.fecha_pago);
+    // 2. Filtro por Rango de Fechas
+    const fechaPago = new Date(pago.fecha_pago);
     let coincideFecha = true;
     if (fechaInicio && fechaPago < fechaInicio) coincideFecha = false;
     if (fechaFin && fechaPago > fechaFin) coincideFecha = false;
@@ -108,7 +89,6 @@ function aplicarFiltros() {
 
 // Renderizado de Tabla
 function renderTable() {
-  if (!tabla) return;
   tabla.innerHTML = '';
 
   if (pagosFiltrados.length === 0) {
@@ -124,6 +104,7 @@ function renderTable() {
   paginaDatos.forEach(p => {
     const nombreJugador = jugadoresMap.get(p.jugador_id) || 'Desconocido';
     
+    // Visualización de Observación
     const obsDisplay = p.observacion 
       ? `<div class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-[200px]" title="${p.observacion}">Obs: ${p.observacion}</div>` 
       : '';
@@ -137,7 +118,7 @@ function renderTable() {
       <td class="px-6 py-4 text-gray-500 text-xs italic">${obsDisplay}</td>
       <td class="px-6 py-4 font-bold text-green-600">$${parseFloat(p.monto).toLocaleString('es-CO')}</td>
       <td class="px-6 py-4 text-right">
-        <button onclick="eliminarPago(${p.id}, '${nombreJugador}')" class="text-red-500 hover:text-red-700 transition">
+        <button onclick="eliminarPago(${p.id}, '${nombreJugador}')" class="text-red-500 hover:text-red-700 transition" title="Eliminar">
           <i class="ph ph-trash text-lg"></i>
         </button>
       </td>
@@ -148,17 +129,20 @@ function renderTable() {
   actualizarControles(pagosFiltrados.length);
 }
 
-// --- 6. FUNCIONES DE DATOS (Async) ---
+// --- 5. CARGA DE DATOS ---
 
 async function cargarJugadores() {
   try {
+    // Usamos fetch directo para evitar errores de importación
     const res = await fetch('/api/jugadores');
     const jugadores = await res.json();
     
     if (!select) return;
+    
     select.innerHTML = '<option value="">Seleccione jugador...</option>' + 
       jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
     
+    // Crear Mapa para búsqueda rápida
     jugadoresMap.clear();
     jugadores.forEach(j => jugadoresMap.set(j.id, j.nombre));
   } catch (error) {
@@ -169,21 +153,44 @@ async function cargarJugadores() {
 
 async function cargarPagos() {
   try {
+    // Usamos fetch directo para asegurar traer observaciones
     const res = await fetch('/api/pagos');
     todosLosPagos = await res.json();
     
-    // Ordenar
+    // Ordenar por fecha descendente (más reciente primero)
     todosLosPagos.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
     
-    aplicarFiltros();
+    aplicarFiltros(); // Esto llama a renderTabla internamente
   } catch (error) {
     console.error("Error cargando pagos", error);
     mostrarAlerta("Error cargando pagos", "error");
   }
 }
 
-// --- 7. EVENTOS DEL FORMULARIO ---
+// --- 6. EVENTOS DE PAGINACIÓN Y FILTROS ---
+window.cambiarPagina = (delta) => {
+  const totalPaginas = Math.ceil(pagosFiltrados.length / itemsPorPagina);
+  const nuevaPag = paginaActual + delta;
+  if (nuevaPag >= 1 && nuevaPag <= totalPaginas) {
+    paginaActual = nuevaPag;
+    renderTabla();
+  }
+};
 
+window.limpiarFiltros = () => {
+  inputBuscador.value = '';
+  inputFiltroInicio.value = '';
+  inputFiltroFin.value = '';
+  paginaActual = 1;
+  aplicarFiltros();
+};
+
+inputBuscador.addEventListener('input', () => { paginaActual = 1; aplicarFiltros(); });
+inputFiltroInicio.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
+inputFiltroFin.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
+
+
+// --- 7. GUARDAR PAGO ---
 if (form) {
   form.addEventListener('submit', async e => {
     e.preventDefault();
@@ -215,8 +222,7 @@ if (form) {
 
       mostrarAlerta("Pago registrado correctamente", "success");
       form.reset();
-      const fechaInput = document.getElementById('fecha');
-      if (fechaInput) fechaInput.valueAsDate = new Date();
+      document.getElementById('fecha').valueAsDate = new Date(); // Restaurar fecha hoy
       await cargarPagos();
     } catch (error) {
       console.error(error);
@@ -228,13 +234,7 @@ if (form) {
   });
 }
 
-// Listeners de Filtros
-if (inputBuscador) inputBuscador.addEventListener('input', () => { paginaActual = 1; aplicarFiltros(); });
-if (inputFiltroInicio) inputFiltroInicio.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
-if (inputFiltroFin) inputFiltroFin.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
-
-// --- 8. ACCIONES GLOBALES (Window) ---
-
+// --- 8. ELIMINAR PAGO ---
 window.eliminarPago = async (id, nombre) => {
   if (!confirm(`¿Estás seguro de eliminar el pago de ${nombre}?`)) return;
 
@@ -248,9 +248,11 @@ window.eliminarPago = async (id, nombre) => {
   }
 };
 
+// --- 9. EXPORTAR A EXCEL ---
 window.exportarExcel = () => {
   if (pagosFiltrados.length === 0) return alert("No hay datos para exportar");
 
+  // Preparar datos bonitos para Excel
   const datos = pagosFiltrados.map(p => ({
     Fecha: new Date(p.fecha_pago).toLocaleDateString(),
     Jugador: jugadoresMap.get(p.jugador_id) || 'Desconocido',
@@ -265,16 +267,13 @@ window.exportarExcel = () => {
   XLSX.writeFile(wb, "Reporte_Pagos.xlsx");
 };
 
-// --- 9. INICIALIZACIÓN PRINCIPAL ---
-
+// --- 10. INICIALIZACIÓN ---
 async function init() {
   await cargarJugadores();
   await cargarPagos();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  const fechaInput = document.getElementById('fecha');
-  if (fechaInput) fechaInput.valueAsDate = new Date();
-  
+  document.getElementById('fecha').valueAsDate = new Date();
   await init();
 });

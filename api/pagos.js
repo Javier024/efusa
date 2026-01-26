@@ -20,7 +20,7 @@ export default async function handler(req, res) {
           [jugador_id]
         );
       } else {
-        // Trae pagos con el nombre del jugador
+        // Si pedimos todos, hacemos JOIN para traer también el nombre del jugador
         result = await pool.query(
           `SELECT 
              p.id,
@@ -40,32 +40,31 @@ export default async function handler(req, res) {
     }
 
     // ======================================================
-    // 📌 REGISTRAR PAGO (POST) - FECHA Y OBSERVACIÓN INCLUIDAS
+    // 📌 REGISTRAR PAGO (POST)
     // ======================================================
     if (req.method === 'POST') {
       const { 
-        jugador_id, 
-        monto, 
-        fecha_pago, 
-        tipo, 
-        observacion 
+          jugador_id, 
+          monto, 
+          fecha_pago, 
+          tipo, 
+          observacion 
       } = req.body;
 
       if (!jugador_id || !monto) {
         return res.status(400).json({ error: 'Faltan datos obligatorios' });
       }
 
-      // El orden debe coincidir con los valores de abajo ($1, $2, $3, $4, $5)
       const queryText = `
         INSERT INTO pagos (jugador_id, monto, fecha_pago, tipo, observacion)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING *;
+          VALUES ($1, $2, $3, $4, $5)
+          RETURNING *; -- IMPORTANTE: Devolvemos el pago insertado
       `;
 
       const values = [
         jugador_id, 
         monto, 
-        fecha_pago || null, // Si el input viene vacío, guarda NULL en la BD (o usa el default)
+        fecha_pago || null, 
         tipo || 'abono',
         observacion || null
       ];
@@ -73,8 +72,8 @@ export default async function handler(req, res) {
       const result = await pool.query(queryText, values);
       
       return res.status(201).json({ 
-        mensaje: 'Pago registrado con fecha y observación', 
-        pago: result.rows[0] 
+        mensaje: 'Pago registrado', 
+        pago: result.rows[0] // <-- Esto permite validar la fecha en el Frontend
       });
     }
 
@@ -82,7 +81,9 @@ export default async function handler(req, res) {
     // 📌 ELIMINAR PAGO (DELETE)
     // ======================================================
     if (req.method === 'DELETE') {
+      // El ID viene en la URL
       const { id } = req.query;
+
       if (!id) {
         return res.status(400).json({ error: 'ID del pago requerido' });
       }
@@ -96,6 +97,6 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error("Error API Pagos:", error);
-    return res.status(500).json({ error: 'Error interno del servidor' });
+    return res.status(500).json({ error: 'Error interno del servidor', details: error.message });
   }
 }
