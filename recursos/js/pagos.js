@@ -213,11 +213,12 @@ window.eliminarPago = async (id, nombre) => {
   if (!confirm(`¿Estás seguro de eliminar el pago de ${nombre}?`)) return;
 
   try {
-    // Asumimos que api.js NO tiene eliminarPago implementado, así que hacemos fetch directo.
-    // Si api.js lo tiene, descomenta la siguiente línea y borra el fetch:
-    // await eliminarPago(id); 
-    
-    await fetch(`/api/pagos?id=${id}`, { method: 'DELETE' });
+    // Intentamos usar eliminarPago si existe en api.js, si no, usamos fetch directo
+    try {
+      await eliminarPago(id);
+    } catch (e) {
+      await fetch(`/api/pagos?id=${id}`, { method: 'DELETE' });
+    }
     
     mostrarAlerta("Pago eliminado", "success");
     await cargarPagos();
@@ -231,7 +232,6 @@ window.eliminarPago = async (id, nombre) => {
 window.exportarExcel = () => {
   if (pagosFiltrados.length === 0) return alert("No hay datos para exportar");
 
-  // Mapear datos para que sean legibles en Excel
   const datos = pagosFiltrados.map(p => ({
     Fecha: new Date(p.fecha_pago).toLocaleDateString(),
     Jugador: jugadoresMap.get(p.jugador_id) || 'Desconocido',
