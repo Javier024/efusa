@@ -3,7 +3,7 @@ import { getPagos, crearPago, getJugadores } from './api.js';
 // --- ESTADO GLOBAL ---
 let todosLosPagos = [];
 let pagosFiltrados = [];
-let jugadoresMap = new Map(); // Para buscar nombres rápido por ID
+let jugadoresMap = new Map();
 let paginaActual = 1;
 const itemsPorPagina = 10;
 
@@ -23,9 +23,7 @@ const divAlerta = document.getElementById('alerta');
 
 // --- INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
-  // Establecer fecha de hoy por defecto
   document.getElementById('fecha').valueAsDate = new Date();
-  
   await init();
 });
 
@@ -39,11 +37,9 @@ async function cargarJugadores() {
   try {
     const jugadores = await getJugadores();
     
-    // Llenar el Select
     select.innerHTML = '<option value="">Seleccione jugador...</option>' + 
       jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
     
-    // Crear Mapa para búsqueda rápida de nombres
     jugadores.forEach(j => jugadoresMap.set(j.id, j.nombre));
   } catch (error) {
     console.error("Error cargando jugadores", error);
@@ -53,11 +49,12 @@ async function cargarJugadores() {
 
 async function cargarPagos() {
   try {
-    const pagos = await getPagos();
-    // Ordenar por fecha descendente (más reciente primero)
-    todosLosPagos = pagos.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
+    // Usamos fetch directo aquí para asegurar traer observaciones y fechas
+    const res = await fetch('/api/pagos');
+    todosLosPagos = await res.json();
+    todosLosPagos.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
     
-    aplicarFiltros(); // Esto llama a renderTabla internamente
+    aplicarFiltros();
   } catch (error) {
     console.error("Error cargando pagos", error);
     mostrarAlerta("Error cargando pagos", "error");
@@ -70,15 +67,12 @@ function aplicarFiltros() {
   const fechaInicio = inputFiltroInicio.value ? new Date(inputFiltroInicio.value) : null;
   const fechaFin = inputFiltroFin.value ? new Date(inputFiltroFin.value) : null;
 
-  // Ajustar fecha fin para incluir todo el día seleccionado
   if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
 
   pagosFiltrados = todosLosPagos.filter(pago => {
-    // 1. Filtro por Texto (Nombre del Jugador)
     const nombreJugador = jugadoresMap.get(pago.jugador_id)?.toLowerCase() || '';
     const coincideTexto = nombreJugador.includes(textoBusqueda);
 
-    // 2. Filtro por Rango de Fechas
     const fechaPago = new Date(pago.fecha_pago);
     let coincideFecha = true;
     if (fechaInicio && fechaPago < fechaInicio) coincideFecha = false;
@@ -87,7 +81,6 @@ function aplicarFiltros() {
     return coincideTexto && coincideFecha;
   });
 
-  // Recalcular totales y renderizar
   calcularTotal();
   renderTabla();
 }
@@ -102,28 +95,31 @@ function renderTabla() {
     return;
   }
 
-  // Calcular rango de paginación
   const inicio = (paginaActual - 1) * itemsPorPagina;
   const fin = inicio + itemsPorPagina;
   const paginaDatos = pagosFiltrados.slice(inicio, fin);
 
   paginaDatos.forEach(p => {
-    const nombreJugador = jugadoresMap.get(p.jugador_id) || 'Desconocido';
-    const row = document.createElement('tr');
-    row.className = "hover:bg-gray-50 transition-colors";
-    row.innerHTML = `
+    const nombreJugador = jugadoresMap.get(pago.jugador_id) || 'Desconocido';
+    const tr = document.createElement('tr');
+    tr.className = "hover:bg-gray-50 transition-colors";
+    
+    // Mostramos observacion si existe
+    const obsDisplay = p.observacion ? `<div class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-[200px]" title="${p.observacion}">Obs: ${p.observacion}</div>` : '';
+
+    tr.innerHTML = `
       <td class="px-6 py-4 font-medium text-gray-900">${nombreJugador}</td>
       <td class="px-6 py-4 text-gray-500">${new Date(p.fecha_pago + 'T00:00:00').toLocaleDateString('es-CO')}</td>
       <td class="px-6 py-4"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs uppercase font-bold">${p.tipo || 'Abono'}</span></td>
-      <td class="px-6 py-4 text-gray-500 text-xs italic max-w-xs truncate">${p.observacion || '-'}</td>
+      <td class="px-6 py-4 text-gray-500 text-xs italic">${obsDisplay}</td>
       <td class="px-6 py-4 font-bold text-green-600">$${parseFloat(p.monto).toLocaleString('es-CO')}</td>
       <td class="px-6 py-4 text-right">
-        <button onclick="eliminarPago(${p.id}, '${nombreJugador}')" class="text-red-500 hover:text-red-700 transition">
+        <button onclick="eliminarPago(${p.id}, '${nombreJugador}')" class="text-red-500 hover:text-red-700 transition" title="Eliminar">
           <i class="ph ph-trash text-lg"></i>
         </button>
       </td>
     `;
-    tabla.appendChild(row);
+    tabla.appendChild(tr);
   });
 
   actualizarControles(pagosFiltrados.length);
@@ -134,11 +130,9 @@ function actualizarControles(totalItems) {
   const inicio = totalItems > 0 ? (paginaActual - 1) * itemsPorPagina + 1 : 0;
   const fin = Math.min(paginaActual * itemsPorPagina, totalItems);
 
-  // Actualizar textos
   elPaginaActual.innerText = `${paginaActual} / ${totalPaginas}`;
   elInfoPaginacion.innerText = `Mostrando ${inicio}-${fin} de ${totalItems}`;
 
-  // Habilitar/Deshabilitar botones
   btnPrev.disabled = paginaActual === 1;
   btnNext.disabled = paginaActual === totalPaginas;
 }
@@ -148,7 +142,7 @@ function calcularTotal() {
   elTotalFiltrado.innerText = `$${total.toLocaleString('es-CO')}`;
 }
 
-// --- EVENTOS DE PAGINACIÓN Y FILTROS ---
+// --- EVENTOS ---
 window.cambiarPagina = (delta) => {
   const totalPaginas = Math.ceil(pagosFiltrados.length / itemsPorPagina);
   const nuevaPag = paginaActual + delta;
@@ -166,7 +160,6 @@ window.limpiarFiltros = () => {
   aplicarFiltros();
 };
 
-// Agregar listeners a inputs
 inputBuscador.addEventListener('input', () => { paginaActual = 1; aplicarFiltros(); });
 inputFiltroInicio.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
 inputFiltroFin.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
@@ -186,18 +179,26 @@ form.addEventListener('submit', async e => {
   btn.disabled = true;
   btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i> Procesando...`;
 
+  // Asegúrate de enviar fecha y observacion
+  const data = {
+    jugador_id: Number(select.value),
+    monto: Number(document.getElementById('monto').value),
+    fecha_pago: document.getElementById('fecha').value,
+    tipo: document.getElementById('tipo').value,
+    observacion: document.getElementById('observacion').value
+  };
+
   try {
-    await crearPago({
-      jugador_id: Number(select.value),
-      monto: Number(document.getElementById('monto').value),
-      fecha_pago: document.getElementById('fecha').value,
-      tipo: document.getElementById('tipo').value,
-      observacion: document.getElementById('observacion').value
+    // Usamos fetch directo para asegurar que lleguen los datos correctos
+    await fetch('/api/pagos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
 
     mostrarAlerta("Pago registrado correctamente", "success");
     form.reset();
-    document.getElementById('fecha').valueAsDate = new Date(); // Restaurar fecha hoy
+    document.getElementById('fecha').valueAsDate = new Date();
     await cargarPagos();
   } catch (error) {
     console.error(error);
@@ -213,18 +214,18 @@ window.eliminarPago = async (id, nombre) => {
   if (!confirm(`¿Estás seguro de eliminar el pago de ${nombre}?`)) return;
 
   try {
-    // Intentamos usar eliminarPago si existe en api.js, si no, usamos fetch directo
-    try {
-      await eliminarPago(id);
-    } catch (e) {
-      await fetch(`/api/pagos?id=${id}`, { method: 'DELETE' });
-    }
+    // Enviamos el ID como query parameter ?id=X
+    const res = await fetch(`/api/pagos?id=${id}`, { method: 'DELETE' });
     
-    mostrarAlerta("Pago eliminado", "success");
-    await cargarPagos();
+    if (res.ok) {
+      mostrarAlerta("Pago eliminado", "success");
+      await cargarPagos();
+    } else {
+      mostrarAlerta("Error al eliminar", "error");
+    }
   } catch (error) {
     console.error(error);
-    mostrarAlerta("Error al eliminar", "error");
+    mostrarAlerta("Error de conexión", "error");
   }
 };
 
