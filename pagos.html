@@ -5,59 +5,65 @@
   <title>Pagos – EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Tailwind -->
+  <!-- Tailwind CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="bg-gray-100 min-h-screen flex flex-col">
 
   <!-- Header -->
-  <header class="bg-green-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">EFUSA – Pagos</h1>
-    <a href="index.html" class="underline">Volver</a>
+  <header class="bg-green-600 text-white px-6 py-4 flex justify-between items-center shadow">
+    <h1 class="text-xl font-bold">EFUSA · Pagos</h1>
+    <a href="index.html" class="text-sm underline hover:text-gray-200">
+      ← Volver
+    </a>
   </header>
 
-  <main class="p-6 max-w-6xl mx-auto">
+  <main class="flex-1 p-6 max-w-6xl mx-auto w-full">
 
-    <!-- Formulario de pago -->
-    <form id="formPago" class="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
-      
-      <select id="jugador_id" class="input" required>
+    <!-- Alertas -->
+    <div id="alerta" class="hidden mb-4 p-3 rounded text-sm"></div>
+
+    <!-- Formulario -->
+    <form id="formPago"
+      class="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
+
+      <select id="jugador_id"
+        class="border p-2 rounded w-full" required>
         <option value="">Seleccione jugador</option>
       </select>
 
-      <input id="monto" type="number" placeholder="Monto pagado" class="input" required>
-      <input id="fecha" type="date" class="input" required>
+      <input id="monto" type="number" min="1"
+        placeholder="Monto"
+        class="border p-2 rounded w-full" required>
+
+      <input id="fecha" type="date"
+        class="border p-2 rounded w-full" required>
 
       <button type="submit"
-        class="bg-green-600 text-white rounded hover:bg-green-700">
-        Registrar pago
+        class="bg-green-600 text-white rounded px-4 py-2 hover:bg-green-700 transition">
+        Registrar
       </button>
     </form>
 
-    <!-- Tabla pagos -->
+    <!-- Tabla -->
     <div class="bg-white shadow rounded overflow-x-auto">
       <table class="w-full text-sm">
-        <thead class="bg-gray-100">
+        <thead class="bg-gray-100 text-gray-600">
           <tr>
             <th class="p-3 text-left">Jugador</th>
             <th class="p-3 text-left">Fecha</th>
             <th class="p-3 text-left">Monto</th>
           </tr>
         </thead>
-        <tbody id="tabla-pagos"></tbody>
+        <tbody id="tabla-pagos" class="divide-y"></tbody>
       </table>
     </div>
 
   </main>
 
-<script type="module" src="recursos/js/pagos.js"></script>
-
-<style>
-.input {
-  @apply border p-2 rounded w-full;
-}
-</style>
+  <!-- JS -->
+  <script type="module" src="recursos/js/pagos.js"></script>
 
 </body>
 </html>
