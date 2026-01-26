@@ -1,13 +1,11 @@
-import { getPagos, crearPago, getJugadores } from './api.js';
-
-// --- ESTADO GLOBAL ---
+// --- CONFIGURACIÓN Y VARIABLES GLOBALES ---
 let todosLosPagos = [];
 let pagosFiltrados = [];
-let jugadoresMap = new Map(); // Para buscar nombres rápido por ID
+let jugadoresMap = new Map(); // Mapa para buscar nombres por ID
 let paginaActual = 1;
 const itemsPorPagina = 10;
 
-// Elementos DOM
+// Elementos del DOM
 const form = document.getElementById('formPago');
 const tabla = document.getElementById('tabla-pagos');
 const select = document.getElementById('jugador_id');
@@ -21,68 +19,20 @@ const elInfoPaginacion = document.getElementById('info-paginacion');
 const elPaginaActual = document.getElementById('pagina-actual');
 const divAlerta = document.getElementById('alerta');
 
-// --- INICIALIZACIÓN ---
-document.addEventListener('DOMContentLoaded', async () => {
-  // Establecer fecha de hoy por defecto
-  document.getElementById('fecha').valueAsDate = new Date();
-  
-  await init();
-});
+// --- FUNCIONES DE PAGINACIÓN Y RENDERIZADO (Movidas arriba para evitar errores) ---
 
-async function init() {
-  await cargarJugadores();
-  await cargarPagos();
-}
-
-// --- CARGA DE DATOS ---
-async function cargarJugadores() {
-  try {
-    const jugadores = await getJugadores();
-    
-    // Llenar el Select
-    select.innerHTML = '<option value="">Seleccione jugador...</option>' + 
-      jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
-    
-    // Crear Mapa para búsqueda rápida de nombres
-    jugadores.forEach(j => jugadoresMap.set(j.id, j.nombre));
-  } catch (error) {
-    console.error("Error cargando jugadores", error);
-    mostrarAlerta("Error cargando jugadores", "error");
-  }
-}
-
-async function cargarPagos() {
-  try {
-    // Usamos fetch directo para asegurar traer observaciones y fechas
-    const res = await fetch('/api/pagos');
-    todosLosPagos = await res.json();
-    
-    // Ordenar por fecha descendente (más reciente primero)
-    todosLosPagos.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
-    
-    aplicarFiltros(); // Esto llama a renderTabla internamente
-  } catch (error) {
-    console.error("Error cargando pagos", error);
-    mostrarAlerta("Error cargando pagos", "error");
-  }
-}
-
-// --- LÓGICA DE FILTRADO ---
 function aplicarFiltros() {
   const textoBusqueda = inputBuscador.value.toLowerCase();
   const fechaInicio = inputFiltroInicio.value ? new Date(inputFiltroInicio.value) : null;
   const fechaFin = inputFiltroFin.value ? new Date(inputFiltroFin.value) : null;
 
-  // Ajustar fecha fin para incluir todo el día seleccionado
   if (fechaFin) fechaFin.setHours(23, 59, 59, 999);
 
-  pagosFiltrados = todosLosPagos.filter(p => {
-    // 1. Filtro por Texto (Nombre del Jugador)
-    const nombreJugador = jugadoresMap.get(p.jugador_id)?.toLowerCase() || '';
+  pagosFiltrados = todosLosPagos.filter(pago => {
+    const nombreJugador = jugadoresMap.get(pago.jugador_id)?.toLowerCase() || '';
     const coincideTexto = nombreJugador.includes(textoBusqueda);
 
-    // 2. Filtro por Rango de Fechas
-    const fechaPago = new Date(p.fecha_pago);
+    const fechaPago = new Date(pago.fecha_pago);
     let coincideFecha = true;
     if (fechaInicio && fechaPago < fechaInicio) coincideFecha = false;
     if (fechaFin && fechaPago > fechaFin) coincideFecha = false;
@@ -90,12 +40,10 @@ function aplicarFiltros() {
     return coincideTexto && coincideFecha;
   });
 
-  // Recalcular totales y renderizar
   calcularTotal();
   renderTabla();
 }
 
-// --- RENDERIZADO Y PAGINACIÓN ---
 function renderTable() {
   tabla.innerHTML = '';
 
@@ -105,7 +53,6 @@ function renderTable() {
     return;
   }
 
-  // Calcular rango de paginación
   const inicio = (paginaActual - 1) * itemsPorPagina;
   const fin = inicio + itemsPorPagina;
   const paginaDatos = pagosFiltrados.slice(inicio, fin);
@@ -113,7 +60,6 @@ function renderTable() {
   paginaDatos.forEach(p => {
     const nombreJugador = jugadoresMap.get(p.jugador_id) || 'Desconocido';
     
-    // Visualización de Observación
     const obsDisplay = p.observacion 
       ? `<div class="text-[10px] text-gray-400 italic mt-0.5 truncate max-w-[200px]" title="${p.observacion}">Obs: ${p.observacion}</div>` 
       : '';
@@ -125,7 +71,6 @@ function renderTable() {
       <td class="px-6 py-4 text-gray-500">${new Date(p.fecha_pago + 'T00:00:00').toLocaleDateString('es-CO')}</td>
       <td class="px-6 py-4"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs uppercase font-bold">${p.tipo || 'Abono'}</span></td>
       <td class="px-6 py-4 text-gray-500 text-xs italic">${obsDisplay}</td>
-      <!-- CORRECCIÓN AQUÍ: Usamos p.monto en lugar de pago.monto -->
       <td class="px-6 py-4 font-bold text-green-600">$${parseFloat(p.monto).toLocaleString('es-CO')}</td>
       <td class="px-6 py-4 text-right">
         <button onclick="eliminarPago(${p.id}, '${nombreJugador}')" class="text-red-500 hover:text-red-700 transition" title="Eliminar">
@@ -144,11 +89,9 @@ function actualizarControles(totalItems) {
   const inicio = totalItems > 0 ? (paginaActual - 1) * itemsPorPagina + 1 : 0;
   const fin = Math.min(paginaActual * itemsPorPagina, totalItems);
 
-  // Actualizar textos
   elPaginaActual.innerText = `${paginaActual} / ${totalPaginas}`;
   elInfoPaginacion.innerText = `Mostrando ${inicio}-${fin} de ${totalItems}`;
 
-  // Habilitar/Deshabilitar botones
   btnPrev.disabled = paginaActual === 1;
   btnNext.disabled = paginaActual === totalPaginas;
 }
@@ -158,7 +101,52 @@ function calcularTotal() {
   elTotalFiltrado.innerText = `$${total.toLocaleString('es-CO')}`;
 }
 
-// --- EVENTOS DE PAGINACIÓN Y FILTROS ---
+// --- INICIALIZACIÓN Y EVENTOS ---
+document.addEventListener('DOMContentLoaded', async () => {
+  document.getElementById('fecha').valueAsDate = new Date();
+  await init();
+});
+
+async function init() {
+  await cargarJugadores();
+  await cargarPagos();
+}
+
+// --- CARGA DE DATOS ---
+
+async function cargarJugadores() {
+  try {
+    // Hacemos fetch directo para evitar errores de importación
+    const res = await fetch('/api/jugadores');
+    const jugadores = await res.json();
+    
+    select.innerHTML = '<option value="">Seleccione jugador...</option>' + 
+      jugadores.map(j => `<option value="${j.id}">${j.nombre}</option>`).join('');
+    
+    // Crear Mapa para búsqueda rápida
+    jugadores.forEach(j => jugadoresMap.set(j.id, j.nombre));
+  } catch (error) {
+    console.error("Error cargando jugadores", error);
+    mostrarAlerta("Error cargando jugadores", "error");
+  }
+}
+
+async function cargarPagos() {
+  try {
+    const res = await fetch('/api/pagos');
+    todosLosPagos = await res.json();
+    
+    // Ordenar por fecha descendente
+    todosLosPagos.sort((a, b) => new Date(b.fecha_pago) - new Date(a.fecha_pago));
+    
+    aplicarFiltros();
+  } catch (error) {
+    console.error("Error cargando pagos", error);
+    mostrarAlerta("Error cargando pagos", "error");
+  }
+}
+
+// --- CONTROLES DE PAGINACIÓN Y FILTROS ---
 window.cambiarPagina = (delta) => {
   const totalPaginas = Math.ceil(pagosFiltrados.length / itemsPorPagina);
   const nuevaPag = paginaActual + delta;
@@ -176,11 +164,10 @@ window.limpiarFiltros = () => {
   aplicarFiltros();
 };
 
-// Agregar listeners a inputs
+// Agregar listeners
 inputBuscador.addEventListener('input', () => { paginaActual = 1; aplicarFiltros(); });
 inputFiltroInicio.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
 inputFiltroFin.addEventListener('change', () => { paginaActual = 1; aplicarFiltros(); });
-
 
 // --- GUARDAR PAGO ---
 form.addEventListener('submit', async e => {
@@ -213,7 +200,7 @@ form.addEventListener('submit', async e => {
 
     mostrarAlerta("Pago registrado correctamente", "success");
     form.reset();
-    document.getElementById('fecha').valueAsDate = new Date(); // Restaurar fecha hoy
+    document.getElementById('fecha').valueAsDate = new Date();
     await cargarPagos();
   } catch (error) {
     console.error(error);
@@ -256,7 +243,7 @@ window.exportarExcel = () => {
   XLSX.writeFile(wb, "Reporte_Pagos.xlsx");
 };
 
-// --- UTILIDAD ALERTAS ---
+// --- UTILIDAD DE ALERTAS ---
 function mostrarAlerta(mensaje, tipo) {
   divAlerta.classList.remove('hidden', 'bg-green-50', 'text-green-700', 'border-green-500', 'bg-red-50', 'text-red-700', 'border-red-500');
   
