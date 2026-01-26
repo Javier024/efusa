@@ -1,20 +1,6 @@
-import { Pool } from "pg";
-
 export default async function handler(req, res) {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false },
+  res.status(200).json({
+    database_url_exists: !!process.env.DATABASE_URL,
+    starts_with: process.env.DATABASE_URL?.slice(0, 30)
   });
-
-  try {
-    const result = await pool.query(
-      "SELECT * FROM jugadores ORDER BY creado_en DESC"
-    );
-    res.status(200).json(result.rows);
-  } catch (error) {
-    console.error("ERROR NEON:", error);
-    res.status(500).json({ error: error.message });
-  } finally {
-    await pool.end();
-  }
 }
