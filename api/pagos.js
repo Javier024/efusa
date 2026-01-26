@@ -11,17 +11,17 @@ export default async function handler(req, res) {
     // 📌 LISTAR PAGOS (GET)
     // ======================================================
     if (req.method === 'GET') {
-      // Si viene un jugador_id por query (?jugador_id=1), filtramos. Si no, traemos todo
       const { jugador_id } = req.query;
 
       let result;
       if (jugador_id) {
+        // Si pide un jugador específico
         result = await pool.query(
           `SELECT * FROM pagos WHERE jugador_id = $1 ORDER BY fecha_pago DESC`,
           [jugador_id]
         );
       } else {
-        // Traer pagos con nombre del jugador
+        // Si pide todos, hacemos JOIN para traer el nombre del jugador
         result = await pool.query(
           `SELECT 
              p.id,
@@ -56,7 +56,7 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Faltan datos obligatorios (jugador_id y monto)' });
       }
 
-      // Insertamos explícitamente todos los campos
+      // Insertamos todos los campos explícitamente
       const queryText = `
         INSERT INTO pagos (jugador_id, monto, fecha_pago, tipo, observacion)
         VALUES ($1, $2, $3, $4, $5)
@@ -66,8 +66,8 @@ export default async function handler(req, res) {
       const values = [
         jugador_id, 
         monto, 
-        fecha_pago || null, // Si no manda fecha, usará el DEFAULT de la BD (CURRENT_DATE)
-        tipo || 'abono',      // Si no manda tipo, pone 'abono'
+        fecha_pago || null, 
+        tipo || 'abono',      // Si no envía tipo, pone 'abono'
         observacion || null
       ];
 
