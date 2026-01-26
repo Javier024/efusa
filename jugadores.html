@@ -3,129 +3,107 @@
 <head>
   <meta charset="UTF-8">
   <title>Jugadores - EFUSA</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 20px;
-    }
-
-    form input {
-      margin: 5px;
-      padding: 8px;
-    }
-
-    button {
-      padding: 8px 15px;
-      cursor: pointer;
-    }
-
-    table {
-      margin-top: 20px;
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: left;
-    }
-
-    th {
-      background: #f2f2f2;
-    }
-  </style>
 </head>
 <body>
 
-<h1>Listado de Jugadores</h1>
-
-<h2>➕ Registrar jugador</h2>
+<h1>Jugadores</h1>
 
 <form id="formJugador">
+  <input type="hidden" id="id">
   <input id="nombre" placeholder="Nombre" required>
   <input id="categoria" placeholder="Categoría" required>
   <input id="mensualidad" type="number" placeholder="Mensualidad" required>
-  <input id="acudiente" placeholder="Nombre acudiente" required>
+  <input id="acudiente" placeholder="Acudiente" required>
   <input id="telefono" placeholder="Teléfono" required>
   <input id="direccion" placeholder="Dirección" required>
-  <input id="sangre" placeholder="Tipo de sangre" required>
+  <input id="sangre" placeholder="Tipo sangre" required>
   <button type="submit">Guardar</button>
 </form>
 
-<h2>Jugadores registrados</h2>
-
-<table>
+<table border="1" width="100%">
   <thead>
     <tr>
       <th>Nombre</th>
       <th>Categoría</th>
       <th>Mensualidad</th>
-      <th>Acudiente</th>
-      <th>Teléfono</th>
       <th>Estado</th>
+      <th>Acciones</th>
     </tr>
   </thead>
-  <tbody id="tablaJugadores"></tbody>
+  <tbody id="tabla"></tbody>
 </table>
 
 <script>
-async function cargarJugadores() {
-  try {
-    const res = await fetch('/api/jugadores');
-    const jugadores = await res.json();
+let editando = false;
 
-    const tabla = document.getElementById('tablaJugadores');
-    tabla.innerHTML = '';
+async function cargar() {
+  const res = await fetch('/api/jugadores');
+  const data = await res.json();
 
-    jugadores.forEach(j => {
-      tabla.innerHTML += `
-        <tr>
-          <td>${j.nombre}</td>
-          <td>${j.categoria}</td>
-          <td>$${j.mensualidad}</td>
-          <td>${j.nombre_acudiente}</td>
-          <td>${j.telefono}</td>
-          <td>${j.activo ? 'Activo' : 'Inactivo'}</td>
-        </tr>
-      `;
-    });
+  tabla.innerHTML = '';
 
-  } catch (error) {
-    console.error(error);
-    alert('Error al cargar jugadores');
-  }
+  data.forEach(j => {
+    tabla.innerHTML += `
+      <tr>
+        <td>${j.nombre}</td>
+        <td>${j.categoria}</td>
+        <td>${j.mensualidad}</td>
+        <td>${j.activo ? 'Activo' : 'Inactivo'}</td>
+        <td>
+          <button onclick='editar(${JSON.stringify(j)})'>✏️</button>
+          <button onclick='eliminar(${j.id})'>🗑️</button>
+        </td>
+      </tr>
+    `;
+  });
 }
 
-document.getElementById('formJugador').addEventListener('submit', async (e) => {
+function editar(j) {
+  editando = true;
+  id.value = j.id;
+  nombre.value = j.nombre;
+  categoria.value = j.categoria;
+  mensualidad.value = j.mensualidad;
+  acudiente.value = j.nombre_acudiente;
+  telefono.value = j.telefono;
+  direccion.value = j.direccion;
+  sangre.value = j.tipo_sangre;
+}
+
+async function eliminar(id) {
+  if (!confirm('¿Eliminar jugador?')) return;
+
+  await fetch(`/api/jugadores?id=${id}`, { method: 'DELETE' });
+  cargar();
+}
+
+formJugador.onsubmit = async e => {
   e.preventDefault();
 
   const data = {
+    id: id.value,
     nombre: nombre.value,
     categoria: categoria.value,
     mensualidad: mensualidad.value,
     nombre_acudiente: acudiente.value,
     telefono: telefono.value,
     direccion: direccion.value,
-    tipo_sangre: sangre.value
+    tipo_sangre: sangre.value,
+    activo: true
   };
 
-  const res = await fetch('/api/jugadores', {
-    method: 'POST',
+  await fetch('/api/jugadores', {
+    method: editando ? 'PUT' : 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data)
   });
 
-  if (res.ok) {
-    alert('Jugador registrado');
-    e.target.reset();
-    cargarJugadores();
-  } else {
-    alert('Error al registrar');
-  }
-});
+  editando = false;
+  formJugador.reset();
+  cargar();
+};
 
-cargarJugadores();
+cargar();
 </script>
 
 </body>
