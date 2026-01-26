@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>EFUSA | Jugadores</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="recursos/css/estilos.css">
+
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+
+    th {
+      background-color: #1e1e1e;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f4f4f4;
+    }
+
+    button {
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <img src="recursos/img/logo-efusa.png" alt="EFUSA" height="60">
+    <h1>Listado de Jugadores</h1>
+  </header>
+
+  <!-- BOTÓN -->
+  <section>
+    <button onclick="location.href='index.html'">➕ Registrar jugador</button>
+  </section>
+
+  <!-- TABLA -->
+  <section>
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Categoría</th>
+          <th>Mensualidad</th>
+          <th>Acudiente</th>
+          <th>Teléfono</th>
+          <th>Estado</th>
+        </tr>
+      </thead>
+      <tbody id="tabla-jugadores">
+        <tr>
+          <td colspan="6">Cargando jugadores...</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- JS -->
+  <script>
+    const tabla = document.getElementById("tabla-jugadores");
+
+    async function cargarJugadores() {
+      try {
+        const res = await fetch("/api/jugadores");
+        const jugadores = await res.json();
+
+        tabla.innerHTML = "";
+
+        if (jugadores.length === 0) {
+          tabla.innerHTML = `<tr><td colspan="6">No hay jugadores registrados</td></tr>`;
+          return;
+        }
+
+        jugadores.forEach(j => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${j.nombre}</td>
+            <td>${j.categoria}</td>
+            <td>$${j.mensualidad}</td>
+            <td>${j.nombre_acudiente}</td>
+            <td>${j.telefono}</td>
+            <td>${j.activo ? "🟢 Activo" : "🔴 Inactivo"}</td>
+          `;
+          tabla.appendChild(tr);
+        });
+
+      } catch (error) {
+        tabla.innerHTML = `<tr><td colspan="6">Error al cargar jugadores</td></tr>`;
+        console.error(error);
+      }
+    }
+
+    cargarJugadores();
+  </script>
+
+</body>
+</html>
