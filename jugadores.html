@@ -1,41 +1,73 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Jugadores - EFUSA</title>
+  <meta charset="UTF-8" />
+  <title>Jugadores – EFUSA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-<h1>Jugadores</h1>
+<body class="bg-gray-100 min-h-screen">
 
-<form id="formJugador">
-  <input type="hidden" id="id">
-  <input id="nombre" placeholder="Nombre" required>
-  <input id="categoria" placeholder="Categoría" required>
-  <input id="mensualidad" type="number" placeholder="Mensualidad" required>
-  <input id="acudiente" placeholder="Acudiente" required>
-  <input id="telefono" placeholder="Teléfono" required>
-  <input id="direccion" placeholder="Dirección" required>
-  <input id="sangre" placeholder="Tipo sangre" required>
-  <button type="submit">Guardar</button>
-</form>
+  <!-- Header -->
+  <header class="bg-green-600 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">EFUSA – Jugadores</h1>
+    <a href="index.html" class="underline">Volver</a>
+  </header>
 
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Nombre</th>
-      <th>Categoría</th>
-      <th>Mensualidad</th>
-      <th>Estado</th>
-      <th>Acciones</th>
-    </tr>
-  </thead>
-  <tbody id="tabla"></tbody>
-</table>
+  <main class="p-6 max-w-6xl mx-auto">
 
-<script>
+    <!-- Formulario -->
+    <form id="formJugador" class="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-3 gap-3">
+      <input type="hidden" id="id">
+
+      <input id="nombre" placeholder="Nombre del jugador" class="input" required>
+      <input id="categoria" placeholder="Categoría" class="input" required>
+      <input id="mensualidad" type="number" placeholder="Mensualidad" class="input" required>
+
+      <input id="acudiente" placeholder="Nombre acudiente" class="input" required>
+      <input id="telefono" placeholder="Teléfono" class="input" required>
+      <input id="direccion" placeholder="Dirección" class="input" required>
+      <input id="sangre" placeholder="Tipo de sangre" class="input" required>
+
+      <button type="submit"
+        class="col-span-1 md:col-span-3 bg-green-600 text-white py-2 rounded hover:bg-green-700">
+        Guardar jugador
+      </button>
+    </form>
+
+    <!-- Tabla -->
+    <div class="bg-white shadow rounded overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-3 text-left">Nombre</th>
+            <th class="p-3 text-left">Categoría</th>
+            <th class="p-3 text-left">Mensualidad</th>
+            <th class="p-3 text-left">Estado</th>
+            <th class="p-3 text-left">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+<script type="module">
+import { formatearMoneda } from './recursos/js/configuracion.js';
+
 let editando = false;
+const tabla = document.getElementById('tabla');
+const form = document.getElementById('formJugador');
 
+document.addEventListener('DOMContentLoaded', cargar);
+
+/* ======================================================
+   📥 CARGAR JUGADORES
+====================================================== */
 async function cargar() {
   const res = await fetch('/api/jugadores');
   const data = await res.json();
@@ -44,21 +76,32 @@ async function cargar() {
 
   data.forEach(j => {
     tabla.innerHTML += `
-      <tr>
-        <td>${j.nombre}</td>
-        <td>${j.categoria}</td>
-        <td>${j.mensualidad}</td>
-        <td>${j.activo ? 'Activo' : 'Inactivo'}</td>
-        <td>
-          <button onclick='editar(${JSON.stringify(j)})'>✏️</button>
-          <button onclick='eliminar(${j.id})'>🗑️</button>
+      <tr class="border-b hover:bg-gray-50">
+        <td class="p-2">${j.nombre}</td>
+        <td class="p-2">${j.categoria}</td>
+        <td class="p-2">${formatearMoneda(j.mensualidad)}</td>
+        <td class="p-2">
+          <span class="px-2 py-1 rounded text-xs ${
+            j.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+          }">
+            ${j.activo ? 'Activo' : 'Inactivo'}
+          </span>
+        </td>
+        <td class="p-2 space-x-2">
+          <button onclick='editar(${JSON.stringify(j)})'
+            class="text-blue-600 hover:underline">Editar</button>
+          <button onclick='eliminarJugador(${j.id})'
+            class="text-red-600 hover:underline">Eliminar</button>
         </td>
       </tr>
     `;
   });
 }
 
-function editar(j) {
+/* ======================================================
+   ✏️ EDITAR
+====================================================== */
+window.editar = function (j) {
   editando = true;
   id.value = j.id;
   nombre.value = j.nombre;
@@ -68,16 +111,21 @@ function editar(j) {
   telefono.value = j.telefono;
   direccion.value = j.direccion;
   sangre.value = j.tipo_sangre;
-}
+};
 
-async function eliminar(id) {
+/* ======================================================
+   🗑️ ELIMINAR
+====================================================== */
+window.eliminarJugador = async function (idJugador) {
   if (!confirm('¿Eliminar jugador?')) return;
-
-  await fetch(`/api/jugadores?id=${id}`, { method: 'DELETE' });
+  await fetch(`/api/jugadores?id=${idJugador}`, { method: 'DELETE' });
   cargar();
-}
+};
 
-formJugador.onsubmit = async e => {
+/* ======================================================
+   💾 GUARDAR
+====================================================== */
+form.onsubmit = async e => {
   e.preventDefault();
 
   const data = {
@@ -99,12 +147,16 @@ formJugador.onsubmit = async e => {
   });
 
   editando = false;
-  formJugador.reset();
+  form.reset();
   cargar();
 };
-
-cargar();
 </script>
+
+<style>
+.input {
+  @apply border p-2 rounded w-full;
+}
+</style>
 
 </body>
 </html>

@@ -1,76 +1,63 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Pagos - EFUSA</title>
+  <meta charset="UTF-8" />
+  <title>Pagos – EFUSA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
 
-<h1>Pagos</h1>
+<body class="bg-gray-100 min-h-screen">
 
-<form id="formPago">
-  <select id="jugador" required></select>
-  <input id="monto" type="number" placeholder="Monto" required>
-  <button type="submit">Registrar pago</button>
-</form>
+  <!-- Header -->
+  <header class="bg-green-600 text-white p-4 flex justify-between items-center">
+    <h1 class="text-xl font-bold">EFUSA – Pagos</h1>
+    <a href="index.html" class="underline">Volver</a>
+  </header>
 
-<table border="1" width="100%">
-  <thead>
-    <tr>
-      <th>Jugador</th>
-      <th>Monto</th>
-      <th>Fecha</th>
-    </tr>
-  </thead>
-  <tbody id="tabla"></tbody>
-</table>
+  <main class="p-6 max-w-6xl mx-auto">
 
-<script>
-async function cargarJugadores() {
-  const res = await fetch('/api/jugadores');
-  const data = await res.json();
+    <!-- Formulario de pago -->
+    <form id="formPago" class="bg-white p-4 rounded shadow mb-6 grid grid-cols-1 md:grid-cols-4 gap-3">
+      
+      <select id="jugador_id" class="input" required>
+        <option value="">Seleccione jugador</option>
+      </select>
 
-  jugador.innerHTML = '<option value="">Seleccione jugador</option>';
-  data.forEach(j => {
-    jugador.innerHTML += `<option value="${j.id}">${j.nombre}</option>`;
-  });
+      <input id="monto" type="number" placeholder="Monto pagado" class="input" required>
+      <input id="fecha" type="date" class="input" required>
+
+      <button type="submit"
+        class="bg-green-600 text-white rounded hover:bg-green-700">
+        Registrar pago
+      </button>
+    </form>
+
+    <!-- Tabla pagos -->
+    <div class="bg-white shadow rounded overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-100">
+          <tr>
+            <th class="p-3 text-left">Jugador</th>
+            <th class="p-3 text-left">Fecha</th>
+            <th class="p-3 text-left">Monto</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-pagos"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+<script type="module" src="recursos/js/pagos.js"></script>
+
+<style>
+.input {
+  @apply border p-2 rounded w-full;
 }
-
-async function cargarPagos() {
-  const res = await fetch('/api/pagos');
-  const data = await res.json();
-
-  tabla.innerHTML = '';
-  data.forEach(p => {
-    tabla.innerHTML += `
-      <tr>
-        <td>${p.nombre}</td>
-        <td>${p.monto}</td>
-        <td>${new Date(p.fecha).toLocaleDateString()}</td>
-      </tr>
-    `;
-  });
-}
-
-formPago.onsubmit = async e => {
-  e.preventDefault();
-
-  await fetch('/api/pagos', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jugador_id: jugador.value,
-      monto: monto.value
-    })
-  });
-
-  formPago.reset();
-  cargarPagos();
-};
-
-cargarJugadores();
-cargarPagos();
-</script>
+</style>
 
 </body>
 </html>
