@@ -351,6 +351,7 @@
     cargar();
   };
 
+  // --- CORRECCIÓN APLICADA AQUÍ ---
   form.onsubmit = async e => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -358,8 +359,11 @@
     btn.disabled = true;
     btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i>`;
 
+    // Obtenemos el ID por separado
+    const idValue = document.getElementById('id').value;
+
     const data = {
-      id: document.getElementById('id').value || null,
+      // NO incluimos 'id' aquí por defecto
       nombre: document.getElementById('nombre').value,
       fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
       identificacion: document.getElementById('identificacion').value,
@@ -377,6 +381,11 @@
       activo: true
     };
 
+    // Solo agregamos el ID si estamos editando y existe un valor
+    if (editando && idValue) {
+      data.id = idValue;
+    }
+
     try {
       await fetch('/api/jugadores', {
         method: editando ? 'PUT' : 'POST',
@@ -386,12 +395,13 @@
       resetForm();
       cargar();
     } catch (error) {
-      alert('Error al guardar');
+      alert('Error al guardar: ' + error.message);
     } finally {
       btn.disabled = false;
       btn.innerHTML = originalHtml;
     }
   };
+  // -------------------------------
 
   // Exportar Excel
   window.exportToExcel = function() {
