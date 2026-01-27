@@ -243,7 +243,6 @@
     const paginaDatos = filteredData.slice(inicio, fin);
 
     paginaDatos.forEach(j => {
-      // Visualización de Tarjetas
       const tarjetaHTML = (j.tarjetas_amarillas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-yellow-400" title="Amarillas"></span>` : '') + 
                             (j.tarjetas_rojas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-red-600 ml-1" title="Rojas"></span>` : '') +
                             (j.tarjetas_amarillas === 0 && j.tarjetas_rojas === 0 ? '-' : '');
@@ -314,7 +313,6 @@
     document.getElementById('direccion').value = j.direccion || '';
     document.getElementById('sangre').value = j.tipo_sangre || '';
     
-    // Cargar estadísticas
     document.getElementById('goles').value = j.goles || 0;
     document.getElementById('asistencias').value = j.asistencias || 0;
     document.getElementById('partidos').value = j.partidos_jugados || 0;
@@ -332,7 +330,6 @@
     editando = false;
     form.reset();
     document.getElementById('id').value = '';
-    // Reset stats to 0 visualmente
     document.getElementById('goles').value = 0;
     document.getElementById('asistencias').value = 0;
     document.getElementById('partidos').value = 0;
@@ -351,7 +348,7 @@
     cargar();
   };
 
-  // --- CORRECCIÓN APLICADA AQUÍ ---
+  // --- FORMULARIO CORREGIDO ---
   form.onsubmit = async e => {
     e.preventDefault();
     const btn = document.getElementById('btn-submit');
@@ -359,11 +356,9 @@
     btn.disabled = true;
     btn.innerHTML = `<i class="ph ph-spinner animate-spin"></i>`;
 
-    // Obtenemos el ID por separado
     const idValue = document.getElementById('id').value;
 
     const data = {
-      // NO incluimos 'id' aquí por defecto
       nombre: document.getElementById('nombre').value,
       fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
       identificacion: document.getElementById('identificacion').value,
@@ -372,7 +367,6 @@
       telefono: document.getElementById('telefono').value,
       direccion: document.getElementById('direccion').value,
       tipo_sangre: document.getElementById('sangre').value,
-      // Estadísticas
       goles: parseInt(document.getElementById('goles').value) || 0,
       asistencias: parseInt(document.getElementById('asistencias').value) || 0,
       partidos_jugados: parseInt(document.getElementById('partidos').value) || 0,
@@ -381,7 +375,6 @@
       activo: true
     };
 
-    // Solo agregamos el ID si estamos editando y existe un valor
     if (editando && idValue) {
       data.id = idValue;
     }
@@ -401,9 +394,7 @@
       btn.innerHTML = originalHtml;
     }
   };
-  // -------------------------------
 
-  // Exportar Excel
   window.exportToExcel = function() {
     if (filteredData.length === 0) return alert("No hay datos para exportar");
     

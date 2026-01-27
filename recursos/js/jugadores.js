@@ -6,17 +6,21 @@ async function cargarJugadores() {
   try {
     const jugadores = await getJugadores();
     const tbody = document.querySelector('#tabla-jugadores');
-
-    // 1. Usamos un solo string para evitar múltiples redibujados
     let html = '';
 
     jugadores.forEach(j => {
-      // 2. Agregamos clases de Tailwind para que se vea bien y botones de acción
+      // Actualizado para mostrar los nuevos campos
       html += `
         <tr class="border-b hover:bg-gray-50" data-id="${j.id}">
-          <td class="p-2">${j.nombre}</td>
-          <td class="p-2">${j.categoria}</td>
-          <td class="p-2">${j.telefono}</td>
+          <td class="p-2">
+            <div class="font-bold text-sm">${j.nombre}</div>
+            <div class="text-xs text-gray-500">${j.identificacion || 'Sin ID'}</div>
+          </td>
+          <td class="p-2 text-sm">${j.categoria}</td>
+          <td class="p-2 text-sm">
+            ${j.goles || 0} Goles <br>
+            <span class="text-xs text-gray-500">${j.partidos_jugados || 0} Partidos</span>
+          </td>
           <td class="p-2">
             <span class="px-2 py-1 rounded text-xs ${j.activo ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}">
               ${j.activo ? 'Activo' : 'Inactivo'}
