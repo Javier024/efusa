@@ -245,9 +245,8 @@
     }
 
     // ==========================================
-    // VARIABLES GLOBALES (CORRECCIÓN CRÍTICA)
+    // VARIABLES GLOBALES
     // ==========================================
-    // Estas variables se declaran AQUÍ FUERA para que todas las funciones puedan verlas
     let jugadores = []; 
     let pagos = []; 
 
@@ -267,10 +266,7 @@
         const [resPagos, resJugadores] = await Promise.all([fetch('/api/pagos'), fetch('/api/jugadores')]);
         if (!resPagos.ok || !resJugadores.ok) throw new Error("Error conectando API");
         
-        // ==========================================
-        // ASIGNACIÓN A GLOBALES (CORRECCIÓN CRÍTICA)
-        // ==========================================
-        // Quitamos 'const' para asignar a las variables globales definidas arriba
+        // Asignamos a las variables GLOBALES
         pagos = await resPagos.json();
         jugadores = await resJugadores.json();
 
@@ -318,7 +314,7 @@
 
     // --- LÓGICA VENCIMIENTOS (ESTADO DE PAGO) ---
     function prepararVencimientos(jugadores, pagos) {
-      // Calculamos "vencimiento" para ordenar, pero mostramos el estado del jugador
+      // Calculamos "vencimiento" para ordenar
       listaVencimientos = jugadores.map(j => {
         const pagosJugador = pagos.filter(p => p.jugador_id == j.id);
         let ultimoPagoDate = null;
@@ -329,24 +325,26 @@
           ultimoPagoDate = new Date();
           ultimoPagoDate.setDate(ultimoPagoDate.getDate() - 30);
         }
-        // Fecha de referencia para ordenar (último pago + 30)
         const refDate = new Date(ultimoPagoDate);
         refDate.setDate(refDate.getDate() + 30);
         return { ...j, refDate };
-      }).sort((a, b) => a.refDate - b.refDate); // Ordenar por fecha teórica de pago
+      }).sort((a, b) => a.refDate - b.refDate);
     }
 
-    function getEstadoBadge(estado, pagoEsteMes) {
-      // Prioridad: Campo estado_pago -> Cálculo automático
-      if (estado === 'Pagado') return `<span class="px-2 py-1 text-xs rounded-full bg-green-50 text-green-600 font-bold border border-green-200">Pagado</span>`;
+    // --- NUEVA LÓGICA DE ESTADO (BADGES) ---
+    function getEstadoBadge(estado) {
+      if (estado === 'Pagado' || estado === 'Al día') return `<span class="px-2 py-1 text-xs rounded-full bg-green-50 text-green-600 font-bold border border-green-200">Al día</span>`;
+      
       if (estado === 'Abono') return `<span class="px-2 py-1 text-xs rounded-full bg-yellow-50 text-yellow-700 font-bold border border-yellow-200">Abono</span>`;
+      
       if (estado === 'Pendiente') return `<span class="px-2 py-1 text-xs rounded-full bg-red-50 text-red-600 font-bold border border-red-200">Pendiente</span>`;
       
-      // Si no hay estado definido, calculamos
-      if (pagoEsteMes) return `<span class="px-2 py-1 text-xs rounded-full bg-green-50 text-green-600 font-bold border border-green-200">Pagado</span>`;
-      return `<span class="px-2 py-1 text-xs rounded-full bg-red-50 text-red-600 font-bold border border-red-200">Pendiente</span>`;
+      if (estado === 'Por Pagar' || estado === 'Por Pagar (Nuevo)') return `<span class="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-600 font-bold border border-gray-200">Por Pagar</span>`;
+
+      return `<span class="px-2 py-1 text-xs rounded-full bg-gray-50 text-gray-600 font-bold border border-gray-200">${estado}</span>`;
     }
 
+    // --- NUEVA LÓGICA DE RENDERIZADO ---
     function renderTablaVencimientos() {
       const tbody = document.getElementById('body-vencimientos');
       tbody.innerHTML = '';
@@ -361,15 +359,41 @@
       const fin = inicio + filasPorPagina;
       const datosPagina = listaVencimientos.slice(inicio, fin);
 
-      // Verificar mes actual para cálculo automático si faltan datos
       const hoy = new Date();
       const mesActual = hoy.getMonth();
       const anioActual = hoy.getFullYear();
 
       datosPagina.forEach(j => {
-        // Chequear si pagó este mes para cálculo automático
-        const pagosEsteMes = j.pagos ? j.pagos.some(p => { const f = new Date(p.fecha_pago); return f.getMonth() === mesActual && f.getFullYear() === anioActual; }) : false;
-        const badge = getEstadoBadge(j.estado_pago, pagosEsteMes);
+        // 1. Filtramos los pagos de este jugador usando la variable GLOBAL 'pagos'
+        const pagosJugador = pagos.filter(p => p.jugador_id == j.id);
+
+        // 2. Verificamos si pagó este mes
+        const pagoEsteMes = pagosJugador.some(p => {
+          const f = new Date(p.fecha_pago);
+          return f.getMonth() === mesActual && f.getFullYear() === anioActual;
+        });
+
+        // 3. Determinamos el estado final
+        let estadoFinal = 'Pendiente';
+
+        if (j.estado_pago) {
+          // Prioridad: Estado manual de la base de datos
+          estadoFinal = j.estado_pago;
+        } else {
+          // Lógica Automática Inteligente
+          if (pagosJugador.length === 0) {
+            // Nunca ha pagado -> Por Pagar
+            estadoFinal = 'Por Pagar';
+          } else if (pagoEsteMes) {
+            // Tiene historial y pagó este mes -> Al día
+            estadoFinal = 'Pagado';
+          } else {
+            // Tiene historial pero no pagó este mes -> Pendiente
+            estadoFinal = 'Pendiente';
+          }
+        }
+
+        const badge = getEstadoBadge(estadoFinal);
 
         tbody.innerHTML += `
           <tr class="hover:bg-gray-50 transition-colors">
@@ -415,7 +439,6 @@
       const fin = inicio + filasPorPagina;
       const datosPagina = listaMovimientos.slice(inicio, fin);
       datosPagina.forEach(p => {
-        // Gracias a que 'jugadores' es global, esto ya no dará error
         const jugador = jugadores.find(j => j.id == p.jugador_id);
         const nombre = jugador ? jugador.nombre : 'Desconocido';
         tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-6 py-4 text-gray-500 text-xs">${formatDate(p.fecha_pago)}</td><td class="px-6 py-4 font-medium text-gray-900">${nombre}</td><td class="px-6 py-4 font-bold text-green-600">${formatMoney(p.monto)}</td><td class="px-6 py-4"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide">${p.tipo || 'Abono'}</span></td></tr>`;
