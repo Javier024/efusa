@@ -244,6 +244,13 @@
       chartInstance = new Chart(ctx, { type: 'line', data: { labels: meses, datasets: [{ label: 'Ingresos ($)', data: montos, borderColor: '#16a34a', backgroundColor: 'rgba(22, 163, 74, 0.1)', borderWidth: 2, fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: '#16a34a' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: '#f3f4f6' } }, x: { grid: { display: false } } } } });
     }
 
+    // ==========================================
+    // VARIABLES GLOBALES (CORRECCIÓN CRÍTICA)
+    // ==========================================
+    // Estas variables se declaran AQUÍ FUERA para que todas las funciones puedan verlas
+    let jugadores = []; 
+    let pagos = []; 
+
     // --- ESTADO PAGINACIÓN ---
     // Vencimientos
     let listaVencimientos = [];
@@ -259,8 +266,13 @@
       try {
         const [resPagos, resJugadores] = await Promise.all([fetch('/api/pagos'), fetch('/api/jugadores')]);
         if (!resPagos.ok || !resJugadores.ok) throw new Error("Error conectando API");
-        const pagos = await resPagos.json();
-        const jugadores = await resJugadores.json();
+        
+        // ==========================================
+        // ASIGNACIÓN A GLOBALES (CORRECCIÓN CRÍTICA)
+        // ==========================================
+        // Quitamos 'const' para asignar a las variables globales definidas arriba
+        pagos = await resPagos.json();
+        jugadores = await resJugadores.json();
 
         renderKPIs(jugadores, pagos);
         renderChart(pagos);
@@ -403,6 +415,7 @@
       const fin = inicio + filasPorPagina;
       const datosPagina = listaMovimientos.slice(inicio, fin);
       datosPagina.forEach(p => {
+        // Gracias a que 'jugadores' es global, esto ya no dará error
         const jugador = jugadores.find(j => j.id == p.jugador_id);
         const nombre = jugador ? jugador.nombre : 'Desconocido';
         tbody.innerHTML += `<tr class="hover:bg-gray-50 transition-colors"><td class="px-6 py-4 text-gray-500 text-xs">${formatDate(p.fecha_pago)}</td><td class="px-6 py-4 font-medium text-gray-900">${nombre}</td><td class="px-6 py-4 font-bold text-green-600">${formatMoney(p.monto)}</td><td class="px-6 py-4"><span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wide">${p.tipo || 'Abono'}</span></td></tr>`;
