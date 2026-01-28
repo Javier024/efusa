@@ -10,7 +10,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; }
     tr { transition: background-color 0.2s; }
-    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     .compact-cell { padding-top: 0.75rem; padding-bottom: 0.75rem; }
   </style>
@@ -34,7 +34,7 @@
   <main class="flex-grow container mx-auto px-4 py-8 max-w-[1600px]">
 
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-      
+
       <!-- FORMULARIO -->
       <div class="xl:col-span-1">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
@@ -46,7 +46,6 @@
           <form id="formJugador" class="space-y-4">
             <input type="hidden" id="id">
 
-            <!-- Datos Básicos -->
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1">Nombre y Apellidos *</label>
               <input id="nombre" placeholder="Nombre completo" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:outline-none" required>
@@ -74,7 +73,6 @@
               </div>
             </div>
 
-            <!-- ESTADÍSTICAS DEPORTIVAS -->
             <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
               <h4 class="text-xs font-bold text-blue-800 uppercase mb-2 flex items-center gap-1">
                 <i class="ph ph-trophy"></i> Rendimiento Deportivo
@@ -115,12 +113,12 @@
             </div>
 
             <hr class="border-gray-100 my-2">
-            
-            <!-- Acudiente -->
+
             <div>
               <label class="block text-xs font-semibold text-gray-500 mb-1">Acudiente</label>
               <input id="acudiente" placeholder="Nombre" class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
             </div>
+
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-gray-500 mb-1">Teléfono</label>
@@ -143,23 +141,23 @@
       <!-- TABLA -->
       <div class="xl:col-span-2 flex flex-col">
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden flex-grow flex flex-col">
-          
+
           <div class="p-4 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-gray-50">
             <div class="relative w-full sm:w-64">
               <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400"></i>
-              <input type="text" id="buscador" placeholder="Buscar jugador..." 
+              <input type="text" id="buscador" placeholder="Buscar jugador..."
                      class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
             </div>
             <button onclick="exportToExcel()" class="flex items-center gap-2 text-sm bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition">
               <i class="ph ph-file-xls"></i> Descargar Excel
             </button>
           </div>
-          
+
           <div class="overflow-x-auto">
             <table class="w-full text-sm text-left whitespace-nowrap">
               <thead class="bg-gray-100 text-gray-600 uppercase text-xs font-semibold">
                 <tr>
-                  <th class="p-3 text-gray-400 font-mono text-xs">ID</th> 
+                  <th class="p-3 text-gray-400 font-mono text-xs">ID</th>
                   <th class="p-3">Jugador</th>
                   <th class="p-3">Teléfono</th>
                   <th class="p-3">Sangre</th>
@@ -171,9 +169,7 @@
                   <th class="p-3 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody id="tabla" class="divide-y divide-gray-100">
-                <!-- Se llena con JS -->
-              </tbody>
+              <tbody id="tabla" class="divide-y divide-gray-100"></tbody>
             </table>
           </div>
 
@@ -192,7 +188,8 @@
 
   </main>
 
-  <!-- Importamos el archivo de recursos -->
-  <script src="recursos/jugadores.js"></script>
+  <!-- 🔥 RUTA CORRECTA -->
+  <script src="/recursos/js/jugadores.js"></script>
+
 </body>
 </html>
