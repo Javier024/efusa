@@ -5,141 +5,104 @@
   <title>Jugadores – EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
-  <!-- Excel -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <style>
     body { font-family: 'Inter', sans-serif; }
-    tr { transition: background-color 0.2s; }
-    input[type=number]::-webkit-inner-spin-button,
-    input[type=number]::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
-    }
-    .compact-cell {
-      padding-top: 0.75rem;
-      padding-bottom: 0.75rem;
-    }
   </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen flex flex-col">
 
-  <!-- HEADER -->
-  <header class="bg-green-700 text-white shadow-md sticky top-0 z-10">
-    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <i class="ph ph-users-three text-2xl"></i>
-        <h1 class="text-xl font-bold">Gestión de Jugadores</h1>
-      </div>
+<header class="bg-green-700 text-white shadow sticky top-0 z-10">
+  <div class="container mx-auto px-4 py-4 flex justify-between">
+    <h1 class="text-xl font-bold flex items-center gap-2">
+      <i class="ph ph-users-three"></i> Gestión de Jugadores
+    </h1>
+    <a href="/index.html" class="text-sm hover:underline">← Volver</a>
+  </div>
+</header>
 
-      <!-- 🔥 RUTA ABSOLUTA -->
-      <a href="/index.html" class="flex items-center gap-1 text-sm hover:underline opacity-80 hover:opacity-100 transition">
-        <i class="ph ph-arrow-left"></i> Volver al Panel
-      </a>
+<main class="container mx-auto px-4 py-8 max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+<!-- FORM -->
+<section class="bg-white p-6 rounded-xl shadow sticky top-24">
+  <h2 id="form-title" class="font-bold mb-4">Nuevo Jugador</h2>
+
+  <form id="formJugador" class="space-y-3">
+    <input type="hidden" id="id">
+
+    <input id="nombre" required placeholder="Nombre completo" class="w-full border p-2 rounded">
+
+    <input type="date" id="fecha_nacimiento" required class="w-full border p-2 rounded">
+
+    <input id="identificacion" placeholder="Identificación" class="w-full border p-2 rounded">
+
+    <select id="categoria" class="w-full border p-2 rounded">
+      <option value="Sub 8">Sub 8</option>
+      <option value="Sub 12">Sub 12</option>
+      <option value="Sub 14">Sub 14</option>
+      <option value="Sub 16">Sub 16</option>
+    </select>
+
+    <input id="telefono" placeholder="Teléfono" class="w-full border p-2 rounded">
+    <input id="acudiente" placeholder="Nombre acudiente" class="w-full border p-2 rounded">
+    <input id="direccion" placeholder="Dirección" class="w-full border p-2 rounded">
+
+    <select id="sangre" class="w-full border p-2 rounded">
+      <option value="">Tipo de sangre</option>
+      <option>O+</option><option>O-</option>
+      <option>A+</option><option>A-</option>
+      <option>B+</option><option>B-</option>
+      <option>AB+</option><option>AB-</option>
+    </select>
+
+    <div class="grid grid-cols-5 gap-2">
+      <input id="goles" type="number" placeholder="Goles" class="border p-2 rounded">
+      <input id="asistencias" type="number" placeholder="Asist." class="border p-2 rounded">
+      <input id="partidos" type="number" placeholder="PJ" class="border p-2 rounded">
+      <input id="amarillas" type="number" placeholder="🟨" class="border p-2 rounded">
+      <input id="rojas" type="number" placeholder="🟥" class="border p-2 rounded">
     </div>
-  </header>
 
-  <main class="flex-grow container mx-auto px-4 py-8 max-w-[1600px]">
+    <button id="btn-submit" class="bg-green-600 text-white py-2 rounded w-full">
+      Guardar
+    </button>
 
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+    <button id="btn-cancelar" onclick="resetForm()" type="button"
+      class="hidden text-red-500 text-sm w-full">
+      Cancelar edición
+    </button>
+  </form>
+</section>
 
-      <!-- FORMULARIO -->
-      <div class="xl:col-span-1">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+<!-- TABLA -->
+<section class="lg:col-span-2 bg-white rounded-xl shadow">
+  <div class="p-4 flex justify-between">
+    <input id="buscador" placeholder="Buscar jugador..." class="border p-2 rounded">
+    <button onclick="exportToExcel()" class="bg-green-600 text-white px-4 py-2 rounded">
+      Excel
+    </button>
+  </div>
 
-          <div class="flex justify-between items-center mb-4">
-            <h2 class="text-lg font-bold text-gray-800" id="form-title">Nuevo Jugador</h2>
-            <button id="btn-cancelar" onclick="resetForm()" class="text-xs text-red-500 hidden hover:underline">
-              Cancelar
-            </button>
-          </div>
+  <table class="w-full text-sm">
+    <thead class="bg-gray-100">
+      <tr>
+        <th class="p-3">ID</th>
+        <th class="p-3">Jugador</th>
+        <th class="p-3">Teléfono</th>
+        <th class="p-3">Categoría</th>
+        <th class="p-3 text-right">Acciones</th>
+      </tr>
+    </thead>
+    <tbody id="tabla"></tbody>
+  </table>
+</section>
 
-          <form id="formJugador" class="space-y-4">
-            <input type="hidden" id="id">
+</main>
 
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-1">Nombre y Apellidos *</label>
-              <input id="nombre" required placeholder="Nombre completo"
-                class="w-full border-gray-300 border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-gray-500 mb-1">Fecha de Nacimiento *</label>
-              <input type="date" id="fecha_nacimiento" required
-                class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1">Identificación</label>
-                <input id="identificacion" placeholder="Doc. ID"
-                  class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
-              </div>
-
-              <div>
-                <label class="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
-                <select id="categoria"
-                  class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none bg-white">
-                  <option value="Sub 18-17">Sub 18-17</option>
-                  <option value="Sub 16-15">Sub 16-15</option>
-                  <option value="Sub 12-11">Sub 12-11</option>
-                  <option value="Sub 10-9">Sub 10-9</option>
-                  <option value="Sub 8-9">Sub 8-9</option>
-                </select>
-              </div>
-            </div>
-
-            <button type="submit" id="btn-submit"
-              class="w-full bg-green-600 text-white font-bold py-3 rounded-lg shadow hover:bg-green-700 transition">
-              <i class="ph ph-floppy-disk text-lg"></i> Guardar
-            </button>
-
-          </form>
-        </div>
-      </div>
-
-      <!-- TABLA -->
-      <div class="xl:col-span-2">
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-
-          <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-            <input id="buscador" placeholder="Buscar jugador..."
-              class="border p-2 rounded w-64 focus:ring-2 focus:ring-green-500">
-
-            <button onclick="exportToExcel()"
-              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
-              Descargar Excel
-            </button>
-          </div>
-
-          <table class="w-full text-sm">
-            <thead class="bg-gray-100 text-gray-600 text-xs uppercase">
-              <tr>
-                <th class="p-3">ID</th>
-                <th class="p-3">Jugador</th>
-                <th class="p-3">Teléfono</th>
-                <th class="p-3">Categoría</th>
-                <th class="p-3 text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody id="tabla"></tbody>
-          </table>
-
-        </div>
-      </div>
-
-    </div>
-  </main>
-
-  <!-- ✅ SCRIPT CORRECTO PARA VERCEL -->
-  <script src="/recursos/js/jugadores.js"></script>
-
+<script src="/recursos/js/jugadores.js"></script>
 </body>
 </html>
