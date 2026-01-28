@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Jugadores – EFUSA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Excel -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    tr { transition: background-color 0.2s; }
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .compact-cell {
+      padding-top: 0.75rem;
+      padding-bottom: 0.75rem;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-50 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-green-700 text-white shadow-md sticky top-0 z-10">
+    <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <i class="ph ph-users-three text-2xl"></i>
+        <h1 class="text-xl font-bold">Gestión de Jugadores</h1>
+      </div>
+
+      <!-- 🔥 RUTA ABSOLUTA -->
+      <a href="/index.html" class="flex items-center gap-1 text-sm hover:underline opacity-80 hover:opacity-100 transition">
+        <i class="ph ph-arrow-left"></i> Volver al Panel
+      </a>
+    </div>
+  </header>
+
+  <main class="flex-grow container mx-auto px-4 py-8 max-w-[1600px]">
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+      <!-- FORMULARIO -->
+      <div class="xl:col-span-1">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 sticky top-24">
+
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-lg font-bold text-gray-800" id="form-title">Nuevo Jugador</h2>
+            <button id="btn-cancelar" onclick="resetForm()" class="text-xs text-red-500 hidden hover:underline">
+              Cancelar
+            </button>
+          </div>
+
+          <form id="formJugador" class="space-y-4">
+            <input type="hidden" id="id">
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Nombre y Apellidos *</label>
+              <input id="nombre" required placeholder="Nombre completo"
+                class="w-full border-gray-300 border rounded-lg p-2 focus:ring-2 focus:ring-green-500 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-gray-500 mb-1">Fecha de Nacimiento *</label>
+              <input type="date" id="fecha_nacimiento" required
+                class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Identificación</label>
+                <input id="identificacion" placeholder="Doc. ID"
+                  class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none">
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-gray-500 mb-1">Categoría</label>
+                <select id="categoria"
+                  class="w-full border-gray-300 border rounded-lg p-2 focus:ring-green-500 focus:outline-none bg-white">
+                  <option value="Sub 18-17">Sub 18-17</option>
+                  <option value="Sub 16-15">Sub 16-15</option>
+                  <option value="Sub 12-11">Sub 12-11</option>
+                  <option value="Sub 10-9">Sub 10-9</option>
+                  <option value="Sub 8-9">Sub 8-9</option>
+                </select>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-submit"
+              class="w-full bg-green-600 text-white font-bold py-3 rounded-lg shadow hover:bg-green-700 transition">
+              <i class="ph ph-floppy-disk text-lg"></i> Guardar
+            </button>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- TABLA -->
+      <div class="xl:col-span-2">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+
+          <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+            <input id="buscador" placeholder="Buscar jugador..."
+              class="border p-2 rounded w-64 focus:ring-2 focus:ring-green-500">
+
+            <button onclick="exportToExcel()"
+              class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+              Descargar Excel
+            </button>
+          </div>
+
+          <table class="w-full text-sm">
+            <thead class="bg-gray-100 text-gray-600 text-xs uppercase">
+              <tr>
+                <th class="p-3">ID</th>
+                <th class="p-3">Jugador</th>
+                <th class="p-3">Teléfono</th>
+                <th class="p-3">Categoría</th>
+                <th class="p-3 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="tabla"></tbody>
+          </table>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ✅ SCRIPT CORRECTO PARA VERCEL -->
+  <script src="/recursos/js/jugadores.js"></script>
+
+</body>
+</html>
