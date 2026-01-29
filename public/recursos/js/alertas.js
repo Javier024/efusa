@@ -1,34 +1,96 @@
-import { getAlertas } from './api.js';
+/**
+ * 📢 ALERTAS DE PAGO – EFUSA
+ * Detecta jugadores con deuda y genera alertas + WhatsApp
+ */
 
+import { getJugadores, getPagos } from './api.js'
+import {
+  enviarWhatsApp,
+  mensajeRecordatorio
+} from './whatsapp.js'
+import { formatearMoneda } from './configuracion.js'
+
+const tbody = document.getElementById('alertas')
+
+let jugadores = []
+let pagos = []
+
+/**
+ * Inicializar
+ */
 document.addEventListener('DOMContentLoaded', async () => {
-  const cont = document.getElementById('alertas');
-  if (!cont) return;
+  await cargarDatos()
+  generarAlertas()
+})
 
-  try {
-    const alertas = await getAlertas();
+/**
+ * Cargar jugadores y pagos
+ */
+async function cargarDatos() {
+  jugadores = await getJugadores()
+  pagos = await getPagos()
+}
 
-    if (!alertas.length) {
-      cont.innerHTML = `
-        <div class="p-3 bg-green-100 border-l-4 border-green-600">
-          ✅ No hay jugadores con deuda
-        </div>
-      `;
-      return;
-    }
+/**
+ * Generar alertas de deuda
+ */
+function generarAlertas() {
+  tbody.innerHTML = ''
 
-    cont.innerHTML = alertas.map(a => `
-      <div class="p-3 bg-red-100 border-l-4 border-red-600 mb-2">
-        ⚠ ${a.nombre} debe $${a.deuda}
-      </div>
-    `).join('');
+  jugadores.forEach(jugador => {
+    const pagosJugador = pagos.filter(p => p.jugador_id === jugador.id)
 
-  } catch (error) {
-    console.error('Error cargando alertas:', error);
-    cont.innerHTML = `
-      <div class="p-3 bg-yellow-100 border-l-4 border-yellow-600">
-        ⚠ Error cargando alertas
-      </div>
-    `;
+    const totalPagado = pagosJugador.reduce(
+      (sum, p) => sum + Number(p.monto),
+      0
+    )
+
+    const mensualidad = jugador.mensualidad || 0
+    const mesesEsperados = jugador.meses || 1
+    const totalEsperado = mensualidad * mesesEsperados
+    const deuda = totalEsperado - totalPagado
+
+    if (deuda <= 0) return
+
+    const tr = document.createElement('tr')
+    tr.className = 'border-b hover:bg-gray-50'
+
+    tr.innerHTML = `
+      <td class="p-3 font-medium">${jugador.nombre}</td>
+      <td class="p-3">${jugador.categoria || '-'}</td>
+      <td class="p-3">${formatearMoneda(mensualidad)}</td>
+      <td class="p-3 text-red-600 font-bold">
+        ${formatearMoneda(deuda)}
+      </td>
+      <td class="p-3">
+        <button
+          class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700"
+          onclick="enviarRecordatorio(${jugador.id})">
+          WhatsApp
+        </button>
+      </td>
+    `
+
+    tbody.appendChild(tr)
+  })
+}
+
+/**
+ * Enviar WhatsApp
+ */
+window.enviarRecordatorio = function (jugadorId) {
+  const jugador = jugadores.find(j => j.id === jugadorId)
+  if (!jugador || !jugador.telefono) {
+    alert('Jugador sin teléfono registrado')
+    return
   }
-});
+
+  const mensaje = mensajeRecordatorio(
+    jugador.nombre,
+    jugador.mensualidad,
+    jugador.meses || 1
+  )
+
+  enviarWhatsApp(jugador.telefono, mensaje)
+}
 

@@ -1,14 +1,14 @@
 /**
  * ⚙️ CONFIGURACIÓN GENERAL – EFUSA
- * Archivo global de configuración y utilidades
+ * Configuración global y utilidades compartidas
  */
 
 /* ======================================================
-   🌍 ENTORNO
+   🌍 ENTORNO / API
 ====================================================== */
 
-// En Vercel se deja vacío
-export const API_BASE_URL = '';
+// En Vercel usamos rutas relativas
+export const API_BASE_URL = '/api'
 
 /* ======================================================
    🏫 CATEGORÍAS EFUSA
@@ -19,7 +19,7 @@ export const CATEGORIAS = [
   'Sub 12',
   'Sub 14',
   'Sub 16'
-];
+]
 
 /* ======================================================
    📅 CONFIGURACIÓN DE PAGOS
@@ -28,18 +28,18 @@ export const CATEGORIAS = [
 export const CONFIG_PAGOS = {
   diaLimitePago: 5, // Día máximo para pagar mensualidad
   moneda: 'COP'
-};
+}
 
 /* ======================================================
    💰 FORMATO MONEDA
 ====================================================== */
 
-export function formatearMoneda(valor) {
+export function formatearMoneda(valor = 0) {
   return new Intl.NumberFormat('es-CO', {
     style: 'currency',
     currency: CONFIG_PAGOS.moneda,
     minimumFractionDigits: 0
-  }).format(valor);
+  }).format(Number(valor))
 }
 
 /* ======================================================
@@ -47,7 +47,7 @@ export function formatearMoneda(valor) {
 ====================================================== */
 
 export function fechaHoy() {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split('T')[0]
 }
 
 /* ======================================================
@@ -60,16 +60,16 @@ export async function apiFetch(endpoint, options = {}) {
       'Content-Type': 'application/json'
     },
     ...options
-  });
+  })
 
   if (!res.ok) {
-    let mensaje = 'Error en la API';
+    let mensaje = 'Error en la API'
     try {
-      const error = await res.json();
-      mensaje = error.error || error.mensaje || mensaje;
+      const error = await res.json()
+      mensaje = error.error || error.mensaje || mensaje
     } catch (_) {}
-    throw new Error(mensaje);
+    throw new Error(mensaje)
   }
 
-  return res.json();
+  return res.json()
 }

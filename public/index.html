@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>EFUSA – Panel Principal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Iconos -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col">
+
+  <!-- HEADER -->
+  <header class="bg-green-600 text-white p-6 shadow">
+    <h1 class="text-2xl font-bold">⚽ EFUSA</h1>
+    <p class="text-sm opacity-90">Sistema de gestión deportiva</p>
+  </header>
+
+  <!-- CONTENIDO -->
+  <main class="flex-grow max-w-5xl mx-auto p-6">
+
+    <h2 class="text-lg font-semibold mb-6">
+      Panel principal
+    </h2>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- JUGADORES -->
+      <a
+        href="/jugadores.html"
+        class="bg-white rounded-xl p-6 shadow hover:shadow-lg transition border"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <i class="ph ph-users text-3xl text-green-600"></i>
+          <h3 class="text-lg font-bold">Jugadores</h3>
+        </div>
+        <p class="text-sm text-gray-600">
+          Registrar y administrar jugadores
+        </p>
+      </a>
+
+      <!-- PAGOS -->
+      <a
+        href="/pagos.html"
+        class="bg-white rounded-xl p-6 shadow hover:shadow-lg transition border"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <i class="ph ph-money text-3xl text-green-600"></i>
+          <h3 class="text-lg font-bold">Pagos</h3>
+        </div>
+        <p class="text-sm text-gray-600">
+          Control de pagos y recaudos
+        </p>
+      </a>
+
+      <!-- ALERTAS -->
+      <a
+        href="/alertas.html"
+        class="bg-white rounded-xl p-6 shadow hover:shadow-lg transition border"
+      >
+        <div class="flex items-center gap-3 mb-3">
+          <i class="ph ph-warning text-3xl text-yellow-500"></i>
+          <h3 class="text-lg font-bold">Alertas</h3>
+        </div>
+        <p class="text-sm text-gray-600">
+          Jugadores con pagos pendientes
+        </p>
+      </a>
+
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="bg-white text-center text-xs text-gray-500 p-4 border-t">
+    © 2026 EFUSA · Sistema interno
+  </footer>
+
+</body>
+</html>

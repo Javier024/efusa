@@ -1,5 +1,15 @@
 {
+  "version": 2,
   "buildCommand": "npm install",
-  "public": "public"
+  "public": "public",
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/$1"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/public/$1"
+    }
+  ]
 }
-

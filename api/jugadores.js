@@ -1,91 +1,196 @@
-const { Pool } = require('pg');
+import pool from './db.js';
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-
-module.exports = async (req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  
-  if (!process.env.DATABASE_URL) {
-    return res.status(500).json({ error: 'Error de Configuración', detalle: 'Falta DATABASE_URL en Vercel' });
-  }
-
+export default async function handler(req, res) {
   try {
-    // 👉 LISTAR (GET)
+    /* =======================
+       📥 GET – LISTAR
+    ======================= */
     if (req.method === 'GET') {
-      const result = await pool.query('SELECT * FROM jugadores ORDER BY id DESC');
-      return res.status(200).json(result.rows);
+      const { rows } = await pool.query(`
+        SELECT
+          id,
+          nombre,
+          fecha_nacimiento,
+          identificacion,
+          categoria,
+          goles,
+          asistencias,
+          partidos,
+          amarillas,
+          rojas,
+          sangre,
+          acudiente,
+          telefono,
+          direccion,
+          created_at
+        FROM jugadores
+        ORDER BY nombre ASC
+      `);
+
+      return res.status(200).json(rows);
     }
 
-    // 👉 CREAR (POST)
+    /* =======================
+       ➕ POST – CREAR
+    ======================= */
     if (req.method === 'POST') {
       const {
-        nombre, categoria, fecha_nacimiento, identificacion,
-        nombre_acudiente, telefono, direccion, tipo_sangre,
-        goles, asistencias, partidos_jugados,
-        tarjetas_amarillas, tarjetas_rojas
+        nombre,
+        fecha_nacimiento,
+        identificacion,
+        categoria,
+        goles = 0,
+        asistencias = 0,
+        partidos = 0,
+        amarillas = 0,
+        rojas = 0,
+        sangre,
+        acudiente,
+        telefono,
+        direccion
       } = req.body;
 
-      const query = `
-        INSERT INTO jugadores 
-        (nombre, categoria, fecha_nacimiento, identificacion, nombre_acudiente, telefono, direccion, tipo_sangre, goles, asistencias, partidos_jugados, tarjetas_amarillas, tarjetas_rojas, mensualidad, activo)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, 0, true)
-      `;
+      if (!nombre || !fecha_nacimiento) {
+        return res.status(400).json({
+          error: 'Nombre y fecha de nacimiento son obligatorios'
+        });
+      }
 
-      await pool.query(query, [
-        nombre, categoria, fecha_nacimiento, identificacion,
-        nombre_acudiente, telefono, direccion, tipo_sangre,
-        goles || 0, asistencias || 0, partidos_jugados || 0,
-        tarjetas_amarillas || 0, tarjetas_rojas || 0
+      const { rows } = await pool.query(`
+        INSERT INTO jugadores (
+          nombre,
+          fecha_nacimiento,
+          identificacion,
+          categoria,
+          goles,
+          asistencias,
+          partidos,
+          amarillas,
+          rojas,
+          sangre,
+          acudiente,
+          telefono,
+          direccion
+        ) VALUES (
+          $1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13
+        )
+        RETURNING *
+      `, [
+        nombre,
+        fecha_nacimiento,
+        identificacion,
+        categoria,
+        goles,
+        asistencias,
+        partidos,
+        amarillas,
+        rojas,
+        sangre,
+        acudiente,
+        telefono,
+        direccion
       ]);
 
-      return res.status(201).json({ mensaje: 'Jugador creado exitosamente' });
+      return res.status(201).json(rows[0]);
     }
 
-    // 👉 EDITAR (PUT)
+    /* =======================
+       ✏️ PUT – EDITAR
+    ======================= */
     if (req.method === 'PUT') {
       const {
-        id, nombre, categoria, fecha_nacimiento, identificacion,
-        nombre_acudiente, telefono, direccion, tipo_sangre,
-        goles, asistencias, partidos_jugados,
-        tarjetas_amarillas, tarjetas_rojas, activo
+        id,
+        nombre,
+        fecha_nacimiento,
+        identificacion,
+        categoria,
+        goles,
+        asistencias,
+        partidos,
+        amarillas,
+        rojas,
+        sangre,
+        acudiente,
+        telefono,
+        direccion
       } = req.body;
 
-      const query = `
-        UPDATE jugadores SET
-          nombre=$1, categoria=$2, fecha_nacimiento=$3, identificacion=$4,
-          nombre_acudiente=$5, telefono=$6, direccion=$7, tipo_sangre=$8,
-          goles=$9, asistencias=$10, partidos_jugados=$11,
-          tarjetas_amarillas=$12, tarjetas_rojas=$13, activo=$14
-        WHERE id=$15
-      `;
+      if (!id) {
+        return res.status(400).json({ error: 'ID requerido' });
+      }
 
-      await pool.query(query, [
-        nombre, categoria, fecha_nacimiento, identificacion,
-        nombre_acudiente, telefono, direccion, tipo_sangre,
-        goles || 0, asistencias || 0, partidos_jugados || 0,
-        tarjetas_amarillas || 0, tarjetas_rojas || 0, activo, id
+      const { rowCount, rows } = await pool.query(`
+        UPDATE jugadores SET
+          nombre=$1,
+          fecha_nacimiento=$2,
+          identificacion=$3,
+          categoria=$4,
+          goles=$5,
+          asistencias=$6,
+          partidos=$7,
+          amarillas=$8,
+          rojas=$9,
+          sangre=$10,
+          acudiente=$11,
+          telefono=$12,
+          direccion=$13
+        WHERE id=$14
+        RETURNING *
+      `, [
+        nombre,
+        fecha_nacimiento,
+        identificacion,
+        categoria,
+        goles,
+        asistencias,
+        partidos,
+        amarillas,
+        rojas,
+        sangre,
+        acudiente,
+        telefono,
+        direccion,
+        id
       ]);
 
-      return res.status(200).json({ mensaje: 'Jugador actualizado' });
+      if (!rowCount) {
+        return res.status(404).json({ error: 'Jugador no encontrado' });
+      }
+
+      return res.status(200).json(rows[0]);
     }
 
-    // 👉 ELIMINAR (DELETE)
+    /* =======================
+       🗑 DELETE – ELIMINAR
+    ======================= */
     if (req.method === 'DELETE') {
       const { id } = req.query;
-      await pool.query('DELETE FROM jugadores WHERE id=$1', [id]);
-      return res.status(200).json({ mensaje: 'Jugador eliminado' });
+
+      if (!id) {
+        return res.status(400).json({ error: 'ID requerido' });
+      }
+
+      const { rowCount } = await pool.query(
+        'DELETE FROM jugadores WHERE id = $1',
+        [id]
+      );
+
+      if (!rowCount) {
+        return res.status(404).json({ error: 'Jugador no encontrado' });
+      }
+
+      return res.status(200).json({ success: true });
     }
 
+    /* =======================
+       ❌ MÉTODO NO PERMITIDO
+    ======================= */
     return res.status(405).json({ error: 'Método no permitido' });
 
   } catch (error) {
-    console.error("Error API:", error);
-    return res.status(500).json({ 
-      error: 'Error interno del servidor', 
-      detalle: error.message 
+    console.error('Error API Jugadores:', error);
+    return res.status(500).json({
+      error: 'Error interno del servidor'
     });
   }
 }
