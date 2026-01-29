@@ -1,6 +1,9 @@
+/* recursos/jugadores.js */
+
 const form = document.getElementById('formJugador');
 const tabla = document.getElementById('tabla');
 const buscadorInput = document.getElementById('buscador');
+
 let jugadoresData = []; 
 let filteredData = []; 
 let editando = false;
@@ -8,16 +11,24 @@ let editando = false;
 const itemsPorPagina = 10;
 let paginaActual = 1;
 
-// --- LÓGICA PRINCIPAL ---
+// --- LÓGICA PRINCIPAL (CONEXIÓN API) ---
 
 async function cargar() {
   try {
+    // Llamamos a tu API real
     const res = await fetch('/api/jugadores');
-    jugadoresData = await res.json();
+    
+    if (!res.ok) {
+      throw new Error('Error de red al cargar');
+    }
+
+    const data = await res.json();
+    jugadoresData = data; // La API devuelve un array directamente (result.rows)
+    
     filtrarYRenderizar(); 
   } catch (error) {
     console.error(error);
-    tabla.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Error cargando datos.</td></tr>`;
+    tabla.innerHTML = `<tr><td colspan="10" class="p-8 text-center text-red-500">Error cargando datos del servidor.</td></tr>`;
   }
 }
 
@@ -30,7 +41,7 @@ function filtrarYRenderizar() {
   const termino = buscadorInput.value.toLowerCase();
   filteredData = jugadoresData.filter(j => 
     j.nombre.toLowerCase().includes(termino) || 
-    (j.identificacion && j.identificacion.includes(termino))
+    (j.identificacion && j.identificacion.toString().includes(termino))
   );
   renderTable();
   updatePaginationControls();
@@ -48,9 +59,16 @@ function renderTable() {
   const paginaDatos = filteredData.slice(inicio, fin);
 
   paginaDatos.forEach(j => {
-    const tarjetaHTML = (j.tarjetas_amarillas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-yellow-400" title="Amarillas"></span>` : '') + 
-                          (j.tarjetas_rojas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-red-600 ml-1" title="Rojas"></span>` : '') +
-                          (j.tarjetas_amarillas === 0 && j.tarjetas_rojas === 0 ? '-' : '');
+    // Aseguramos que existan las propiedades de estadísticas
+    const goles = j.goles || 0;
+    const asistencias = j.asistencias || 0;
+    const pj = j.partidos_jugados || 0;
+    const amarillas = j.tarjetas_amarillas || 0;
+    const rojas = j.tarjetas_rojas || 0;
+
+    const tarjetaHTML = (amarillas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-yellow-400" title="Amarillas"></span>` : '') + 
+                          (rojas > 0 ? `<span class="inline-block w-2 h-2 rounded-full bg-red-600 ml-1" title="Rojas"></span>` : '') +
+                          (amarillas === 0 && rojas === 0 ? '-' : '');
 
     tabla.innerHTML += `
       <tr class="hover:bg-gray-50 group">
@@ -66,9 +84,9 @@ function renderTable() {
 
         <td class="p-3"><span class="bg-purple-100 text-purple-700 text-xs px-2 py-1 rounded-full font-medium">${j.categoria}</span></td>
         
-        <td class="p-3 text-center font-bold text-green-700 compact-cell">${j.goles}</td>
-        <td class="p-3 text-center text-gray-600 compact-cell">${j.asistencias}</td>
-        <td class="p-3 text-center text-gray-600 compact-cell">${j.partidos_jugados}</td>
+        <td class="p-3 text-center font-bold text-green-700 compact-cell">${goles}</td>
+        <td class="p-3 text-center text-gray-600 compact-cell">${asistencias}</td>
+        <td class="p-3 text-center text-gray-600 compact-cell">${pj}</td>
         
         <td class="p-3 text-center text-sm">${tarjetaHTML}</td>
         
@@ -103,13 +121,15 @@ function updatePaginationControls() {
   document.getElementById('btn-next').disabled = paginaActual === maxPagina;
 }
 
-// --- CRUD ---
+// --- CRUD (API) ---
 
 window.editar = function (j) {
   editando = true;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  
   document.getElementById('id').value = j.id;
   document.getElementById('nombre').value = j.nombre;
+  // Asegurar formato de fecha YYYY-MM-DD para el input type="date"
   document.getElementById('fecha_nacimiento').value = j.fecha_nacimiento ? j.fecha_nacimiento.split('T')[0] : '';
   document.getElementById('identificacion').value = j.identificacion || '';
   document.getElementById('categoria').value = j.categoria || '';
@@ -149,11 +169,16 @@ window.resetForm = function () {
 
 window.eliminarJugador = async function (id) {
   if (!confirm('¿Eliminar este jugador?')) return;
-  await fetch(`/api/jugadores?id=${id}`, { method: 'DELETE' });
-  cargar();
+  
+  try {
+    await fetch(`/api/jugadores?id=${id}`, { method: 'DELETE' });
+    cargar();
+  } catch (error) {
+    alert('Error al eliminar');
+  }
 };
 
-// --- FORMULARIO ---
+// --- FORMULARIO (API) ---
 form.onsubmit = async e => {
   e.preventDefault();
   const btn = document.getElementById('btn-submit');
@@ -167,7 +192,7 @@ form.onsubmit = async e => {
     nombre: document.getElementById('nombre').value,
     fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
     identificacion: document.getElementById('identificacion').value,
-    categoria: document.getElementById('categoria').value,
+    categoria: document.getElementById('categoria').value, // Campo importante que faltaba en algunos ejemplos
     nombre_acudiente: document.getElementById('acudiente').value,
     telefono: document.getElementById('telefono').value,
     direccion: document.getElementById('direccion').value,
@@ -179,10 +204,6 @@ form.onsubmit = async e => {
     tarjetas_rojas: parseInt(document.getElementById('rojas').value) || 0,
     activo: true
   };
-
-  if (editando && idValue) {
-    data.id = idValue;
-  }
 
   try {
     const response = await fetch('/api/jugadores', {
@@ -198,6 +219,7 @@ form.onsubmit = async e => {
 
     resetForm();
     cargar();
+    
   } catch (error) {
     console.error("Error:", error);
     alert('Hubo un problema: ' + error.message);
