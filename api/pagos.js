@@ -5,7 +5,9 @@ const pool = new Pool({
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  res.setHeader('Content-Type', 'application/json');
+  
   try {
     // ======================================================
     // 📌 LISTAR PAGOS (GET)

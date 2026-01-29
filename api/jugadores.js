@@ -5,7 +5,8 @@ const pool = new Pool({
   ssl: { rejectUnauthorized: false }
 });
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
+  res.setHeader('Content-Type', 'application/json');
   
   if (!process.env.DATABASE_URL) {
     return res.status(500).json({ error: 'Error de Configuración', detalle: 'Falta DATABASE_URL en Vercel' });
