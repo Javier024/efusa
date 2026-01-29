@@ -1,8 +1,5 @@
 {
   "buildCommand": "npm install",
-  "outputDirectory": "public",
-  "env": {
-    "DATABASE_URL": "@database_url"
-  }
+  "public": "public"
 }
 

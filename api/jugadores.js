@@ -1,11 +1,11 @@
-import { Pool } from 'pg';
+const { Pool } = require('pg');
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: { rejectUnauthorized: false }
 });
 
-module.exports = async function handler(req, res) {
+module.exports = async (req, res) => {
   res.setHeader('Content-Type', 'application/json');
   
   if (!process.env.DATABASE_URL) {
