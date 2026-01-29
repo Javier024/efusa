@@ -1,4 +1,4 @@
-/* recursos/jugadores.js */
+/* public/recursos/js/jugadores.js */
 
 const form = document.getElementById('formJugador');
 const tabla = document.getElementById('tabla');
@@ -11,11 +11,10 @@ let editando = false;
 const itemsPorPagina = 10;
 let paginaActual = 1;
 
-// --- LÓGICA PRINCIPAL (CONEXIÓN API) ---
+// --- LÓGICA PRINCIPAL (API) ---
 
 async function cargar() {
   try {
-    // Llamamos a tu API real
     const res = await fetch('/api/jugadores');
     
     if (!res.ok) {
@@ -23,7 +22,7 @@ async function cargar() {
     }
 
     const data = await res.json();
-    jugadoresData = data; // La API devuelve un array directamente (result.rows)
+    jugadoresData = data; 
     
     filtrarYRenderizar(); 
   } catch (error) {
@@ -59,7 +58,6 @@ function renderTable() {
   const paginaDatos = filteredData.slice(inicio, fin);
 
   paginaDatos.forEach(j => {
-    // Aseguramos que existan las propiedades de estadísticas
     const goles = j.goles || 0;
     const asistencias = j.asistencias || 0;
     const pj = j.partidos_jugados || 0;
@@ -121,7 +119,7 @@ function updatePaginationControls() {
   document.getElementById('btn-next').disabled = paginaActual === maxPagina;
 }
 
-// --- CRUD (API) ---
+// --- CRUD ---
 
 window.editar = function (j) {
   editando = true;
@@ -129,7 +127,6 @@ window.editar = function (j) {
   
   document.getElementById('id').value = j.id;
   document.getElementById('nombre').value = j.nombre;
-  // Asegurar formato de fecha YYYY-MM-DD para el input type="date"
   document.getElementById('fecha_nacimiento').value = j.fecha_nacimiento ? j.fecha_nacimiento.split('T')[0] : '';
   document.getElementById('identificacion').value = j.identificacion || '';
   document.getElementById('categoria').value = j.categoria || '';
@@ -178,7 +175,6 @@ window.eliminarJugador = async function (id) {
   }
 };
 
-// --- FORMULARIO (API) ---
 form.onsubmit = async e => {
   e.preventDefault();
   const btn = document.getElementById('btn-submit');
@@ -192,7 +188,7 @@ form.onsubmit = async e => {
     nombre: document.getElementById('nombre').value,
     fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
     identificacion: document.getElementById('identificacion').value,
-    categoria: document.getElementById('categoria').value, // Campo importante que faltaba en algunos ejemplos
+    categoria: document.getElementById('categoria').value,
     nombre_acudiente: document.getElementById('acudiente').value,
     telefono: document.getElementById('telefono').value,
     direccion: document.getElementById('direccion').value,
