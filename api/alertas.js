@@ -1,4 +1,10 @@
-import pool from './db.js';
+// api/alertas.js
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
 export default async function handler(req, res) {
   try {
@@ -6,53 +12,33 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Método no permitido' });
     }
 
-    /**
-     * 🔍 Lógica:
-     * - Obtener jugadores
-     * - Obtener último pago por jugador
-     * - Si NO pagó este mes → alerta
-     */
-
+    // 1. Obtener todos los jugadores
     const { rows: jugadores } = await pool.query(`
-      SELECT 
-        j.id,
-        j.nombre,
-        j.categoria,
-        COALESCE(MAX(p.fecha_pago), NULL) AS ultimo_pago
-      FROM jugadores j
-      LEFT JOIN pagos p ON p.jugador_id = j.id
-      GROUP BY j.id
-      ORDER BY j.nombre
+      SELECT id, nombre, telefono, mensualidad, categoria
+      FROM jugadores
+      WHERE activo = true
+      ORDER BY nombre ASC
     `);
 
-    const hoy = new Date();
-    const mesActual = hoy.getMonth();
-    const anioActual = hoy.getFullYear();
+    const META_MENSUALIDAD = 50000;
 
-    const alertas = jugadores
-      .filter(j => {
-        if (!j.ultimo_pago) return true;
-
-        const fechaPago = new Date(j.ultimo_pago);
-        return (
-          fechaPago.getMonth() !== mesActual ||
-          fechaPago.getFullYear() !== anioActual
-        );
-      })
-      .map(j => ({
+    // 2. Filtrar solo deudores (Acumulado < Meta)
+    const deudores = jugadores.filter(j => j.mensualidad < META_MENSUALIDAD).map(j => {
+      const deuda = META_MENSUALIDAD - j.mensualidad;
+      return {
         id: j.id,
         nombre: j.nombre,
         categoria: j.categoria,
-        deuda: 60000 // 💰 mensualidad fija (puedes moverla luego a config)
-      }));
+        telefono: j.telefono,
+        pagado: j.mensualidad,
+        deuda: deuda
+      };
+    });
 
-    return res.status(200).json(alertas);
+    return res.status(200).json(deudores);
 
   } catch (error) {
     console.error('Error API Alertas:', error);
-    return res.status(500).json({
-      error: 'Error interno del servidor'
-    });
+    return res.status(500).json({ error: 'Error interno del servidor' });
   }
 }
-

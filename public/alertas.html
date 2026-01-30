@@ -2,42 +2,108 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <title>Alertas de Pago – EFUSA</title>
+  <title>Alertas de Pago | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
 
-  <!-- Tailwind CSS -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            slate: { 850: '#151f32' } 
+          },
+        }
+      }
+    }
+  </script>
+
+  <!-- Iconos -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  
+  <!-- Fuente -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+  </style>
 </head>
 
-<body class="bg-gray-100 min-h-screen">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- Header -->
-  <header class="bg-green-600 text-white p-4 flex justify-between items-center">
-    <h1 class="text-xl font-bold">EFUSA – Alertas de Pago</h1>
-    <a href="/index.html" class="underline hover:text-gray-200">
-      ⬅ Volver
-    </a>
-  </header>
+<!-- HEADER -->
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-20">
+      
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-rose-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 text-white">
+          <i class="ph ph-warning-circle text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Alertas de Deuda</h1>
+          <p class="text-sm text-slate-500 font-medium">Notificaciones y recordatorios</p>
+        </div>
+      </div>
 
-  <!-- Contenido -->
-  <main class="p-6 max-w-4xl mx-auto">
+      <a href="/index.html" class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900">
+        <i class="ph ph-arrow-left text-lg mr-2"></i> Volver
+      </a>
+    </div>
+  </div>
+</header>
 
-    <h2 class="text-lg font-semibold mb-4">
-      ⏰ Jugadores con pagos pendientes
-    </h2>
+<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
 
-    <!-- CONTENEDOR QUE USA alertas.js -->
-    <div
-      id="lista-alertas"
-      class="space-y-3 bg-white p-4 rounded shadow"
-    >
-      <!-- Aquí se insertan las alertas dinámicamente -->
+  <!-- TARJETA DE ESTADO -->
+  <div id="sin-alertas" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-12 text-center">
+    <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="ph ph-check text-4xl text-emerald-600"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-emerald-800">¡Excelente!</h2>
+    <p class="text-emerald-600 mt-2">Todos los jugadores tienen sus cuentas al día.</p>
+  </div>
+
+  <!-- TABLA DE DEUDORES -->
+  <div id="con-alertas" class="bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
+    
+    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div>
+        <h3 class="font-bold text-slate-900 text-lg">Lista de Deudores</h3>
+        <p class="text-xs text-slate-500 mt-1">Jugadores con saldo pendiente (Meta: $50.000)</p>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Alertas Activas</span>
+      </div>
     </div>
 
-  </main>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
+          <tr>
+            <th class="px-6 py-4">Jugador</th>
+            <th class="px-6 py-4 text-center">Progreso de Pago</th>
+            <th class="px-6 py-4 text-center">Deuda Total</th>
+            <th class="px-6 py-4 text-center">Teléfono</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-alertas" class="divide-y divide-slate-100">
+          <!-- Se llena con JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-  <!-- JS -->
-  <script src="/alertas.js"></script>
+</main>
+
+<!-- JS -->
+<script type="module" src="/recursos/js/alertas.js"></script>
 
 </body>
 </html>
