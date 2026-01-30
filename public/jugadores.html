@@ -5,8 +5,19 @@
   <title>Jugadores | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Tailwind -->
+  <!-- Tailwind CSS con configuración para evitar warnings -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
 
   <!-- Iconos -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -46,7 +57,7 @@
   <section class="bg-white p-6 rounded-xl shadow-sm border mb-8">
     <h2 class="text-lg font-bold mb-4">Registrar Jugador</h2>
 
-    <form id="formJugador" class="grid grid-cols-1 md:grid-cols-6 gap-4">
+    <form id="formJugador" class="grid grid-cols-1 md:grid-cols-5 gap-4">
 
       <input
         id="nombre"
@@ -78,15 +89,11 @@
         class="border rounded-lg px-4 py-2"
       >
 
-      <input
-        id="fecha_nacimiento"
-        type="date"
-        class="border rounded-lg px-4 py-2"
-      >
+      <!-- Eliminado campo de fecha_nacimiento -->
 
       <button
         type="submit"
-        class="bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition md:col-span-6"
+        class="bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition md:col-span-5"
       >
         Guardar Jugador
       </button>
@@ -103,8 +110,8 @@
           <th class="px-6 py-3 text-left">Categoría</th>
           <th class="px-6 py-3 text-left">Teléfono</th>
           <th class="px-6 py-3 text-left">Mensualidad</th>
-          <th class="px-6 py-3 text-left">Nacimiento</th>
           <th class="px-6 py-3 text-left">Estado</th>
+          <!-- Eliminado th de Nacimiento -->
         </tr>
       </thead>
       <tbody id="tabla-jugadores" class="divide-y"></tbody>

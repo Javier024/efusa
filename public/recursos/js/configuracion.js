@@ -1,3 +1,4 @@
+// public/recursos/js/configuracion.js
 const API_BASE = '/api';
 
 export async function apiFetch(endpoint, options = {}) {
@@ -9,15 +10,26 @@ export async function apiFetch(endpoint, options = {}) {
       ...options
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error('❌ Error API:', text);
-      throw new Error('Error en la API');
+    // Intentar obtener el JSON incluso si hay error (porque nuestro backend envía JSON en errores 500)
+    let responseData;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+      responseData = await response.json();
+    } else {
+      // Si no es JSON (ej. error HTML de Vercel crudo)
+      responseData = await response.text();
     }
 
-    return await response.json();
+    if (!response.ok) {
+      console.error('❌ Error API (Status', response.status, '):', responseData);
+      // Lanzar un error con el mensaje del servidor si existe
+      const msg = (responseData && responseData.detalle) || responseData.error || 'Error en la API';
+      throw new Error(msg);
+    }
+
+    return responseData;
   } catch (error) {
-    console.error('❌ apiFetch:', error);
+    console.error('❌ apiFetch (Network/Parsing):', error);
     throw error;
   }
 }
