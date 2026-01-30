@@ -8,17 +8,27 @@ const FILAS_POR_PAGINA = 5;
 let todosLosJugadores = [];
 let paginaActual = 1;
 
-// ELEMENTOS DOM
-const modal = document.getElementById('modal-jugador');
-const form = document.getElementById('formJugador');
-const tbody = document.getElementById('tabla-jugadores');
-const infoPaginacion = document.getElementById('info-paginacion');
-const btnPrev = document.getElementById('btn-prev');
-const btnNext = document.getElementById('btn-next');
+// ELEMENTOS DOM (Se declaran vacíos aquí para que sean globales)
+let modal, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 document.addEventListener('DOMContentLoaded', () => {
+  // INICIALIZACIÓN SEGURA (Solo busca elementos cuando el HTML está listo)
+  modal = document.getElementById('modal-jugador');
+  form = document.getElementById('formJugador');
+  tbody = document.getElementById('tabla-jugadores');
+  infoPaginacion = document.getElementById('info-paginacion');
+  btnPrev = document.getElementById('btn-prev');
+  btnNext = document.getElementById('btn-next');
+
+  // Verificar que existan antes de agregar eventos
+  if (form) form.addEventListener('submit', guardarJugador);
+  if (modal) {
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) cerrarModal();
+    });
+  }
+
   cargarJugadores();
-  form.addEventListener('submit', guardarJugador);
 });
 
 // ==========================
@@ -34,7 +44,7 @@ async function cargarJugadores() {
     renderTabla();
   } catch (error) {
     console.error('Error cargando:', error);
-    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar datos.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar datos.</td></tr>`;
   }
 }
 
@@ -54,13 +64,11 @@ async function guardarJugador(e) {
 
   try {
     if (esEdicion) {
-      // PUT con el ID
       await apiFetch(`/jugadores?id=${id}`, {
         method: 'PUT',
         body: JSON.stringify({ ...payload, id })
       });
     } else {
-      // POST para crear
       await apiFetch('/jugadores', {
         method: 'POST',
         body: JSON.stringify(payload)
@@ -78,7 +86,7 @@ async function guardarJugador(e) {
 }
 
 async function eliminarJugador(id) {
-  if (!confirm('¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.')) return;
+  if (!confirm('¿Estás seguro de eliminar este jugador?')) return;
 
   try {
     await apiFetch(`/jugadores?id=${id}`, { method: 'DELETE' });
@@ -105,13 +113,13 @@ function calcularEstado(pagado) {
 }
 
 function renderTabla() {
+  if (!tbody) return; // Seguridad
+
   tbody.innerHTML = '';
   
-  // Lógica de Paginación
   const totalItems = todosLosJugadores.length;
   const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
   
-  // Asegurar que paginaActual esté en rango
   if (paginaActual > totalPages) paginaActual = totalPages;
   if (paginaActual < 1) paginaActual = 1;
 
@@ -119,7 +127,6 @@ function renderTabla() {
   const fin = inicio + FILAS_POR_PAGINA;
   const jugadoresPagina = todosLosJugadores.slice(inicio, fin);
 
-  // Renderizar filas
   if (jugadoresPagina.length === 0) {
     tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">No hay jugadores registrados.</td></tr>`;
   } else {
@@ -160,20 +167,26 @@ function renderTabla() {
     });
   }
 
-  // Actualizar controles de paginación
-  infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} registros)`;
-  btnPrev.disabled = paginaActual === 1;
-  btnNext.disabled = paginaActual === totalPages;
+  if (infoPaginacion) infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} registros)`;
+  if (btnPrev) btnPrev.disabled = paginaActual === 1;
+  if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
 
 function actualizarEstadisticas() {
+  // Usamos getElementById aquí porque las variables globales podrían no estar listas si se llama antes de DOMContentLoaded
+  const statTotal = document.getElementById('stat-total');
+  const statPagados = document.getElementById('stat-pagados');
+  const statPendientes = document.getElementById('stat-pendientes');
+
+  if (!statTotal) return; // Si no existen los elementos en HTML, salimos sin error
+
   const total = todosLosJugadores.length;
   const pagados = todosLosJugadores.filter(j => j.mensualidad >= MENSUALIDAD_OBJETIVO).length;
   const pendientes = total - pagados;
 
-  document.getElementById('stat-total').innerText = total;
-  document.getElementById('stat-pagados').innerText = pagados;
-  document.getElementById('stat-pendientes').innerText = pendientes;
+  statTotal.innerText = total;
+  statPagados.innerText = pagados;
+  statPendientes.innerText = pendientes;
 }
 
 // ==========================
@@ -181,7 +194,7 @@ function actualizarEstadisticas() {
 // ==========================
 
 window.abrirModal = function() {
-  // Limpiar formulario para crear nuevo
+  if (!form) return;
   form.reset();
   document.getElementById('jugador-id').value = '';
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
@@ -190,6 +203,7 @@ window.abrirModal = function() {
 };
 
 window.cerrarModal = function() {
+  if (!modal) return;
   modal.classList.add('hidden');
   modal.classList.remove('flex');
 };
@@ -198,7 +212,6 @@ window.editarJugador = function(id) {
   const jugador = todosLosJugadores.find(j => j.id === id);
   if (!jugador) return;
 
-  // Llenar formulario con datos existentes
   document.getElementById('jugador-id').value = jugador.id;
   document.getElementById('nombre').value = jugador.nombre;
   document.getElementById('categoria').value = jugador.categoria;
@@ -208,6 +221,7 @@ window.editarJugador = function(id) {
   
   document.getElementById('modal-title').innerText = 'Editar Jugador';
   
+  if (!modal) return;
   modal.classList.remove('hidden');
   modal.classList.add('flex');
 };
@@ -216,8 +230,3 @@ window.cambiarPagina = function(delta) {
   paginaActual += delta;
   renderTabla();
 };
-
-// Cerrar modal al hacer click fuera
-modal.addEventListener('click', (e) => {
-  if (e.target === modal) cerrarModal();
-});
