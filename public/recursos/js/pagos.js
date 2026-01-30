@@ -3,13 +3,13 @@ import { apiFetch } from './configuracion.js';
 
 // VARIABLES GLOBALES
 let todosLosPagos = [];
-let jugadoresList = []; // <--- NUEVA: Guardamos la lista de jugadores para usarla en el resumen
+let jugadoresList = []; // <--- Guardamos la lista de jugadores para usarla en el resumen
 
 document.addEventListener('DOMContentLoaded', () => {
   Promise.all([cargarPagos(), cargarJugadoresSelect()])
     .then(() => {
       filtrarPagos();
-      renderizarResumen('todos'); // <--- NUEVO: Renderizamos el estado de cuentas al inicio
+      renderizarResumen('todos'); // Renderizamos el estado de cuentas al inicio
     });
 
   // Listeners de búsqueda
@@ -279,6 +279,10 @@ function mostrarError(msg) {
   alerta.classList.add('bg-red-100', 'text-red-800', 'border-red-400');
 }
 
+// ==========================
+// EXPORTAR FUNCIONES A WINDOW (CORRECCIÓN AQUÍ)
+// ==========================
 window.eliminarPago = eliminarPago;
 window.limpiarFiltros = limpiarFiltros;
-window.irAPagar = irAPagar; // Exportar nueva función
+window.irAPagar = irAPagar;
+window.renderizarResumen = renderizarResumen; // <--- ESTO SOLUCIONA TU ERROR
