@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Jugadores – EFUSA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <title>Jugadores | EFUSA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -19,109 +19,102 @@
   </style>
 </head>
 
-<body class="bg-gray-50 min-h-screen flex flex-col text-gray-800">
+<body class="bg-gray-50 min-h-screen text-gray-800">
 
 <!-- HEADER -->
-<header class="bg-white shadow-sm sticky top-0 z-20 border-b border-gray-200">
+<header class="bg-white border-b shadow-sm sticky top-0 z-20">
   <div class="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-
     <div class="flex items-center gap-3">
-      <div class="p-2 bg-green-100 text-green-600 rounded-lg">
+      <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
         <i class="ph ph-users text-2xl"></i>
       </div>
       <div>
-        <h1 class="text-lg font-bold text-gray-900">Gestión de Jugadores</h1>
-        <p class="text-xs text-gray-500">Registro y administración</p>
+        <h1 class="text-lg font-bold">Gestión de Jugadores</h1>
+        <p class="text-xs text-gray-500">Registro y control</p>
       </div>
     </div>
 
-    <a href="/index.html"
-      class="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-green-600 transition">
+    <a href="index.html" class="text-sm text-gray-500 hover:text-blue-600 flex items-center gap-1">
       <i class="ph ph-arrow-left"></i> Volver
     </a>
   </div>
 </header>
 
-<main class="flex-grow max-w-6xl mx-auto w-full px-4 py-8">
-
-  <!-- ALERTA -->
-  <div id="alerta"
-    class="hidden mb-6 p-4 rounded-lg border-l-4 text-sm font-bold shadow-sm">
-  </div>
+<main class="max-w-6xl mx-auto px-4 py-8">
 
   <!-- FORMULARIO -->
-  <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-    <h2 class="text-lg font-bold mb-4">Registrar jugador</h2>
+  <section class="bg-white p-6 rounded-xl shadow-sm border mb-8">
+    <h2 class="text-lg font-bold mb-4">Registrar Jugador</h2>
 
-    <form id="formJugador"
-      class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <form id="formJugador" class="grid grid-cols-1 md:grid-cols-6 gap-4">
 
-      <!-- NOMBRE -->
-      <div class="md:col-span-4">
-        <label class="text-xs font-semibold text-gray-500">Nombre completo</label>
-        <input id="nombre" type="text" required
-          class="w-full mt-1 px-4 py-2.5 bg-gray-50 border rounded-lg">
-      </div>
+      <input
+        id="nombre"
+        type="text"
+        required
+        placeholder="Nombre completo"
+        class="md:col-span-2 border rounded-lg px-4 py-2"
+      >
 
-      <!-- CATEGORÍA -->
-      <div class="md:col-span-2">
-        <label class="text-xs font-semibold text-gray-500">Categoría</label>
-        <input id="categoria" type="text" required
-          class="w-full mt-1 px-4 py-2.5 bg-gray-50 border rounded-lg">
-      </div>
+      <input
+        id="categoria"
+        type="text"
+        required
+        placeholder="Categoría"
+        class="border rounded-lg px-4 py-2"
+      >
 
-      <!-- TELÉFONO -->
-      <div class="md:col-span-2">
-        <label class="text-xs font-semibold text-gray-500">Teléfono</label>
-        <input id="telefono" type="text"
-          class="w-full mt-1 px-4 py-2.5 bg-gray-50 border rounded-lg">
-      </div>
+      <input
+        id="telefono"
+        type="text"
+        placeholder="Teléfono"
+        class="border rounded-lg px-4 py-2"
+      >
 
-      <!-- MENSUALIDAD -->
-      <div class="md:col-span-2">
-        <label class="text-xs font-semibold text-gray-500">Mensualidad</label>
-        <input id="mensualidad" type="number" min="0" required
-          class="w-full mt-1 px-4 py-2.5 bg-gray-50 border rounded-lg">
-      </div>
+      <input
+        id="mensualidad"
+        type="number"
+        placeholder="Mensualidad"
+        class="border rounded-lg px-4 py-2"
+      >
 
-      <!-- BOTÓN -->
-      <div class="md:col-span-2">
-        <button type="submit"
-          class="w-full bg-green-600 text-white py-2.5 rounded-lg font-bold hover:bg-green-700 transition">
-          Guardar
-        </button>
-      </div>
+      <input
+        id="fecha_nacimiento"
+        type="date"
+        class="border rounded-lg px-4 py-2"
+      >
+
+      <button
+        type="submit"
+        class="bg-blue-600 text-white rounded-lg px-4 py-2 font-bold hover:bg-blue-700 transition md:col-span-6"
+      >
+        Guardar Jugador
+      </button>
 
     </form>
   </section>
 
-  <!-- BUSCADOR -->
-  <div class="mb-4">
-    <input id="buscador" type="text"
-      placeholder="Buscar jugador..."
-      class="w-full bg-white p-3 rounded-xl border">
-  </div>
-
   <!-- TABLA -->
-  <section class="bg-white rounded-xl border overflow-hidden">
+  <section class="bg-white rounded-xl shadow-sm border overflow-hidden">
     <table class="w-full text-sm">
-      <thead class="bg-gray-100 text-xs font-bold">
+      <thead class="bg-gray-100 font-bold text-xs">
         <tr>
-          <th class="px-6 py-3">Jugador</th>
-          <th class="px-6 py-3">Categoría</th>
-          <th class="px-6 py-3">Teléfono</th>
-          <th class="px-6 py-3">Mensualidad</th>
-          <th class="px-6 py-3 text-right">Acciones</th>
+          <th class="px-6 py-3 text-left">Nombre</th>
+          <th class="px-6 py-3 text-left">Categoría</th>
+          <th class="px-6 py-3 text-left">Teléfono</th>
+          <th class="px-6 py-3 text-left">Mensualidad</th>
+          <th class="px-6 py-3 text-left">Nacimiento</th>
+          <th class="px-6 py-3 text-left">Estado</th>
         </tr>
       </thead>
-      <tbody id="tabla-jugadores"></tbody>
+      <tbody id="tabla-jugadores" class="divide-y"></tbody>
     </table>
   </section>
 
 </main>
 
-<!-- JS -->
-<script type="module" src="/recursos/js/jugadores.js"></script>
+<!-- SCRIPT -->
+<script type="module" src="recursos/js/jugadores.js"></script>
 
 </body>
 </html>
