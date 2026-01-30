@@ -8,24 +8,21 @@ const FILAS_POR_PAGINA = 5;
 let todosLosJugadores = [];
 let paginaActual = 1;
 
-// ELEMENTOS DOM (Se declaran vacíos aquí)
+// ELEMENTOS DOM
 let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // INICIALIZACIÓN SEGURA
   modal = document.getElementById('modal-jugador');
-  backdrop = document.getElementById('modal-backdrop'); // Fondo oscuro
-  panel = document.getElementById('modal-panel'); // Caja blanca del modal
+  backdrop = document.getElementById('modal-backdrop'); 
+  panel = document.getElementById('modal-panel'); 
   form = document.getElementById('formJugador');
   tbody = document.getElementById('tabla-jugadores');
   infoPaginacion = document.getElementById('info-paginacion');
   btnPrev = document.getElementById('btn-prev');
   btnNext = document.getElementById('btn-next');
 
-  // Asignar eventos
   if (form) form.addEventListener('submit', guardarJugador);
   
-  // Cerrar modal al hacer click en el fondo oscuro
   if (modal && backdrop) {
     backdrop.addEventListener('click', cerrarModal);
   }
@@ -41,7 +38,6 @@ async function cargarJugadores() {
   try {
     const data = await apiFetch('/jugadores');
     todosLosJugadores = Array.isArray(data) ? data : [];
-    
     actualizarEstadisticas();
     renderTabla();
   } catch (error) {
@@ -88,7 +84,7 @@ async function guardarJugador(e) {
 }
 
 async function eliminarJugador(id) {
-  if (!confirm('¿Estás seguro de eliminar este jugador?')) return;
+  if (!confirm('¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.')) return;
 
   try {
     await apiFetch(`/jugadores?id=${id}`, { method: 'DELETE' });
@@ -191,56 +187,50 @@ function actualizarEstadisticas() {
 }
 
 // ==========================
-// CONTROL DEL MODAL (CON ANIMACIÓN)
+// CONTROL DEL MODAL
 // ==========================
 
-window.abrirModal = function() {
+function abrirModal() {
   if (!form) return;
   form.reset();
   document.getElementById('jugador-id').value = '';
   
-  // Cambiar textos de cabecera del modal
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
   document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
 
-  // Mostrar modal (Flex para centrar)
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
-    // Animación de entrada
     setTimeout(() => {
       if (backdrop) backdrop.classList.remove('opacity-0');
       if (panel) {
         panel.classList.remove('scale-95', 'opacity-0');
         panel.classList.add('scale-100', 'opacity-100');
       }
-    }, 10); // Pequeño delay para permitir la transición CSS
+    }, 10); 
   }
 };
 
-window.cerrarModal = function() {
+function cerrarModal() {
   if (!modal) return;
 
-  // Animación de salida
   if (backdrop) backdrop.classList.add('opacity-0');
   if (panel) {
     panel.classList.remove('scale-100', 'opacity-100');
     panel.classList.add('scale-95', 'opacity-0');
   }
 
-  // Esperar a que termine la animación para ocultar el DOM
   setTimeout(() => {
     modal.classList.add('hidden');
     modal.classList.remove('flex');
   }, 200);
 };
 
-window.editarJugador = function(id) {
+function editarJugador(id) {
   const jugador = todosLosJugadores.find(j => j.id === id);
   if (!jugador) return;
 
-  // Llenar formulario
   document.getElementById('jugador-id').value = jugador.id;
   document.getElementById('nombre').value = jugador.nombre;
   document.getElementById('categoria').value = jugador.categoria;
@@ -248,16 +238,13 @@ window.editarJugador = function(id) {
   document.getElementById('mensualidad').value = jugador.mensualidad;
   document.getElementById('activo').checked = jugador.activo;
   
-  // Cambiar textos de cabecera del modal (Edición)
   document.getElementById('modal-title').innerText = 'Editar Jugador';
   document.getElementById('modal-icon').className = 'ph ph-pencil-simple text-amber-500';
 
-  // Mostrar modal
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
     
-    // Animación de entrada
     setTimeout(() => {
       if (backdrop) backdrop.classList.remove('opacity-0');
       if (panel) {
@@ -268,7 +255,16 @@ window.editarJugador = function(id) {
   }
 };
 
-window.cambiarPagina = function(delta) {
+function cambiarPagina(delta) {
   paginaActual += delta;
   renderTabla();
 };
+
+// ==========================
+// EXPORTAR FUNCIONES A WINDOW
+// ==========================
+window.abrirModal = abrirModal;
+window.cerrarModal = cerrarModal;
+window.editarJugador = editarJugador;
+window.eliminarJugador = eliminarJugador; // <--- Esto soluciona el ReferenceError
+window.cambiarPagina = cambiarPagina;
