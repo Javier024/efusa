@@ -5,9 +5,13 @@
   <title>Gestión de Jugadores | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
+  <!-- Favicon para quitar el error 404 -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
+  
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
+    // Configuración para quitar el warning de documentación
     tailwind.config = {
       theme: {
         extend: {
@@ -33,11 +37,6 @@
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
     
-    /* Animación suave para el Modal */
-    .modal-enter { opacity: 0; transform: scale(0.95); }
-    .modal-enter-active { opacity: 1; transform: scale(1); transition: opacity 0.2s ease-out, transform 0.2s ease-out; }
-    .modal-exit { opacity: 0; transform: scale(0.95); transition: opacity 0.1s ease-in, transform 0.1s ease-in; }
-
     /* Scrollbar personalizado para la tabla */
     .custom-scroll::-webkit-scrollbar { height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -48,7 +47,7 @@
 
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-<!-- HEADER (Glassmorphism) -->
+<!-- HEADER -->
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-20">
