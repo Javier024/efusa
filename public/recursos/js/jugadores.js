@@ -8,24 +8,26 @@ const FILAS_POR_PAGINA = 5;
 let todosLosJugadores = [];
 let paginaActual = 1;
 
-// ELEMENTOS DOM (Se declaran vacíos aquí para que sean globales)
-let modal, form, tbody, infoPaginacion, btnPrev, btnNext;
+// ELEMENTOS DOM (Se declaran vacíos aquí)
+let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 document.addEventListener('DOMContentLoaded', () => {
-  // INICIALIZACIÓN SEGURA (Solo busca elementos cuando el HTML está listo)
+  // INICIALIZACIÓN SEGURA
   modal = document.getElementById('modal-jugador');
+  backdrop = document.getElementById('modal-backdrop'); // Fondo oscuro
+  panel = document.getElementById('modal-panel'); // Caja blanca del modal
   form = document.getElementById('formJugador');
   tbody = document.getElementById('tabla-jugadores');
   infoPaginacion = document.getElementById('info-paginacion');
   btnPrev = document.getElementById('btn-prev');
   btnNext = document.getElementById('btn-next');
 
-  // Verificar que existan antes de agregar eventos
+  // Asignar eventos
   if (form) form.addEventListener('submit', guardarJugador);
-  if (modal) {
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) cerrarModal();
-    });
+  
+  // Cerrar modal al hacer click en el fondo oscuro
+  if (modal && backdrop) {
+    backdrop.addEventListener('click', cerrarModal);
   }
 
   cargarJugadores();
@@ -103,17 +105,17 @@ async function eliminarJugador(id) {
 
 function calcularEstado(pagado) {
   if (pagado >= MENSUALIDAD_OBJETIVO) {
-    return { texto: 'Pagado', color: 'bg-green-100 text-green-700 border-green-200' };
+    return { texto: 'Pagado', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   } else if (pagado > 0) {
     const faltante = MENSUALIDAD_OBJETIVO - pagado;
-    return { texto: `Abono ($${faltante})`, color: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
+    return { texto: `Abono ($${faltante})`, color: 'bg-amber-50 text-amber-700 border-amber-200' };
   } else {
-    return { texto: 'Pendiente', color: 'bg-red-100 text-red-700 border-red-200' };
+    return { texto: 'Pendiente', color: 'bg-rose-50 text-rose-700 border-rose-200' };
   }
 }
 
 function renderTabla() {
-  if (!tbody) return; // Seguridad
+  if (!tbody) return;
 
   tbody.innerHTML = '';
   
@@ -128,36 +130,36 @@ function renderTabla() {
   const jugadoresPagina = todosLosJugadores.slice(inicio, fin);
 
   if (jugadoresPagina.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-400">No hay jugadores registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay jugadores registrados.</td></tr>`;
   } else {
     jugadoresPagina.forEach(j => {
       const estado = calcularEstado(j.mensualidad);
       const tr = document.createElement('tr');
-      tr.className = "hover:bg-gray-50 transition";
+      tr.className = "hover:bg-slate-50 transition duration-150";
       
       tr.innerHTML = `
         <td class="px-6 py-4">
-          <div class="font-medium text-gray-900">${j.nombre}</div>
-          <div class="text-xs text-gray-500">ID: ${j.id}</div>
+          <div class="font-medium text-slate-900">${j.nombre}</div>
+          <div class="text-xs text-slate-500">ID: ${j.id}</div>
         </td>
         <td class="px-6 py-4">
-          <span class="bg-gray-100 text-gray-600 px-2 py-1 rounded text-xs font-semibold">${j.categoria}</span>
+          <span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span>
         </td>
-        <td class="px-6 py-4 text-gray-600">${j.telefono || '-'}</td>
+        <td class="px-6 py-4 text-slate-600">${j.telefono || '-'}</td>
         <td class="px-6 py-4 text-center">
           <div class="flex flex-col items-center gap-1">
-            <span class="px-2 py-1 rounded-full text-xs font-bold border ${estado.color}">
+            <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset ${estado.color}">
               ${estado.texto}
             </span>
-            <span class="text-xs text-gray-400">Pagado: $${j.mensualidad.toLocaleString()}</span>
+            <span class="text-xs text-slate-400">Pagado: $${j.mensualidad.toLocaleString()}</span>
           </div>
         </td>
         <td class="px-6 py-4 text-center">
           <div class="flex justify-center gap-2">
-            <button onclick="editarJugador(${j.id})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition" title="Editar">
+            <button onclick="editarJugador(${j.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition" title="Editar">
               <i class="ph ph-pencil-simple text-lg"></i>
             </button>
-            <button onclick="eliminarJugador(${j.id})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition" title="Eliminar">
+            <button onclick="eliminarJugador(${j.id})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="Eliminar">
               <i class="ph ph-trash text-lg"></i>
             </button>
           </div>
@@ -173,12 +175,11 @@ function renderTabla() {
 }
 
 function actualizarEstadisticas() {
-  // Usamos getElementById aquí porque las variables globales podrían no estar listas si se llama antes de DOMContentLoaded
   const statTotal = document.getElementById('stat-total');
   const statPagados = document.getElementById('stat-pagados');
   const statPendientes = document.getElementById('stat-pendientes');
-
-  if (!statTotal) return; // Si no existen los elementos en HTML, salimos sin error
+  
+  if (!statTotal) return;
 
   const total = todosLosJugadores.length;
   const pagados = todosLosJugadores.filter(j => j.mensualidad >= MENSUALIDAD_OBJETIVO).length;
@@ -190,28 +191,56 @@ function actualizarEstadisticas() {
 }
 
 // ==========================
-// MODAL Y PAGINACIÓN
+// CONTROL DEL MODAL (CON ANIMACIÓN)
 // ==========================
 
 window.abrirModal = function() {
   if (!form) return;
   form.reset();
   document.getElementById('jugador-id').value = '';
+  
+  // Cambiar textos de cabecera del modal
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
+  document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
+
+  // Mostrar modal (Flex para centrar)
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Animación de entrada
+    setTimeout(() => {
+      if (backdrop) backdrop.classList.remove('opacity-0');
+      if (panel) {
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+      }
+    }, 10); // Pequeño delay para permitir la transición CSS
+  }
 };
 
 window.cerrarModal = function() {
   if (!modal) return;
-  modal.classList.add('hidden');
-  modal.classList.remove('flex');
+
+  // Animación de salida
+  if (backdrop) backdrop.classList.add('opacity-0');
+  if (panel) {
+    panel.classList.remove('scale-100', 'opacity-100');
+    panel.classList.add('scale-95', 'opacity-0');
+  }
+
+  // Esperar a que termine la animación para ocultar el DOM
+  setTimeout(() => {
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+  }, 200);
 };
 
 window.editarJugador = function(id) {
   const jugador = todosLosJugadores.find(j => j.id === id);
   if (!jugador) return;
 
+  // Llenar formulario
   document.getElementById('jugador-id').value = jugador.id;
   document.getElementById('nombre').value = jugador.nombre;
   document.getElementById('categoria').value = jugador.categoria;
@@ -219,11 +248,24 @@ window.editarJugador = function(id) {
   document.getElementById('mensualidad').value = jugador.mensualidad;
   document.getElementById('activo').checked = jugador.activo;
   
+  // Cambiar textos de cabecera del modal (Edición)
   document.getElementById('modal-title').innerText = 'Editar Jugador';
-  
-  if (!modal) return;
-  modal.classList.remove('hidden');
-  modal.classList.add('flex');
+  document.getElementById('modal-icon').className = 'ph ph-pencil-simple text-amber-500';
+
+  // Mostrar modal
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Animación de entrada
+    setTimeout(() => {
+      if (backdrop) backdrop.classList.remove('opacity-0');
+      if (panel) {
+        panel.classList.remove('scale-95', 'opacity-0');
+        panel.classList.add('scale-100', 'opacity-100');
+      }
+    }, 10);
+  }
 };
 
 window.cambiarPagina = function(delta) {
