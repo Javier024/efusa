@@ -1,14 +1,47 @@
 import { apiFetch } from './configuracion.js';
 
-document.addEventListener('DOMContentLoaded', init);
+document.addEventListener('DOMContentLoaded', () => {
+  cargarJugadores();
 
-async function init() {
+  const form = document.getElementById('formJugador');
+  if (form) {
+    form.addEventListener('submit', guardarJugador);
+  }
+});
+
+async function cargarJugadores() {
   try {
     const jugadores = await apiFetch('/jugadores');
     renderJugadores(jugadores);
   } catch (error) {
     console.error('Error cargando jugadores:', error);
-    alert('Error cargando jugadores');
+  }
+}
+
+async function guardarJugador(e) {
+  e.preventDefault();
+
+  const data = {
+    nombre: document.getElementById('nombre').value,
+    categoria: document.getElementById('categoria').value,
+    telefono: document.getElementById('telefono').value,
+    mensualidad: Number(document.getElementById('mensualidad').value),
+    fecha_nacimiento: document.getElementById('fecha_nacimiento').value || null
+  };
+
+  try {
+    await apiFetch('/jugadores', {
+      method: 'POST',
+      body: JSON.stringify(data)
+    });
+
+    e.target.reset();
+    cargarJugadores();
+
+    alert('✅ Jugador agregado correctamente');
+  } catch (error) {
+    console.error('Error guardando jugador:', error);
+    alert('❌ Error guardando jugador');
   }
 }
 
@@ -18,20 +51,14 @@ function renderJugadores(jugadores) {
 
   jugadores.forEach(j => {
     const tr = document.createElement('tr');
-
     tr.innerHTML = `
-      <td class="px-4 py-2">${j.nombre}</td>
-      <td class="px-4 py-2">${j.categoria}</td>
-      <td class="px-4 py-2">${j.telefono || ''}</td>
-      <td class="px-4 py-2">$${j.mensualidad}</td>
-      <td class="px-4 py-2">
-        ${j.fecha_nacimiento ? j.fecha_nacimiento.split('T')[0] : ''}
-      </td>
-      <td class="px-4 py-2">
-        ${j.activo ? 'Activo' : 'Inactivo'}
-      </td>
+      <td>${j.nombre}</td>
+      <td>${j.categoria}</td>
+      <td>${j.telefono || ''}</td>
+      <td>$${j.mensualidad}</td>
+      <td>${j.fecha_nacimiento ? j.fecha_nacimiento.split('T')[0] : ''}</td>
+      <td>${j.activo ? 'Activo' : 'Inactivo'}</td>
     `;
-
     tbody.appendChild(tr);
   });
 }
