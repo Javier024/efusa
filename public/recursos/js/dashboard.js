@@ -3,10 +3,9 @@ import { apiFetch } from './configuracion.js';
 const META_MENSUALIDAD = 50000;
 const FILAS_POR_PAGINA = 8;
 let todosLosJugadores = [];
-let todosLosPagos = [];
-let actividadCombinada = []; // <--- NUEVO
+let jugadoresFiltrados = [];
+let actividadCombinada = [];
 
-// DOM Elements
 const tbody = document.getElementById('tabla-jugadores');
 const feedEl = document.getElementById('actividad-feed');
 const infoPaginacion = document.getElementById('info-paginacion');
@@ -16,6 +15,10 @@ const buscador = document.getElementById('buscador');
 const filtroCat = document.getElementById('filtro-categoria');
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Configurar Saludo Animado
+  configurarSaludo();
+
+  // Configurar Fecha
   const hoy = new Date();
   document.getElementById('fecha-actual').innerText = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
@@ -25,9 +28,37 @@ document.addEventListener('DOMContentLoaded', async () => {
   await cargarDatos();
 });
 
+// ==========================
+// LÓGICA DEL SALUDO ANIMADO
+// ==========================
+function configurarSaludo() {
+  const hora = new Date().getHours();
+  const saludoEl = document.getElementById('saludo-dinamico');
+  
+  let textoSaludo = "Buenas noches";
+  
+  if (hora >= 6 && hora < 12) {
+    textoSaludo = "Buenos días";
+  } else if (hora >= 12 && hora < 18) {
+    textoSaludo = "Buenas tardes";
+  }
+  
+  // Cambiar el texto
+  if (saludoEl) {
+    saludoEl.innerText = `${textoSaludo}, Admin`;
+    
+    // Resetear y agregar la clase para reiniciar la animación
+    saludoEl.classList.remove('animar-saludo');
+    void saludoEl.offsetWidth; // Hack para forzar el reflow del navegador
+    saludoEl.classList.add('animar-saludo');
+  }
+}
+
+// ==========================
+// CARGA DE DATOS
+// ==========================
 async function cargarDatos() {
   try {
-    // Cargar ambos simultáneamente
     const [jugadoresData, pagosData] = await Promise.all([
       apiFetch('/jugadores'),
       apiFetch('/pagos')
@@ -36,12 +67,9 @@ async function cargarDatos() {
     todosLosJugadores = Array.isArray(jugadoresData) ? jugadoresData : [];
     todosLosPagos = Array.isArray(pagosData) ? pagosData : [];
     
-    // Generar Feed de Actividad
     generarActividadFeed();
-    
-    // Actualizar vista
     actualizarKPIs();
-    aplicarFiltros(); // Esto llama a renderizarTabla
+    aplicarFiltros();
 
   } catch (error) {
     console.error('Error cargando dashboard:', error);
@@ -50,13 +78,104 @@ async function cargarDatos() {
 }
 
 // ==========================
-// NUEVO: GENERAR ACTIVIDAD
+// FILTROS
 // ==========================
+function aplicarFiltros() {
+  const texto = buscador ? buscador.value.toLowerCase() : '';
+  const cat = filtroCat ? filtroCat.value : '';
+
+  jugadoresFiltrados = todosLosJugadores.filter(j => {
+    const cumpleTexto = j.nombre.toLowerCase().includes(texto) || (j.telefono && j.telefono.includes(texto));
+    const cumpleCat = cat === '' || j.categoria === cat;
+    return cumpleTexto && cumpleCat;
+  });
+
+  paginaActual = 1;
+  renderizarTabla();
+}
+
+// ==========================
+// EXPORTACIÓN
+// ==========================
+window.exportarExcel = function() {
+  if (jugadoresFiltrados.length === 0) {
+    alert("No hay datos para exportar con los filtros actuales.");
+    return;
+  }
+
+  const data = jugadoresFiltrados.map(j => ({ 
+    Nombre: j.nombre, 
+    Categoria: j.categoria, 
+    Telefono: j.telefono || '-', 
+    Estado: calcularEstado(j.mensualidad).texto,
+    Pagado: j.mensualidad,
+    Deuda: Math.max(0, META_MENSUALIDAD - j.mensualidad),
+    Activo: j.activo ? 'Sí' : 'No'
+  }));
+
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
+  XLSX.writeFile(wb, "Reporte_EFUSA_Jugadores.xlsx");
+};
+
+window.exportarPDF = function() {
+  if (jugadoresFiltrados.length === 0) {
+    alert("No hay datos para exportar con los filtros actuales.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  doc.setFontSize(18);
+  doc.setTextColor(37, 99, 235);
+  doc.text("Reporte de Jugadores - EFUSA", 14, 20);
+  
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
+
+  const body = jugadoresFiltrados.map(j => [
+    j.nombre,
+    j.categoria,
+    j.telefono || '-',
+    `$${j.mensualidad.toLocaleString()}`,
+    calcularEstado(j.mensualidad).texto
+  ]);
+
+  doc.autoTable({
+    head: [['Nombre', 'Categoría', 'Teléfono', 'Pagado', 'Estado']],
+    body: body,
+    startY: 35,
+    theme: 'grid',
+    headStyles: { fillColor: [37, 99, 235] },
+    styles: { fontSize: 9, cellPadding: 3 }
+  });
+
+  doc.save("Reporte_EFUSA_Jugadores.pdf");
+};
+
+// ==========================
+// KPIs, FEED Y TABLA
+// ==========================
+
+function actualizarKPIs() {
+  const total = todosLosJugadores.length;
+  const activos = todosLosJugadores.filter(j => j.activo).length;
+  const totalDinero = todosLosJugadores.reduce((sum, j) => sum + j.mensualidad, 0);
+  const deudores = todosLosJugadores.filter(j => j.mensualidad < META_MENSUALIDAD).length;
+
+  document.getElementById('stat-total').innerText = total;
+  document.getElementById('stat-activos').innerText = activos;
+  document.getElementById('stat-dinero').innerText = '$' + totalDinero.toLocaleString();
+  document.getElementById('stat-deudores').innerText = deudores;
+}
+
 function generarActividadFeed() {
   if (!feedEl) return;
   feedEl.innerHTML = '';
 
-  // 1. Crear array de eventos de jugadores (Creación)
   const eventosJugadores = todosLosJugadores.map(j => ({
     tipo: 'jugador',
     fecha: j.created_at,
@@ -67,7 +186,6 @@ function generarActividadFeed() {
     bgIcono: 'bg-brand-100'
   }));
 
-  // 2. Crear array de eventos de pagos
   const eventosPagos = todosLosPagos.map(p => ({
     tipo: 'pago',
     fecha: p.fecha,
@@ -78,10 +196,9 @@ function generarActividadFeed() {
     bgIcono: 'bg-emerald-100'
   }));
 
-  // 3. Unir y ordenar (Más reciente primero)
   actividadCombinada = [...eventosJugadores, ...eventosPagos]
     .sort((a, b) => new Date(b.fecha) - new Date(a.fecha))
-    .slice(0, 5); // Solo los 5 últimos
+    .slice(0, 5);
 
   if (actividadCombinada.length === 0) {
     feedEl.innerHTML = `<div class="text-center text-xs text-slate-400 py-6 italic">Sin actividad reciente.</div>`;
@@ -120,64 +237,37 @@ function obtenerTiempoRelativo(fecha) {
   return fecha.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 }
 
-// ==========================
-// LÓGICA EXISTENTE
-// ==========================
-
-function aplicarFiltros() {
-  const texto = buscador ? buscador.value.toLowerCase() : '';
-  const cat = filtroCat ? filtroCat.value : '';
-
-  const jugadoresFiltrados = todosLosJugadores.filter(j => {
-    const cumpleTexto = j.nombre.toLowerCase().includes(texto) || (j.telefono && j.telefono.includes(texto));
-    const cumpleCat = cat === '' || j.categoria === cat;
-    return cumpleTexto && cumpleCat;
-  });
-
-  renderizarTabla(jugadoresFiltrados);
-}
-
-function actualizarKPIs() {
-  const total = todosLosJugadores.length;
-  const activos = todosLosJugadores.filter(j => j.activo).length;
-  const totalDinero = todosLosJugadores.reduce((sum, j) => sum + j.mensualidad, 0);
-  const deudores = todosLosJugadores.filter(j => j.mensualidad < META_MENSUALIDAD).length;
-
-  document.getElementById('stat-total').innerText = total;
-  document.getElementById('stat-activos').innerText = activos;
-  document.getElementById('stat-dinero').innerText = '$' + totalDinero.toLocaleString();
-  document.getElementById('stat-deudores').innerText = deudores;
-}
-
 let paginaActual = 1;
-function renderizarTabla(lista) {
+
+function renderizarTabla() {
   if (!tbody) return;
   tbody.innerHTML = '';
   
-  const totalPages = Math.ceil(lista.length / FILAS_POR_PAGINA) || 1;
+  const totalPages = Math.ceil(jugadoresFiltrados.length / FILAS_POR_PAGINA) || 1;
   if (paginaActual > totalPages) paginaActual = totalPages;
 
   const inicio = (paginaActual - 1) * FILAS_POR_PAGINA;
   const fin = inicio + FILAS_POR_PAGINA;
-  const datosPagina = lista.slice(inicio, fin);
+  const datosPagina = jugadoresFiltrados.slice(inicio, fin);
 
-  if (lista.length === 0) {
+  if (jugadoresFiltrados.length === 0) {
     tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400 text-xs">No hay resultados.</td></tr>`;
   } else {
     datosPagina.forEach(j => {
+      const estado = calcularEstado(j.mensualidad);
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 last:border-0";
       
-      const estado = j.mensualidad >= META_MENSUALIDAD 
-        ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-bold">Al día</span>'
-        : '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-[10px] font-bold">Debe</span>';
-
       tr.innerHTML = `
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-xs">${j.nombre}</div>
         </td>
         <td class="px-4 py-3 text-[10px] text-slate-500">${j.categoria}</td>
-        <td class="px-4 py-3">${estado}</td>
+        <td class="px-4 py-3">
+          <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${estado.color}">
+            ${estado.texto}
+          </span>
+        </td>
         <td class="px-4 py-3 text-right">
            <a href="jugadores.html?edit=${j.id}" class="text-brand-600 hover:text-brand-800 text-[10px] font-bold">VER</a>
         </td>
@@ -186,32 +276,18 @@ function renderizarTabla(lista) {
     });
   }
 
-  if (infoPaginacion) infoPaginacion.innerText = `${lista.length} total`;
+  if (infoPaginacion) infoPaginacion.innerText = `${jugadoresFiltrados.length} total`;
   if (btnPrev) btnPrev.disabled = paginaActual === 1;
   if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
 
-// Exportaciones
-window.exportarExcel = function() {
-  const data = todosLosJugadores.map(j => ({ 
-    Nombre: j.nombre, Categoria: j.categoria, Telefono: j.telefono, Pagado: j.mensualidad 
-  }));
-  const ws = XLSX.utils.json_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
-  XLSX.writeFile(wb, "EFUSA_Dashboard.xlsx");
-};
-
-window.exportarPDF = function() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text("Reporte EFUSA", 14, 20);
-  const body = todosLosJugadores.map(j => [j.nombre, j.categoria, `$${j.mensualidad}`]);
-  doc.autoTable({ head: [['Nombre', 'Categoria', 'Pagado']], body: body, startY: 30 });
-  doc.save("Reporte_EFUSA.pdf");
-};
+function calcularEstado(pagado) {
+  if (pagado >= META_MENSUALIDAD) return { texto: 'Al Día', color: 'bg-emerald-50 text-emerald-700 border border-emerald-200' };
+  if (pagado > 0) return { texto: 'Abono', color: 'bg-amber-50 text-amber-700 border border-amber-200' };
+  return { texto: 'Pendiente', color: 'bg-rose-50 text-rose-700 border border-rose-200' };
+}
 
 window.cambiarPagina = function(delta) {
   paginaActual += delta;
-  aplicarFiltros(); // Re-aplica filtros para re-renderizar
+  aplicarFiltros();
 };
