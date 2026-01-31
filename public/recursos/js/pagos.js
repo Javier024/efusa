@@ -65,7 +65,6 @@ function enviarWhatsapp(pago) {
     return;
   }
 
-  // Formatear mensaje
   const nombre = pago.jugador;
   const monto = Number(pago.monto).toLocaleString();
   const concepto = pago.tipo.toUpperCase();
@@ -117,7 +116,7 @@ function renderizarResumen(tipo) {
     const debe = 50000 - pagado;
     
     let estadoBadge = '';
-    let deudaTexto = '';
+    let deudaTexto = ''; // <--- VARIABLE CORRECTA DEFINIDA AQUÍ
     
     if (debe <= 0) {
       estadoBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">Al día</span>`;
@@ -139,7 +138,7 @@ function renderizarResumen(tipo) {
         <div class="text-xs text-slate-500">${j.categoria}</div>
       </td>
       <td class="px-4 py-3 text-center">${estadoBadge}</td>
-      <td class="px-4 py-3 text-center text-xs text-slate-600">${deudaTexto}</td>
+      <td class="px-4 py-3 text-center text-xs text-slate-600">${deudaTexto}</td> <!-- <--- CORREGIDO AQUÍ -->
       <td class="px-4 py-3 text-center text-sm font-bold text-slate-900">$${pagado.toLocaleString()}</td>
       <td class="px-4 py-3 text-right">
         <button onclick="irAPagar(${j.id})" class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1 ml-auto">
@@ -166,7 +165,7 @@ function renderizarResumen(tipo) {
             <p class="font-bold text-slate-900">$${pagado.toLocaleString()}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-slate-600">${debeTexto}</p>
+            <p class="text-xs text-slate-600">${deudaTexto}</p> <!-- <--- CORREGIDO AQUÍ -->
           </div>
        </div>
        <button onclick="irAPagar(${j.id})" class="w-full py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold text-sm hover:bg-blue-100 transition">
@@ -359,9 +358,8 @@ function renderPagos(pagos) {
   });
 }
 
-// Utilidad simple para notificaciones si no existe en config
+// Utilidad simple para notificaciones
 function mostrarNotificacion(msg, type = 'success') {
-    // Fallback simple para no romper si no hay toasts
     console.log(`[${type}] ${msg}`);
 }
 
