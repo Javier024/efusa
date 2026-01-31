@@ -1,14 +1,64 @@
+// public/recursos/js/jugadores.js
 import { apiFetch } from './configuracion.js';
 
+// ==========================
+// UTILIDADES DE NOTIFICACIÓN
+// ==========================
+function mostrarNotificacion(mensaje, tipo = 'success') {
+  const container = document.getElementById('toast-container');
+  
+  // Si el contenedor no existe (por si no actualizaron el HTML), usamos alert fallback
+  if (!container) {
+    if(tipo === 'error') alert('❌ ' + mensaje);
+    else alert('✅ ' + mensaje);
+    return;
+  }
+
+  const toast = document.createElement('div');
+  
+  const estilos = {
+    success: 'bg-emerald-500 text-white shadow-emerald-200',
+    error: 'bg-rose-500 text-white shadow-rose-200',
+    info: 'bg-blue-500 text-white shadow-blue-200'
+  };
+  
+  const iconos = {
+    success: '<i class="ph ph-check-circle text-xl"></i>',
+    error: '<i class="ph ph-warning-circle text-xl"></i>',
+    info: '<i class="ph ph-info text-xl"></i>'
+  };
+
+  toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg transform transition-all duration-300 toast-enter ${estilos[tipo]}`;
+  toast.innerHTML = `
+    ${iconos[tipo]}
+    <span class="font-medium text-sm">${mensaje}</span>
+  `;
+
+  container.appendChild(toast);
+
+  // Eliminar después de 3 segundos
+  setTimeout(() => {
+    toast.classList.remove('toast-enter');
+    toast.classList.add('toast-exit');
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
+}
+
+// ==========================
 // CONSTANTES
+// ==========================
 const MENSUALIDAD_OBJETIVO = 50000;
 const FILAS_POR_PAGINA = 5;
 
+// ==========================
 // ESTADO GLOBAL
+// ==========================
 let todosLosJugadores = [];
 let paginaActual = 1;
 
+// ==========================
 // ELEMENTOS DOM
+// ==========================
 let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -36,13 +86,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function cargarJugadores() {
   try {
+    // Mostrar estado de carga
+    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-2xl"></i> Cargando...</td></tr>';
+    
     const data = await apiFetch('/jugadores');
     todosLosJugadores = Array.isArray(data) ? data : [];
+    
     actualizarEstadisticas();
     renderTabla();
   } catch (error) {
     console.error('Error cargando:', error);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500">Error al cargar datos.</td></tr>`;
+    mostrarNotificacion('Error al cargar los jugadores', 'error');
+    if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error de conexión con el servidor.</td></tr>`;
   }
 }
 
@@ -52,10 +107,15 @@ async function guardarJugador(e) {
   const id = document.getElementById('jugador-id').value;
   const esEdicion = !!id;
   
+  // Recolección de datos actualizada con nuevos campos
   const payload = {
     nombre: document.getElementById('nombre').value,
+    apellidos: document.getElementById('apellidos').value,
+    fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+    tipo_identificacion: document.getElementById('tipo_identificacion').value,
+    numero_identificacion: document.getElementById('numero_identificacion').value,
     categoria: document.getElementById('categoria').value,
-    telefono: document.getElementById('telefono').value,
+    telefono: document.getElementById('telefono').value, // Obligatorio según requerimiento
     mensualidad: Number(document.getElementById('mensualidad').value) || 0,
     activo: document.getElementById('activo').checked
   };
@@ -66,32 +126,37 @@ async function guardarJugador(e) {
         method: 'PUT',
         body: JSON.stringify({ ...payload, id })
       });
+      mostrarNotificacion('Jugador actualizado correctamente');
     } else {
       await apiFetch('/jugadores', {
         method: 'POST',
         body: JSON.stringify(payload)
       });
+      mostrarNotificacion('Jugador registrado correctamente');
     }
     
     cerrarModal();
     cargarJugadores();
-    alert(esEdicion ? '✅ Jugador actualizado' : '✅ Jugador registrado');
 
   } catch (error) {
     console.error('Error guardando:', error);
-    alert('❌ Error: ' + error.message);
+    // Extraemos el mensaje de error si viene del backend o mostramos el genérico
+    const msgError = error.message || 'Ocurrió un error inesperado';
+    mostrarNotificacion('Error: ' + msgError, 'error');
   }
 }
 
 async function eliminarJugador(id) {
-  if (!confirm('¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.')) return;
+  // Confirmación nativa
+  const confirmar = confirm("¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.");
+  if (!confirmar) return;
 
   try {
     await apiFetch(`/jugadores?id=${id}`, { method: 'DELETE' });
+    mostrarNotificacion('Jugador eliminado', 'info');
     cargarJugadores();
-    alert('🗑️ Jugador eliminado');
   } catch (error) {
-    alert('❌ Error al eliminar: ' + error.message);
+    mostrarNotificacion('Error al eliminar: ' + error.message, 'error');
   }
 }
 
@@ -126,28 +191,47 @@ function renderTabla() {
   const jugadoresPagina = todosLosJugadores.slice(inicio, fin);
 
   if (jugadoresPagina.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay jugadores registrados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No hay jugadores registrados.</td></tr>`;
   } else {
     jugadoresPagina.forEach(j => {
       const estado = calcularEstado(j.mensualidad);
+      
+      // Formatear nombre completo
+      const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
+      
+      // Formatear info de ID
+      let idInfo = '';
+      if (j.tipo_identificacion || j.numero_identificacion) {
+        const tipoShort = j.tipo_identificacion ? j.tipo_identificacion.split(' ')[0] : ''; // Cédula -> CC
+        idInfo = `<span class="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 flex items-center gap-1 w-fit"><i class="ph ph-identification-card"></i> ${tipoShort} ${j.numero_identificacion || ''}</span>`;
+      }
+
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 transition duration-150";
       
       tr.innerHTML = `
         <td class="px-6 py-4">
-          <div class="font-medium text-slate-900">${j.nombre}</div>
-          <div class="text-xs text-slate-500">ID: ${j.id}</div>
+          <div class="font-bold text-slate-900 text-base">${nombreCompleto}</div>
+          <div class="mt-1">${idInfo}</div>
+        </td>
+        <td class="px-6 py-4 text-slate-600">
+          ${j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('/') : '<span class="text-slate-300">-</span>'}
         </td>
         <td class="px-6 py-4">
           <span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span>
         </td>
-        <td class="px-6 py-4 text-slate-600">${j.telefono || '-'}</td>
+        <td class="px-6 py-4 text-slate-600">
+          <div class="flex items-center gap-1">
+            <i class="ph ph-phone text-slate-400"></i>
+            ${j.telefono || '-'}
+          </div>
+        </td>
         <td class="px-6 py-4 text-center">
           <div class="flex flex-col items-center gap-1">
             <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset ${estado.color}">
               ${estado.texto}
             </span>
-            <span class="text-xs text-slate-400">Pagado: $${j.mensualidad.toLocaleString()}</span>
+            <span class="text-[10px] text-slate-400">Pagado: $${Number(j.mensualidad).toLocaleString()}</span>
           </div>
         </td>
         <td class="px-6 py-4 text-center">
@@ -178,7 +262,7 @@ function actualizarEstadisticas() {
   if (!statTotal) return;
 
   const total = todosLosJugadores.length;
-  const pagados = todosLosJugadores.filter(j => j.mensualidad >= MENSUALIDAD_OBJETIVO).length;
+  const pagados = todosLosJugadores.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
   const pendientes = total - pagados;
 
   statTotal.innerText = total;
@@ -195,8 +279,11 @@ function abrirModal() {
   form.reset();
   document.getElementById('jugador-id').value = '';
   
+  // Resetear estado visual
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
   document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
+  // Mantener checkbox activado por defecto
+  document.getElementById('activo').checked = true;
 
   if (modal) {
     modal.classList.remove('hidden');
@@ -231,8 +318,13 @@ function editarJugador(id) {
   const jugador = todosLosJugadores.find(j => j.id === id);
   if (!jugador) return;
 
+  // Rellenar campos incluyendo los nuevos
   document.getElementById('jugador-id').value = jugador.id;
-  document.getElementById('nombre').value = jugador.nombre;
+  document.getElementById('nombre').value = jugador.nombre || '';
+  document.getElementById('apellidos').value = jugador.apellidos || '';
+  document.getElementById('fecha_nacimiento').value = jugador.fecha_nacimiento || '';
+  document.getElementById('tipo_identificacion').value = jugador.tipo_identificacion || '';
+  document.getElementById('numero_identificacion').value = jugador.numero_identificacion || '';
   document.getElementById('categoria').value = jugador.categoria;
   document.getElementById('telefono').value = jugador.telefono || '';
   document.getElementById('mensualidad').value = jugador.mensualidad;
@@ -266,5 +358,5 @@ function cambiarPagina(delta) {
 window.abrirModal = abrirModal;
 window.cerrarModal = cerrarModal;
 window.editarJugador = editarJugador;
-window.eliminarJugador = eliminarJugador; // <--- Esto soluciona el ReferenceError
+window.eliminarJugador = eliminarJugador;
 window.cambiarPagina = cambiarPagina;

@@ -5,13 +5,12 @@
   <title>Gestión de Jugadores | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <!-- Favicon para quitar el error 404 -->
+  <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚽</text></svg>">
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    // Configuración para quitar el warning de documentación
     tailwind.config = {
       theme: {
         extend: {
@@ -37,15 +36,30 @@
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
     
-    /* Scrollbar personalizado para la tabla */
+    /* Scrollbar personalizado */
     .custom-scroll::-webkit-scrollbar { height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Animación para las Notificaciones (Toasts) */
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+    .toast-enter { animation: slideIn 0.3s ease-out forwards; }
+    .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
   </style>
 </head>
 
 <body class="text-slate-800 antialiased min-h-screen flex flex-col">
+
+<!-- NOTIFICACIONES (TOASTS) -->
+<div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"></div>
 
 <!-- HEADER -->
 <header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
@@ -121,7 +135,8 @@
       <table class="w-full text-left border-collapse">
         <thead>
           <tr class="bg-slate-50/80 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-            <th class="px-6 py-4">Jugador</th>
+            <th class="px-6 py-4 w-1/3">Jugador / Identificación</th>
+            <th class="px-6 py-4">Fecha Nac.</th>
             <th class="px-6 py-4">Categoría</th>
             <th class="px-6 py-4">Contacto</th>
             <th class="px-6 py-4 text-center">Estado de Pago</th>
@@ -153,7 +168,7 @@
 </main>
 
 <!-- MODAL (Overlay & Content) -->
-<div id="modal-jugador" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+<div id="modal-jugador" class="fixed inset-0 z-40 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
   <!-- Backdrop -->
   <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0"></div>
 
@@ -161,7 +176,7 @@
     <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
       
       <!-- Modal Panel -->
-      <div id="modal-panel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg scale-95 opacity-0">
+      <div id="modal-panel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0">
         
         <!-- Header Modal -->
         <div class="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
@@ -175,61 +190,110 @@
         </div>
 
         <!-- Body Formulario -->
-        <form id="formJugador" class="p-6 space-y-5">
+        <form id="formJugador" class="p-6 space-y-6">
           <input type="hidden" id="jugador-id">
 
-          <!-- Fila 1: Nombre -->
-          <div>
-            <label for="nombre" class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Nombre Completo</label>
-            <input type="text" id="nombre" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 placeholder:text-slate-400 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all placeholder:italic" placeholder="Ej. Juan Pérez">
-          </div>
-
-          <!-- Fila 2: Categoría y Teléfono -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label for="categoria" class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Categoría</label>
-              <div class="relative">
-                <select id="categoria" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none appearance-none cursor-pointer transition-all">
-                  <option value="" disabled selected>Seleccionar...</option>
-                  <option value="Sub 17-18">Sub 17-18</option>
-                  <option value="Sub 16-15">Sub 16-15</option>
-                  <option value="Sub 14-13">Sub 14-13</option>
-                  <option value="Sub 12-11">Sub 12-11</option>
-                  <option value="Sub 10-9">Sub 10-9</option>
-                  <option value="Sub 8-7">Sub 8-7</option>
-                </select>
-                <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
-              </div>
-            </div>
-            <div>
-              <label for="telefono" class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Teléfono</label>
-              <input type="tel" id="telefono" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Opcional">
-            </div>
-          </div>
-
-          <!-- Fila 3: Pago y Estado Activo -->
-          <div class="grid grid-cols-2 gap-4 items-end">
-            <div>
-              <label for="mensualidad" class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Valor Pagado (Acumulado)</label>
-              <div class="relative rounded-lg shadow-sm group cursor-not-allowed">
-                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                  <span class="text-slate-400 sm:text-sm">$</span>
-                </div>
-                <!-- CAMBIO AQUÍ: readonly y estilos desactivados -->
-                <input type="number" id="mensualidad" readonly class="block w-full bg-slate-100 text-slate-500 border-slate-200 rounded-lg pl-7 pr-3 py-2.5 text-sm shadow-sm ring-1 ring-inset ring-slate-200 cursor-not-allowed" placeholder="0">
-              </div>
-              <!-- Ayuda visual para el usuario -->
-              <p class="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                <i class="ph ph-warning"></i> Usa la sección "Pagos" para registrar abonos.
-              </p>
-            </div>
+          <!-- SECCIÓN: DATOS PERSONALES -->
+          <div class="space-y-4">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Datos Personales</h4>
             
-            <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-200 transition-colors cursor-pointer" onclick="document.getElementById('activo').click()">
-              <div class="relative flex items-center">
-                <input type="checkbox" id="activo" checked class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-blue-600 checked:bg-blue-600 hover:border-blue-400">
-                <i class="ph ph-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-xs"></i>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Nombre -->
+              <div>
+                <label for="nombre" class="block text-xs font-semibold text-slate-500 mb-1.5">Nombres <span class="text-red-500">*</span></label>
+                <input type="text" id="nombre" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. Juan Carlos">
               </div>
-              <span class="text-sm font-medium text-slate-700 select-none">Jugador Activo</span>
+              <!-- Apellidos -->
+              <div>
+                <label for="apellidos" class="block text-xs font-semibold text-slate-500 mb-1.5">Apellidos <span class="text-red-500">*</span></label>
+                <input type="text" id="apellidos" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. Pérez López">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Fecha de Nacimiento -->
+              <div>
+                <label for="fecha_nacimiento" class="block text-xs font-semibold text-slate-500 mb-1.5">Fecha de Nacimiento</label>
+                <input type="date" id="fecha_nacimiento" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all">
+              </div>
+              <!-- Teléfono -->
+              <div>
+                <label for="telefono" class="block text-xs font-semibold text-slate-500 mb-1.5">Teléfono de Contacto <span class="text-red-500">*</span></label>
+                <input type="tel" id="telefono" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. 300 123 4567">
+              </div>
+            </div>
+          </div>
+
+          <div class="border-t border-slate-100"></div>
+
+          <!-- SECCIÓN: IDENTIFICACIÓN Y DEPORTIVA -->
+          <div class="space-y-4">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Identificación & Deporte</h4>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <!-- Tipo Identificación -->
+              <div>
+                <label for="tipo_identificacion" class="block text-xs font-semibold text-slate-500 mb-1.5">Tipo ID</label>
+                <div class="relative">
+                  <select id="tipo_identificacion" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none appearance-none transition-all">
+                    <option value="" disabled selected>Seleccione...</option>
+                    <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
+                    <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
+                    <option value="Registro Civil">Registro Civil</option>
+                    <option value="Cédula Extranjería">Cédula Extranjería</option>
+                  </select>
+                  <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+                </div>
+              </div>
+              <!-- Número Identificación -->
+              <div>
+                <label for="numero_identificacion" class="block text-xs font-semibold text-slate-500 mb-1.5">Número ID</label>
+                <input type="text" id="numero_identificacion" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Documento">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+              <!-- Categoría -->
+              <div>
+                <label for="categoria" class="block text-xs font-semibold text-slate-500 mb-1.5">Categoría <span class="text-red-500">*</span></label>
+                <div class="relative">
+                  <select id="categoria" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none appearance-none cursor-pointer transition-all">
+                    <option value="" disabled selected>Seleccionar...</option>
+                    <option value="Sub 17-18">Sub 17-18</option>
+                    <option value="Sub 16-15">Sub 16-15</option>
+                    <option value="Sub 14-13">Sub 14-13</option>
+                    <option value="Sub 12-11">Sub 12-11</option>
+                    <option value="Sub 10-9">Sub 10-9</option>
+                    <option value="Sub 8-7">Sub 8-7</option>
+                  </select>
+                  <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+                </div>
+              </div>
+              
+              <!-- Estado Activo -->
+              <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-200 transition-colors cursor-pointer h-[46px]" onclick="document.getElementById('activo').click()">
+                <div class="relative flex items-center">
+                  <input type="checkbox" id="activo" checked class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-blue-600 checked:bg-blue-600 hover:border-blue-400">
+                  <i class="ph ph-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-xs"></i>
+                </div>
+                <span class="text-sm font-medium text-slate-700 select-none">Jugador Activo</span>
+              </div>
+            </div>
+
+            <!-- Mensualidad (Read Only) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+               <div class="md:col-span-2">
+                  <label for="mensualidad" class="block text-xs font-semibold text-slate-500 mb-1.5">Valor Pagado (Acumulado)</label>
+                  <div class="relative rounded-lg shadow-sm group cursor-not-allowed">
+                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                      <span class="text-slate-400 sm:text-sm">$</span>
+                    </div>
+                    <input type="number" id="mensualidad" readonly class="block w-full bg-slate-100 text-slate-500 border-slate-200 rounded-lg pl-7 pr-3 py-2.5 text-sm shadow-sm ring-1 ring-inset ring-slate-200 cursor-not-allowed" placeholder="0">
+                  </div>
+                  <p class="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
+                    <i class="ph ph-warning"></i> Usa la sección "Pagos" para registrar abonos.
+                  </p>
+               </div>
             </div>
           </div>
 
@@ -246,7 +310,387 @@
 </div>
 
 <!-- SCRIPT JS PRINCIPAL -->
-<script type="module" src="recursos/js/jugadores.js"></script>
+<script>
+  // ==========================
+  // UTILIDADES DE NOTIFICACIÓN
+  // ==========================
+  function mostrarNotificacion(mensaje, tipo = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    
+    // Configurar estilos según tipo
+    const estilos = {
+      success: 'bg-emerald-500 text-white shadow-emerald-200',
+      error: 'bg-rose-500 text-white shadow-rose-200',
+      info: 'bg-blue-500 text-white shadow-blue-200'
+    };
+    
+    const iconos = {
+      success: '<i class="ph ph-check-circle text-xl"></i>',
+      error: '<i class="ph ph-warning-circle text-xl"></i>',
+      info: '<i class="ph ph-info text-xl"></i>'
+    };
+
+    toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg shadow-sm transform transition-all duration-300 toast-enter ${estilos[tipo]}`;
+    toast.innerHTML = `
+      ${iconos[tipo]}
+      <span class="font-medium text-sm">${mensaje}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Eliminar después de 3 segundos
+    setTimeout(() => {
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+
+  function confirmarEliminacion(callback) {
+    // Modal personalizado simple para confirmación
+    const confirmar = confirm("¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.");
+    if (confirmar) callback();
+  }
+
+  // ==========================
+  // LÓGICA PRINCIPAL
+  // ==========================
+  
+  // Simulación de apiFetch para adaptarnos al entorno existente del usuario
+  // Si el usuario tiene un archivo configuracion.js, esto lo sobreescribe, 
+  // si no, usa esta función por defecto apuntando a la API relativa.
+  async function apiFetch(url, options = {}) {
+    const baseUrl = '/api'; 
+    const fullUrl = url.startsWith('http') ? url : `${baseUrl}${url}`;
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      ...options.headers
+    };
+
+    const config = {
+      ...options,
+      headers
+    };
+
+    try {
+      const response = await fetch(fullUrl, config);
+      
+      // Manejo de errores HTTP
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Error HTTP: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error en apiFetch:', error);
+      throw error;
+    }
+  }
+
+  // CONSTANTES
+  const MENSUALIDAD_OBJETIVO = 50000;
+  const FILAS_POR_PAGINA = 5;
+
+  // ESTADO GLOBAL
+  let todosLosJugadores = [];
+  let paginaActual = 1;
+
+  // ELEMENTOS DOM
+  let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
+
+  document.addEventListener('DOMContentLoaded', () => {
+    modal = document.getElementById('modal-jugador');
+    backdrop = document.getElementById('modal-backdrop'); 
+    panel = document.getElementById('modal-panel'); 
+    form = document.getElementById('formJugador');
+    tbody = document.getElementById('tabla-jugadores');
+    infoPaginacion = document.getElementById('info-paginacion');
+    btnPrev = document.getElementById('btn-prev');
+    btnNext = document.getElementById('btn-next');
+
+    if (form) form.addEventListener('submit', guardarJugador);
+    
+    if (modal && backdrop) {
+      backdrop.addEventListener('click', cerrarModal);
+    }
+
+    cargarJugadores();
+  });
+
+  // ==========================
+  // LÓGICA DE DATOS
+  // ==========================
+
+  async function cargarJugadores() {
+    try {
+      tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-2xl"></i> Cargando...</td></tr>';
+      const data = await apiFetch('/jugadores');
+      todosLosJugadores = Array.isArray(data) ? data : [];
+      actualizarEstadisticas();
+      renderTabla();
+    } catch (error) {
+      console.error('Error cargando:', error);
+      mostrarNotificacion('Error al cargar los jugadores', 'error');
+      if (tbody) tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-red-500">Error de conexión con el servidor.</td></tr>`;
+    }
+  }
+
+  async function guardarJugador(e) {
+    e.preventDefault();
+    
+    const id = document.getElementById('jugador-id').value;
+    const esEdicion = !!id;
+    
+    // Recolección de datos incluyendo los nuevos campos
+    const payload = {
+      nombre: document.getElementById('nombre').value,
+      apellidos: document.getElementById('apellidos').value,
+      fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+      tipo_identificacion: document.getElementById('tipo_identificacion').value,
+      numero_identificacion: document.getElementById('numero_identificacion').value,
+      categoria: document.getElementById('categoria').value,
+      telefono: document.getElementById('telefono').value, // Ahora es obligatorio
+      mensualidad: Number(document.getElementById('mensualidad').value) || 0,
+      activo: document.getElementById('activo').checked
+    };
+
+    try {
+      if (esEdicion) {
+        await apiFetch(`/jugadores?id=${id}`, {
+          method: 'PUT',
+          body: JSON.stringify({ ...payload, id })
+        });
+        mostrarNotificacion('Jugador actualizado correctamente');
+      } else {
+        await apiFetch('/jugadores', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        mostrarNotificacion('Jugador registrado correctamente');
+      }
+      
+      cerrarModal();
+      cargarJugadores();
+
+    } catch (error) {
+      console.error('Error guardando:', error);
+      mostrarNotificacion('Error: ' + error.message, 'error');
+    }
+  }
+
+  async function eliminarJugador(id) {
+    confirmarEliminacion(async () => {
+      try {
+        await apiFetch(`/jugadores?id=${id}`, { method: 'DELETE' });
+        mostrarNotificacion('Jugador eliminado', 'info');
+        cargarJugadores();
+      } catch (error) {
+        mostrarNotificacion('Error al eliminar: ' + error.message, 'error');
+      }
+    });
+  }
+
+  // ==========================
+  // LÓGICA DE PRESENTACIÓN
+  // ==========================
+
+  function calcularEstado(pagado) {
+    if (pagado >= MENSUALIDAD_OBJETIVO) {
+      return { texto: 'Pagado', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    } else if (pagado > 0) {
+      const faltante = MENSUALIDAD_OBJETIVO - pagado;
+      return { texto: `Abono ($${faltante})`, color: 'bg-amber-50 text-amber-700 border-amber-200' };
+    } else {
+      return { texto: 'Pendiente', color: 'bg-rose-50 text-rose-700 border-rose-200' };
+    }
+  }
+
+  function renderTabla() {
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+    
+    const totalItems = todosLosJugadores.length;
+    const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
+    
+    if (paginaActual > totalPages) paginaActual = totalPages;
+    if (paginaActual < 1) paginaActual = 1;
+
+    const inicio = (paginaActual - 1) * FILAS_POR_PAGINA;
+    const fin = inicio + FILAS_POR_PAGINA;
+    const jugadoresPagina = todosLosJugadores.slice(inicio, fin);
+
+    if (jugadoresPagina.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No hay jugadores registrados.</td></tr>`;
+    } else {
+      jugadoresPagina.forEach(j => {
+        const estado = calcularEstado(j.mensualidad);
+        
+        // Formatear nombre completo
+        const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
+        
+        // Formatear info de ID
+        let idInfo = '';
+        if (j.tipo_identificacion || j.numero_identificacion) {
+          const tipoShort = j.tipo_identificacion ? j.tipo_identificacion.split(' ')[0] : ''; // Cédula -> CC
+          idInfo = `<span class="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 flex items-center gap-1 w-fit"><i class="ph ph-identification-card"></i> ${tipoShort} ${j.numero_identificacion || ''}</span>`;
+        }
+
+        const tr = document.createElement('tr');
+        tr.className = "hover:bg-slate-50 transition duration-150";
+        
+        tr.innerHTML = `
+          <td class="px-6 py-4">
+            <div class="font-bold text-slate-900 text-base">${nombreCompleto}</div>
+            <div class="mt-1">${idInfo}</div>
+          </td>
+          <td class="px-6 py-4 text-slate-600">
+            ${j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('/') : '<span class="text-slate-300">-</span>'}
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span>
+          </td>
+          <td class="px-6 py-4 text-slate-600">
+            <div class="flex items-center gap-1">
+              <i class="ph ph-phone text-slate-400"></i>
+              ${j.telefono || '-'}
+            </div>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex flex-col items-center gap-1">
+              <span class="inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ring-1 ring-inset ${estado.color}">
+                ${estado.texto}
+              </span>
+              <span class="text-[10px] text-slate-400">Pagado: $${Number(j.mensualidad).toLocaleString()}</span>
+            </div>
+          </td>
+          <td class="px-6 py-4 text-center">
+            <div class="flex justify-center gap-2">
+              <button onclick="editarJugador(${j.id})" class="text-blue-600 hover:bg-blue-50 p-1.5 rounded-lg transition" title="Editar">
+                <i class="ph ph-pencil-simple text-lg"></i>
+              </button>
+              <button onclick="eliminarJugador(${j.id})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="Eliminar">
+                <i class="ph ph-trash text-lg"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    if (infoPaginacion) infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} registros)`;
+    if (btnPrev) btnPrev.disabled = paginaActual === 1;
+    if (btnNext) btnNext.disabled = paginaActual === totalPages;
+  }
+
+  function actualizarEstadisticas() {
+    const statTotal = document.getElementById('stat-total');
+    const statPagados = document.getElementById('stat-pagados');
+    const statPendientes = document.getElementById('stat-pendientes');
+    
+    if (!statTotal) return;
+
+    const total = todosLosJugadores.length;
+    const pagados = todosLosJugadores.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
+    const pendientes = total - pagados;
+
+    statTotal.innerText = total;
+    statPagados.innerText = pagados;
+    statPendientes.innerText = pendientes;
+  }
+
+  // ==========================
+  // CONTROL DEL MODAL
+  // ==========================
+
+  function abrirModal() {
+    if (!form) return;
+    form.reset();
+    document.getElementById('jugador-id').value = '';
+    
+    // Resetear estado visual
+    document.getElementById('modal-title').innerText = 'Registrar Jugador';
+    document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
+    // Mantener checkbox activado por defecto
+    document.getElementById('activo').checked = true;
+
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        if (backdrop) backdrop.classList.remove('opacity-0');
+        if (panel) {
+          panel.classList.remove('scale-95', 'opacity-0');
+          panel.classList.add('scale-100', 'opacity-100');
+        }
+      }, 10); 
+    }
+  };
+
+  function cerrarModal() {
+    if (!modal) return;
+
+    if (backdrop) backdrop.classList.add('opacity-0');
+    if (panel) {
+      panel.classList.remove('scale-100', 'opacity-100');
+      panel.classList.add('scale-95', 'opacity-0');
+    }
+
+    setTimeout(() => {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }, 200);
+  };
+
+  function editarJugador(id) {
+    const jugador = todosLosJugadores.find(j => j.id === id);
+    if (!jugador) return;
+
+    document.getElementById('jugador-id').value = jugador.id;
+    document.getElementById('nombre').value = jugador.nombre || '';
+    document.getElementById('apellidos').value = jugador.apellidos || '';
+    document.getElementById('fecha_nacimiento').value = jugador.fecha_nacimiento || '';
+    document.getElementById('tipo_identificacion').value = jugador.tipo_identificacion || '';
+    document.getElementById('numero_identificacion').value = jugador.numero_identificacion || '';
+    document.getElementById('categoria').value = jugador.categoria;
+    document.getElementById('telefono').value = jugador.telefono || '';
+    document.getElementById('mensualidad').value = jugador.mensualidad;
+    document.getElementById('activo').checked = jugador.activo;
+    
+    document.getElementById('modal-title').innerText = 'Editar Jugador';
+    document.getElementById('modal-icon').className = 'ph ph-pencil-simple text-amber-500';
+
+    if (modal) {
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      
+      setTimeout(() => {
+        if (backdrop) backdrop.classList.remove('opacity-0');
+        if (panel) {
+          panel.classList.remove('scale-95', 'opacity-0');
+          panel.classList.add('scale-100', 'opacity-100');
+        }
+      }, 10);
+    }
+  };
+
+  function cambiarPagina(delta) {
+    paginaActual += delta;
+    renderTabla();
+  };
+
+  // Exportar funciones globales
+  window.abrirModal = abrirModal;
+  window.cerrarModal = cerrarModal;
+  window.editarJugador = editarJugador;
+  window.eliminarJugador = eliminarJugador;
+  window.cambiarPagina = cambiarPagina;
+</script>
 
 </body>
 </html>
