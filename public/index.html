@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <!-- FAVORITO VERDE SOLICITADO -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2222c55e%22>⚽</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2216a34a%22>⚽</text></svg>">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            brand: { 50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8', 900: '#1e3a8a' }
+            brand: { 50: '#dcfce7', 100: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' }
           },
           boxShadow: {
             'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
@@ -39,13 +39,13 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
-    .nav-link.active { background-color: #EFF6FF; color: #2563EB; border-right: 3px solid #2563EB; }
+    .nav-link.active { background-color: #dcfce7; color: #15803d; border-right: 3px solid #16a34a; }
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
     
-    /* Estilo de línea de tiempo */
+    /* Línea de tiempo */
     .activity-line::before {
       content: '';
       position: absolute;
@@ -57,42 +57,53 @@
     }
     .activity-item:last-child .activity-line::before { display: none; }
 
-    /* ANIMACIÓN DEL SALUDO */
+    /* Animación Saludo */
     @keyframes slideInFade {
       0% { opacity: 0; transform: translateY(-15px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    .animar-saludo {
-      animation: slideInFade 0.8s ease-out forwards;
+    .animar-saludo { animation: slideInFade 0.8s ease-out forwards; }
+
+    /* Sidebar Móvil Transición */
+    #mobile-sidebar {
+      transition: transform 0.3s ease-in-out;
     }
   </style>
 </head>
 
-<body class="text-slate-800 antialiased h-screen flex overflow-hidden">
+<body class="text-slate-800 antialiased h-screen flex overflow-hidden relative">
 
-  <!-- SIDEBAR -->
-  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shadow-lg hidden md:flex">
+  <!-- OVERLAY OSCURO (Para móvil) -->
+  <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
+
+  <!-- SIDEBAR (Desktop fijo, Móvil deslizante) -->
+  <!-- AGREGADO ID 'mobile-sidebar' -->
+  <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-30 shadow-xl transform -translate-x-full md:translate-x-0 md:static md:flex transition-transform duration-300">
     <div class="h-20 flex items-center px-6 border-b border-slate-100">
       <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-500/30">
         <i class="ph ph-soccer-ball text-xl"></i>
       </div>
       <div>
-        <h1 class="text-xl font-bold text-slate-900 tracking-tight">EFUSA</h1>
+        <h1 class="text-xl font-bold text-brand-700 tracking-tight">EFUSA</h1>
         <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión Deportiva</p>
       </div>
+      <!-- Botón cerrar solo visible en móvil -->
+      <button id="close-sidebar" class="md:hidden ml-auto text-slate-400 hover:text-rose-500">
+        <i class="ph ph-x text-2xl"></i>
+      </button>
     </div>
 
     <nav class="flex-1 py-6 space-y-1 px-3">
-      <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
+      <a href="#" onclick="toggleSidebar()" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
         <i class="ph ph-squares-four text-lg"></i> Panel Principal
       </a>
-      <a href="jugadores.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors">
+      <a href="jugadores.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-users-three text-lg"></i> Gestión Jugadores
       </a>
-      <a href="pagos.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors">
+      <a href="pagos.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-money text-lg"></i> Gestión Pagos
       </a>
-      <a href="alertas.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:text-slate-900 rounded-lg transition-colors">
+      <a href="alertas.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-warning-octagon text-lg"></i> Alertas
       </a>
     </nav>
@@ -109,27 +120,34 @@
   </aside>
 
   <!-- MAIN CONTENT -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden relative">
-    <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4">
-      <div class="font-bold text-lg text-brand-600">EFUSA</div>
-      <button class="text-slate-600"><i class="ph ph-list text-2xl"></i></button>
+  <div class="flex-1 flex flex-col h-full overflow-hidden relative md:static">
+    
+    <!-- HEADER MÓVIL -->
+    <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm z-20">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white">
+          <i class="ph ph-soccer-ball text-lg"></i>
+        </div>
+        <div class="font-bold text-lg text-brand-700">EFUSA</div>
+      </div>
+      <!-- BOTÓN HAMBURGUESA (Funcional) -->
+      <button id="open-sidebar" class="text-slate-600 p-2 hover:bg-slate-100 rounded-lg">
+        <i class="ph ph-list text-2xl"></i>
+      </button>
     </header>
 
     <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/50 p-4 md:p-8">
       
       <div class="max-w-7xl mx-auto space-y-6">
 
-        <!-- Top Row: Bienvenida y Acciones Rápidas -->
+        <!-- Top Row -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <!-- Bienvenida -->
           <div class="md:col-span-2">
-            <!-- ID para el saludo dinámico -->
             <h2 id="saludo-dinamico" class="text-2xl font-bold text-slate-900">Bienvenido, Admin</h2>
             <p class="text-slate-500">Aquí tienes el resumen de operaciones de hoy.</p>
             <div class="mt-2 text-xs text-slate-400" id="fecha-actual"></div>
           </div>
 
-          <!-- Botones Rápidos -->
           <div class="flex gap-3 h-full items-end">
             <a href="jugadores.html" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-brand-500/20 transition flex flex-col items-center justify-center gap-1 group">
               <i class="ph ph-user-plus text-xl group-hover:scale-110 transition"></i>
@@ -174,10 +192,10 @@
           </div>
         </div>
 
-        <!-- MAIN CONTENT AREA: Grid 1/3 - 2/3 -->
+        <!-- MAIN CONTENT AREA -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
-          <!-- COLUMNA IZQUIERDA: ACTIVIDAD RECIENTE -->
+          <!-- ACTIVIDAD RECIENTE -->
           <section class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden h-full">
             <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
@@ -190,7 +208,7 @@
             </div>
           </section>
 
-          <!-- COLUMNA DERECHA: LISTADO DE JUGADORES -->
+          <!-- LISTADO DE JUGADORES -->
           <section class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
               <h3 class="font-bold text-slate-900 flex items-center gap-2">
@@ -226,6 +244,7 @@
                   <tr>
                     <th class="px-4 py-3">Jugador</th>
                     <th class="px-4 py-3">Categoría</th>
+                    <th class="px-4 py-3">Contacto</th>
                     <th class="px-4 py-3">Estado</th>
                     <th class="px-4 py-3">Acción</th>
                   </tr>
