@@ -2,12 +2,10 @@
 import { apiFetch } from './configuracion.js';
 
 // ==========================
-// UTILIDADES DE NOTIFICACIÓN
+// UTILIDADES
 // ==========================
 function mostrarNotificacion(mensaje, tipo = 'success') {
   const container = document.getElementById('toast-container');
-  
-  // Si el contenedor no existe (por si no actualizaron el HTML), usamos alert fallback
   if (!container) {
     if(tipo === 'error') alert('❌ ' + mensaje);
     else alert('✅ ' + mensaje);
@@ -15,7 +13,6 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
   }
 
   const toast = document.createElement('div');
-  
   const estilos = {
     success: 'bg-emerald-500 text-white shadow-emerald-200',
     error: 'bg-rose-500 text-white shadow-rose-200',
@@ -35,13 +32,22 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
   `;
 
   container.appendChild(toast);
-
-  // Eliminar después de 3 segundos
   setTimeout(() => {
     toast.classList.remove('toast-enter');
     toast.classList.add('toast-exit');
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+}
+
+/**
+ * Función clave para corregir el formato de fecha.
+ * Convierte "1999-07-12T00:00:00.000Z" a "1999-07-12" (para inputs)
+ * o ayuda a formatearlo para vista.
+ */
+function limpiarFechaISO(fechaIso) {
+  if (!fechaIso) return '';
+  // Cortamos todo lo que esté después de la T (la hora)
+  return fechaIso.split('T')[0];
 }
 
 // ==========================
@@ -56,9 +62,7 @@ const FILAS_POR_PAGINA = 5;
 let todosLosJugadores = [];
 let paginaActual = 1;
 
-// ==========================
 // ELEMENTOS DOM
-// ==========================
 let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -86,12 +90,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function cargarJugadores() {
   try {
-    // Mostrar estado de carga
     if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-8 text-center text-slate-400"><i class="ph ph-spinner animate-spin text-2xl"></i> Cargando...</td></tr>';
-    
     const data = await apiFetch('/jugadores');
     todosLosJugadores = Array.isArray(data) ? data : [];
-    
     actualizarEstadisticas();
     renderTabla();
   } catch (error) {
@@ -107,7 +108,6 @@ async function guardarJugador(e) {
   const id = document.getElementById('jugador-id').value;
   const esEdicion = !!id;
   
-  // Recolección de datos actualizada con nuevos campos
   const payload = {
     nombre: document.getElementById('nombre').value,
     apellidos: document.getElementById('apellidos').value,
@@ -115,7 +115,7 @@ async function guardarJugador(e) {
     tipo_identificacion: document.getElementById('tipo_identificacion').value,
     numero_identificacion: document.getElementById('numero_identificacion').value,
     categoria: document.getElementById('categoria').value,
-    telefono: document.getElementById('telefono').value, // Obligatorio según requerimiento
+    telefono: document.getElementById('telefono').value,
     mensualidad: Number(document.getElementById('mensualidad').value) || 0,
     activo: document.getElementById('activo').checked
   };
@@ -140,14 +140,12 @@ async function guardarJugador(e) {
 
   } catch (error) {
     console.error('Error guardando:', error);
-    // Extraemos el mensaje de error si viene del backend o mostramos el genérico
     const msgError = error.message || 'Ocurrió un error inesperado';
     mostrarNotificacion('Error: ' + msgError, 'error');
   }
 }
 
 async function eliminarJugador(id) {
-  // Confirmación nativa
   const confirmar = confirm("¿Estás seguro de eliminar este jugador? Esta acción no se puede deshacer.");
   if (!confirmar) return;
 
@@ -196,13 +194,16 @@ function renderTabla() {
     jugadoresPagina.forEach(j => {
       const estado = calcularEstado(j.mensualidad);
       
-      // Formatear nombre completo
+      // --- CORRECCIÓN DE FECHA AQUÍ ---
+      const fechaLimpia = limpiarFechaISO(j.fecha_nacimiento);
+      // Invertimos para mostrar DD/MM/YYYY
+      const fechaFormateada = fechaLimpia ? fechaLimpia.split('-').reverse().join('/') : '-';
+
       const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
       
-      // Formatear info de ID
       let idInfo = '';
       if (j.tipo_identificacion || j.numero_identificacion) {
-        const tipoShort = j.tipo_identificacion ? j.tipo_identificacion.split(' ')[0] : ''; // Cédula -> CC
+        const tipoShort = j.tipo_identificacion ? j.tipo_identificacion.split(' ')[0] : '';
         idInfo = `<span class="text-xs text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200 flex items-center gap-1 w-fit"><i class="ph ph-identification-card"></i> ${tipoShort} ${j.numero_identificacion || ''}</span>`;
       }
 
@@ -215,7 +216,7 @@ function renderTabla() {
           <div class="mt-1">${idInfo}</div>
         </td>
         <td class="px-6 py-4 text-slate-600">
-          ${j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('/') : '<span class="text-slate-300">-</span>'}
+          ${fechaFormateada}
         </td>
         <td class="px-6 py-4">
           <span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span>
@@ -279,16 +280,13 @@ function abrirModal() {
   form.reset();
   document.getElementById('jugador-id').value = '';
   
-  // Resetear estado visual
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
   document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
-  // Mantener checkbox activado por defecto
   document.getElementById('activo').checked = true;
 
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
     setTimeout(() => {
       if (backdrop) backdrop.classList.remove('opacity-0');
       if (panel) {
@@ -318,11 +316,14 @@ function editarJugador(id) {
   const jugador = todosLosJugadores.find(j => j.id === id);
   if (!jugador) return;
 
-  // Rellenar campos incluyendo los nuevos
   document.getElementById('jugador-id').value = jugador.id;
   document.getElementById('nombre').value = jugador.nombre || '';
   document.getElementById('apellidos').value = jugador.apellidos || '';
-  document.getElementById('fecha_nacimiento').value = jugador.fecha_nacimiento || '';
+  
+  // --- CORRECCIÓN DE FECHA PARA EL INPUT ---
+  // El input date requiere formato YYYY-MM-DD. Usamos la función auxiliar.
+  document.getElementById('fecha_nacimiento').value = limpiarFechaISO(jugador.fecha_nacimiento) || '';
+  
   document.getElementById('tipo_identificacion').value = jugador.tipo_identificacion || '';
   document.getElementById('numero_identificacion').value = jugador.numero_identificacion || '';
   document.getElementById('categoria').value = jugador.categoria;
@@ -336,7 +337,6 @@ function editarJugador(id) {
   if (modal) {
     modal.classList.remove('hidden');
     modal.classList.add('flex');
-    
     setTimeout(() => {
       if (backdrop) backdrop.classList.remove('opacity-0');
       if (panel) {
