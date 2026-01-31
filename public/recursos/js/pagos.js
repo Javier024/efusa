@@ -3,16 +3,16 @@ import { apiFetch } from './configuracion.js';
 
 // VARIABLES GLOBALES
 let todosLosPagos = [];
-let jugadoresList = []; // <--- Guardamos la lista de jugadores para usarla en el resumen
+let jugadoresList = [];
 
 document.addEventListener('DOMContentLoaded', () => {
   Promise.all([cargarPagos(), cargarJugadoresSelect()])
     .then(() => {
       filtrarPagos();
-      renderizarResumen('todos'); // Renderizamos el estado de cuentas al inicio
+      renderizarResumen('todos');
     });
 
-  // Listeners de búsqueda
+  // Listeners
   const buscador = document.getElementById('buscador');
   const fechaInicio = document.getElementById('filtro-inicio');
   const fechaFin = document.getElementById('filtro-fin');
@@ -21,13 +21,12 @@ document.addEventListener('DOMContentLoaded', () => {
   if (fechaInicio) fechaInicio.addEventListener('change', filtrarPagos);
   if (fechaFin) fechaFin.addEventListener('change', filtrarPagos);
 
-  // Listener del Formulario
   const form = document.getElementById('formPago');
   if (form) form.addEventListener('submit', guardarPago);
 });
 
 // ==========================
-// FUNCIONES DE CARGA DE DATOS
+// CARGA DE DATOS
 // ==========================
 
 async function cargarPagos() {
@@ -36,14 +35,14 @@ async function cargarPagos() {
     todosLosPagos = data;
   } catch (error) {
     console.error('Error cargando pagos:', error);
-    mostrarError('No se pudieron cargar los pagos.');
+    mostrarNotificacion('Error cargando pagos', 'error');
   }
 }
 
 async function cargarJugadoresSelect() {
   try {
     const data = await apiFetch('/jugadores');
-    jugadoresList = data; // Guardamos globalmente para el resumen
+    jugadoresList = data;
     
     const selectJugador = document.getElementById('jugador_id');
     if (selectJugador) {
@@ -53,35 +52,63 @@ async function cargarJugadoresSelect() {
       });
     }
   } catch (error) {
-    console.error('Error cargando lista de jugadores:', error);
+    console.error('Error cargando jugadores:', error);
   }
 }
 
 // ==========================
-// NUEVA: RENDERIZAR RESUMEN DE DEUDAS
+// WHATSAPP
+// ==========================
+function enviarWhatsapp(pago) {
+  if (!pago.jugador_telefono) {
+    alert('El jugador no tiene teléfono registrado en la base de datos.');
+    return;
+  }
+
+  // Formatear mensaje
+  const nombre = pago.jugador;
+  const monto = Number(pago.monto).toLocaleString();
+  const concepto = pago.tipo.toUpperCase();
+  const fecha = pago.fecha.split('T')[0];
+  const obs = pago.observacion ? `Obs: ${pago.observacion}` : '';
+  const mes = pago.mes_pago ? `Mes: ${pago.mes_pago}` : '';
+
+  let mensaje = `Hola ${nombre}, confirmamos tu pago en EFUSA.%0A`;
+  mensaje += `💰 *Valor:* $${monto}%0A`;
+  mensaje += `📅 *Fecha:* ${fecha}%0A`;
+  mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
+  if (mes) mensaje += `📆 ${mes}%0A`;
+  if (obs) mensaje += `📝 ${obs}`;
+
+  window.open(`https://wa.me/57${pago.jugador_telefono}?text=${mensaje}`, '_blank');
+}
+
+// ==========================
+// RENDERIZAR RESUMEN (ESTADO DE CUENTAS)
 // ==========================
 function renderizarResumen(tipo) {
   const tbody = document.getElementById('tabla-resumen');
-  if (!tbody) return;
+  const containerMovil = document.getElementById('vista-movil-resumen');
+  
+  if (!tbody || !containerMovil) return;
   
   tbody.innerHTML = '';
+  containerMovil.innerHTML = '';
 
-  // Filtramos la lista de jugadores
   let listaFiltrada = jugadoresList;
   
   if (tipo === 'deudores') {
     listaFiltrada = jugadoresList.filter(j => j.mensualidad < 50000);
+  } else if (tipo === 'pagados') {
+    listaFiltrada = jugadoresList.filter(j => j.mensualidad >= 50000);
   }
 
-  // Ordenamos: Primero los que más deben, luego los deudos, luego pagados
-  listaFiltrada.sort((a, b) => {
-    const deudaA = 50000 - a.mensualidad;
-    const deudaB = 50000 - b.mensualidad;
-    return deudaB - deudaA; // Descendente por deuda
-  });
+  // Ordenar
+  listaFiltrada.sort((a, b) => b.mensualidad - a.mensualidad);
 
   if (listaFiltrada.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-gray-400 text-sm">No hay jugadores en este filtro.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-gray-400">No hay registros.</td></tr>`;
+    containerMovil.innerHTML = `<div class="text-center py-6 text-gray-400">No hay registros.</div>`;
     return;
   }
 
@@ -89,7 +116,6 @@ function renderizarResumen(tipo) {
     const pagado = j.mensualidad;
     const debe = 50000 - pagado;
     
-    // Calcular estado visual
     let estadoBadge = '';
     let deudaTexto = '';
     
@@ -104,9 +130,9 @@ function renderizarResumen(tipo) {
       deudaTexto = `<span class="text-xs text-gray-500">Sin pagos</span>`;
     }
 
+    // HTML Desktop
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-50 border-b border-slate-100 last:border-0";
-    
     tr.innerHTML = `
       <td class="px-4 py-3">
         <div class="font-medium text-slate-900">${j.nombre}</div>
@@ -116,31 +142,54 @@ function renderizarResumen(tipo) {
       <td class="px-4 py-3 text-center text-xs text-slate-600">${deudaTexto}</td>
       <td class="px-4 py-3 text-center text-sm font-bold text-slate-900">$${pagado.toLocaleString()}</td>
       <td class="px-4 py-3 text-right">
-        <button onclick="irAPagar(${j.id})" class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1">
+        <button onclick="irAPagar(${j.id})" class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1 ml-auto">
           <i class="ph ph-plus-circle"></i> Pagar
         </button>
       </td>
     `;
     tbody.appendChild(tr);
+
+    // HTML Mobile (Tarjeta)
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm";
+    card.innerHTML = `
+       <div class="flex justify-between items-start mb-3">
+          <div>
+             <h3 class="font-bold text-slate-900 text-base">${j.nombre}</h3>
+             <p class="text-xs text-slate-500">${j.categoria}</p>
+          </div>
+          ${estadoBadge}
+       </div>
+       <div class="flex justify-between items-end mb-4">
+          <div>
+            <p class="text-[10px] text-slate-400 uppercase font-bold">Acumulado</p>
+            <p class="font-bold text-slate-900">$${pagado.toLocaleString()}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xs text-slate-600">${debeTexto}</p>
+          </div>
+       </div>
+       <button onclick="irAPagar(${j.id})" class="w-full py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold text-sm hover:bg-blue-100 transition">
+          Registrar Pago
+       </button>
+    `;
+    containerMovil.appendChild(card);
   });
 }
 
-// Función para pre-seleccionar el jugador en el formulario
 function irAPagar(id) {
   const select = document.getElementById('jugador_id');
   const formContainer = document.getElementById('formPago').closest('section');
   
   if (select) {
     select.value = id;
-    // Scroll suave hacia el formulario
     formContainer.scrollIntoView({ behavior: 'smooth' });
-    // Enfocar el monto
     setTimeout(() => document.getElementById('monto').focus(), 500);
   }
 }
 
 // ==========================
-// LÓGICA DE FILTRADO Y RENDERIZADO (HISTORIAL)
+// HISTORIAL Y FILTROS
 // ==========================
 
 function filtrarPagos() {
@@ -180,11 +229,15 @@ async function guardarPago(e) {
     monto: Number(document.getElementById('monto').value),
     fecha: document.getElementById('fecha').value,
     tipo: document.getElementById('tipo').value,
-    observacion: document.getElementById('observacion').value
+    observacion: document.getElementById('observacion').value,
+    mes_pago: document.getElementById('mes_pago').value,
+    cantidad_meses: Number(document.getElementById('cantidad_meses').value),
+    periodo_inicio: document.getElementById('periodo_inicio').value,
+    periodo_fin: document.getElementById('periodo_fin').value
   };
 
   if (!payload.jugador_id) {
-    alert('Por favor seleccione un jugador');
+    mostrarNotificacion('Seleccione un jugador', 'error');
     return;
   }
 
@@ -194,32 +247,31 @@ async function guardarPago(e) {
       body: JSON.stringify(payload)
     });
     
-    alert('✅ Pago registrado correctamente');
+    mostrarNotificacion('✅ Pago registrado correctamente');
     document.getElementById('formPago').reset();
-    // Recargar datos
     await cargarPagos();
     filtrarPagos();
-    await cargarJugadoresSelect(); // Importante: recargar jugadores para actualizar saldos en el resumen
+    await cargarJugadoresSelect();
     renderizarResumen(document.querySelector('input[name="filtro-resumen"]:checked').value);
 
   } catch (error) {
     console.error('Error guardando:', error);
-    alert('❌ Error al guardar pago');
+    mostrarNotificacion('❌ Error al guardar pago', 'error');
   }
 }
 
 async function eliminarPago(id) {
-  if (!confirm('¿Estás seguro de eliminar este registro de pago?')) return;
+  if (!confirm('¿Estás seguro de eliminar este registro?')) return;
 
   try {
     await apiFetch(`/pagos?id=${id}`, { method: 'DELETE' });
-    alert('🗑️ Pago eliminado');
+    mostrarNotificacion('Pago eliminado', 'info');
     await cargarPagos();
     filtrarPagos();
-    await cargarJugadoresSelect(); // Recargar saldos
+    await cargarJugadoresSelect();
     renderizarResumen(document.querySelector('input[name="filtro-resumen"]:checked').value);
   } catch (error) {
-    alert('❌ Error al eliminar');
+    mostrarNotificacion('Error al eliminar', 'error');
   }
 }
 
@@ -232,57 +284,91 @@ function limpiarFiltros() {
 
 function renderPagos(pagos) {
   const tbody = document.getElementById('tabla-pagos');
-  if (!tbody) return;
+  const containerMovil = document.getElementById('vista-movil-historial');
+  if (!tbody || !containerMovil) return;
   
   tbody.innerHTML = '';
+  containerMovil.innerHTML = '';
 
   if (pagos.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-400">No se encontraron pagos con los filtros actuales.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-gray-400">No hay pagos.</td></tr>`;
+    containerMovil.innerHTML = `<div class="text-center py-6 text-gray-400">No hay pagos.</div>`;
     return;
   }
 
   pagos.forEach(p => {
-    const tr = document.createElement('tr');
-    tr.className = "hover:bg-slate-50 transition";
-    
     let badgeColor = 'bg-gray-100 text-gray-700';
     if(p.tipo === 'abono') badgeColor = 'bg-blue-50 text-blue-700 border border-blue-200';
     if(p.tipo === 'inscripcion') badgeColor = 'bg-purple-50 text-purple-700 border border-purple-200';
     if(p.tipo === 'uniforme') badgeColor = 'bg-orange-50 text-orange-700 border border-orange-200';
 
+    // Detalles adicionales
+    let detallesExtra = '';
+    if(p.mes_pago) detallesExtra += `<div class="text-[10px] text-slate-500">Mes: ${p.mes_pago}</div>`;
+    if(p.cantidad_meses > 1) detallesExtra += `<div class="text-[10px] text-slate-500">Cant: ${p.cantidad_meses} meses</div>`;
+
+    // HTML Desktop
+    const tr = document.createElement('tr');
+    tr.className = "hover:bg-slate-50 transition";
     tr.innerHTML = `
       <td class="px-6 py-4 font-medium text-slate-900">${p.jugador}</td>
       <td class="px-6 py-4 text-slate-600">${p.fecha.split('T')[0]}</td>
       <td class="px-6 py-4">
-        <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${badgeColor}">
-          ${p.tipo}
-        </span>
+        <span class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ${badgeColor}">${p.tipo}</span>
       </td>
       <td class="px-6 py-4 text-slate-500 text-xs italic max-w-xs truncate" title="${p.observacion || ''}">
         ${p.observacion || '-'}
       </td>
       <td class="px-6 py-4 font-bold text-slate-900">$${p.monto.toLocaleString()}</td>
       <td class="px-6 py-4 text-center">
-        <button onclick="eliminarPago(${p.id})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="Eliminar">
-          <i class="ph ph-trash text-lg"></i>
-        </button>
+        <div class="flex justify-center gap-1">
+          <button onclick="enviarWhatsapp(${JSON.stringify(p)})" class="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Enviar WhatsApp">
+            <i class="ph ph-whatsapp-logo text-lg"></i>
+          </button>
+          <button onclick="eliminarPago(${p.id})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="Eliminar">
+            <i class="ph ph-trash text-lg"></i>
+          </button>
+        </div>
       </td>
     `;
     tbody.appendChild(tr);
+
+    // HTML Mobile
+    const card = document.createElement('div');
+    card.className = "bg-white p-4 rounded-xl border border-slate-200 shadow-sm relative";
+    card.innerHTML = `
+      <div class="flex justify-between items-start mb-2">
+        <div>
+           <h3 class="font-bold text-slate-900 text-base">${p.jugador}</h3>
+           <p class="text-xs text-slate-400">${p.fecha.split('T')[0]}</p>
+        </div>
+        <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">$${p.monto.toLocaleString()}</span>
+      </div>
+      <div class="mb-3">
+         <span class="inline-flex items-center rounded-md px-2 py-1 text-[10px] font-medium ${badgeColor}">${p.tipo}</span>
+         ${detallesExtra}
+      </div>
+      <div class="flex justify-between items-center pt-2 border-t border-slate-50">
+         <button onclick="eliminarPago(${p.id})" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition">Eliminar</button>
+         <button onclick="enviarWhatsapp(${JSON.stringify(p)})" class="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-100 transition">
+            <i class="ph ph-whatsapp-logo text-base"></i> Enviar
+         </button>
+      </div>
+    `;
+    containerMovil.appendChild(card);
   });
 }
 
-function mostrarError(msg) {
-  const alerta = document.getElementById('alerta');
-  alerta.innerText = msg;
-  alerta.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'border-red-400');
-  alerta.classList.add('bg-red-100', 'text-red-800', 'border-red-400');
+// Utilidad simple para notificaciones si no existe en config
+function mostrarNotificacion(msg, type = 'success') {
+    // Fallback simple para no romper si no hay toasts
+    console.log(`[${type}] ${msg}`);
 }
 
 // ==========================
-// EXPORTAR FUNCIONES A WINDOW (CORRECCIÓN AQUÍ)
+// EXPORTS
 // ==========================
 window.eliminarPago = eliminarPago;
 window.limpiarFiltros = limpiarFiltros;
 window.irAPagar = irAPagar;
-window.renderizarResumen = renderizarResumen; // <--- ESTO SOLUCIONA TU ERROR
+window.renderizarResumen = renderizarResumen;
