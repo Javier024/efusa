@@ -4,6 +4,7 @@ import { apiFetch } from './configuracion.js';
 // ==========================
 // UTILIDADES
 // ==========================
+
 function mostrarNotificacion(mensaje, tipo = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) {
@@ -39,14 +40,45 @@ function mostrarNotificacion(mensaje, tipo = 'success') {
   }, 3000);
 }
 
+// ==========================================
+// NUEVAS FUNCIONES DE FECHA (CORREGIDAS)
+// ==========================================
+
 /**
- * Función clave para corregir el formato de fecha.
- * Convierte "1999-07-12T00:00:00.000Z" a "1999-07-12" (para inputs)
- * o ayuda a formatearlo para vista.
+ * 1. Para la TABLA: Devuelve formato "12/07/1999"
+ * Parseamos la fecha manualmente para evitar errores de zona horaria (UTC vs Local).
  */
-function limpiarFechaISO(fechaIso) {
+function formatearFechaTabla(fechaIso) {
+  if (!fechaIso) return '-';
+
+  try {
+    // 1. Cortar la hora (si viene: 1999-07-12T00:00:00Z -> 1999-07-12)
+    const fechaLimpia = fechaIso.split('T')[0];
+    
+    // 2. Separar año, mes, día
+    const partes = fechaLimpia.split('-');
+    if (partes.length !== 3) return fechaIso;
+
+    // 3. Crear objeto Fecha asegurando que sea hora local (no UTC)
+    // Restamos 1 al mes porque en JS Enero es 0
+    const fechaObjeto = new Date(partes[0], partes[1] - 1, partes[2]);
+
+    // 4. Formatear usando localización de Colombia
+    return fechaObjeto.toLocaleDateString('es-CO');
+  } catch (error) {
+    console.error("Error formateando fecha:", error);
+    return fechaIso; // Retorna original si falla
+  }
+}
+
+/**
+ * 2. Para el INPUT de edición: Devuelve formato "1999-07-12"
+ * El calendario HTML <input type="date"> REQUIERE este formato obligatoriamente.
+ * Si intentas poner "12/07/1999" aquí, el calendario se vaciará.
+ */
+function formatearFechaInput(fechaIso) {
   if (!fechaIso) return '';
-  // Cortamos todo lo que esté después de la T (la hora)
+  // Solo necesitamos la parte de la fecha, ignoramos la hora Z
   return fechaIso.split('T')[0];
 }
 
@@ -194,10 +226,8 @@ function renderTabla() {
     jugadoresPagina.forEach(j => {
       const estado = calcularEstado(j.mensualidad);
       
-      // --- CORRECCIÓN DE FECHA AQUÍ ---
-      const fechaLimpia = limpiarFechaISO(j.fecha_nacimiento);
-      // Invertimos para mostrar DD/MM/YYYY
-      const fechaFormateada = fechaLimpia ? fechaLimpia.split('-').reverse().join('/') : '-';
+      // --- USAMOS LA NUEVA FUNCIÓN PARA MOSTRAR 12/07/1999 ---
+      const fechaVisual = formatearFechaTabla(j.fecha_nacimiento);
 
       const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
       
@@ -216,7 +246,7 @@ function renderTabla() {
           <div class="mt-1">${idInfo}</div>
         </td>
         <td class="px-6 py-4 text-slate-600">
-          ${fechaFormateada}
+          ${fechaVisual}
         </td>
         <td class="px-6 py-4">
           <span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span>
@@ -320,9 +350,9 @@ function editarJugador(id) {
   document.getElementById('nombre').value = jugador.nombre || '';
   document.getElementById('apellidos').value = jugador.apellidos || '';
   
-  // --- CORRECCIÓN DE FECHA PARA EL INPUT ---
-  // El input date requiere formato YYYY-MM-DD. Usamos la función auxiliar.
-  document.getElementById('fecha_nacimiento').value = limpiarFechaISO(jugador.fecha_nacimiento) || '';
+  // --- USAMOS LA FUNCIÓN PARA EL INPUT (1999-07-12) ---
+  // Recordatorio: El input type="date" SIEMPRE mostrará esto.
+  document.getElementById('fecha_nacimiento').value = formatearFechaInput(jugador.fecha_nacimiento) || '';
   
   document.getElementById('tipo_identificacion').value = jugador.tipo_identificacion || '';
   document.getElementById('numero_identificacion').value = jugador.numero_identificacion || '';
