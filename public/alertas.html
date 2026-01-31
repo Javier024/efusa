@@ -5,10 +5,10 @@
   <title>Alertas de Pago | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <!-- FAVORITO VERDE -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2216a34a%22>⚽</text></svg>">
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔔</text></svg>">
 
-  <!-- Tailwind Config (Tema Verde) -->
+  <!-- Tailwind -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -16,11 +16,8 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            brand: { 50: '#dcfce7', 100: '#bbf7d0', 500: '#22c55e', 600: '#16a34a', 700: '#15803d', 900: '#14532d' }
+            slate: { 850: '#151f32' } 
           },
-          boxShadow: {
-            'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-          }
         }
       }
     }
@@ -28,170 +25,85 @@
 
   <!-- Iconos -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
-
+  
   <!-- Fuente -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
-    .nav-link.active { background-color: #dcfce7; color: #15803d; border-right: 3px solid #16a34a; }
-    .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-    #mobile-sidebar { transition: transform 0.3s ease-in-out; }
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
   </style>
 </head>
 
-<body class="text-slate-800 antialiased h-screen flex overflow-hidden relative">
+<body class="text-slate-800 antialiased min-h-screen flex flex-col">
 
-  <!-- OVERLAY OSCURO (Para móvil) -->
-  <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
-
-  <!-- SIDEBAR (Barra Lateral) -->
-  <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-30 shadow-xl transform -translate-x-full md:translate-x-0 md:static md:flex transition-transform duration-300">
-    
-    <!-- Logo Sidebar -->
-    <div class="h-20 flex items-center px-6 border-b border-slate-100">
-      <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-500/30">
-        <i class="ph ph-soccer-ball text-xl"></i>
-      </div>
-      <div>
-        <h1 class="text-xl font-bold text-brand-700 tracking-tight">EFUSA</h1>
-        <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión Deportiva</p>
-      </div>
-      <!-- Botón cerrar móvil -->
-      <button id="close-sidebar" class="md:hidden ml-auto text-slate-400 hover:text-rose-500">
-        <i class="ph ph-x text-2xl"></i>
-      </button>
-    </div>
-
-    <!-- Menú de Navegación -->
-    <nav class="flex-1 py-6 space-y-1 px-3">
-      <a href="/index.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
-        <i class="ph ph-squares-four text-lg"></i> Panel Principal
-      </a>
-      <a href="/jugadores.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
-        <i class="ph ph-users-three text-lg"></i> Gestión Jugadores
-      </a>
-      <a href="/pagos.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
-        <i class="ph ph-money text-lg"></i> Gestión Pagos
-      </a>
-      <!-- Alertas Activo -->
-      <a href="/alertas.html" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
-        <i class="ph ph-warning-octagon text-lg"></i> Alertas
-      </a>
-    </nav>
-
-    <!-- Footer Sidebar -->
-    <div class="p-4 border-t border-slate-100">
-      <div class="flex items-center gap-3 p-2 rounded-lg bg-slate-50">
-        <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs">AD</div>
-        <div>
-          <p class="text-xs font-bold text-slate-900">Administrador</p>
-          <p class="text-[10px] text-slate-500">admin@efusa.com</p>
-        </div>
-      </div>
-    </div>
-  </aside>
-
-  <!-- MAIN CONTENT -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden relative md:static">
-    
-    <!-- HEADER MÓVIL -->
-    <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 shadow-sm z-20">
-      <div class="flex items-center gap-2">
-        <div class="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center text-white">
-          <i class="ph ph-warning-octagon text-sm"></i>
-        </div>
-        <div class="font-bold text-lg text-brand-700">Alertas</div>
-      </div>
-      <!-- BOTÓN HAMBURGUESA -->
-      <button id="open-sidebar" class="text-slate-600 p-2 hover:bg-slate-100 rounded-lg">
-        <i class="ph ph-list text-2xl"></i>
-      </button>
-    </header>
-
-    <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/50 p-4 md:p-8">
+<!-- HEADER -->
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-20">
       
-      <div class="max-w-7xl mx-auto space-y-6">
-
-        <!-- TARJETA DE ESTADO (Sin Alertas) -->
-        <div id="sin-alertas" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-12 text-center">
-          <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <i class="ph ph-check text-4xl text-emerald-600"></i>
-          </div>
-          <h2 class="text-2xl font-bold text-emerald-800">¡Excelente!</h2>
-          <p class="text-emerald-600 mt-2">Todos los jugadores tienen sus cuentas al día.</p>
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-gradient-to-br from-rose-500 to-orange-600 rounded-xl flex items-center justify-center shadow-lg shadow-rose-500/20 text-white">
+          <i class="ph ph-warning-circle text-2xl"></i>
         </div>
-
-        <!-- TABLA DE DEUDORES (Con Alertas) -->
-        <div id="con-alertas" class="bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
-          
-          <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-            <div>
-              <h3 class="font-bold text-slate-900 text-lg">Lista de Deudores</h3>
-              <p class="text-xs text-slate-500 mt-1">Jugadores con saldo pendiente (Meta: $50.000)</p>
-            </div>
-            <div class="text-right">
-              <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Alertas Activas</span>
-            </div>
-          </div>
-
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm">
-              <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
-                <tr>
-                  <th class="px-6 py-4">Jugador</th>
-                  <th class="px-6 py-4 text-center">Progreso de Pago</th>
-                  <th class="px-6 py-4 text-center">Deuda Total</th>
-                  <th class="px-6 py-4 text-center">Teléfono</th>
-                  <th class="px-6 py-4 text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody id="tabla-alertas" class="divide-y divide-slate-100">
-                <!-- JS render -->
-              </tbody>
-            </table>
-          </div>
+        <div>
+          <h1 class="text-xl font-bold text-slate-900 tracking-tight">Alertas de Deuda</h1>
+          <p class="text-sm text-slate-500 font-medium">Notificaciones y recordatorios</p>
         </div>
-
       </div>
-    </main>
+
+      <a href="/index.html" class="inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900">
+        <i class="ph ph-arrow-left text-lg mr-2"></i> Volver
+      </a>
+    </div>
+  </div>
+</header>
+
+<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
+
+  <!-- TARJETA DE ESTADO -->
+  <div id="sin-alertas" class="hidden bg-emerald-50 border border-emerald-200 rounded-2xl p-12 text-center">
+    <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <i class="ph ph-check text-4xl text-emerald-600"></i>
+    </div>
+    <h2 class="text-2xl font-bold text-emerald-800">¡Excelente!</h2>
+    <p class="text-emerald-600 mt-2">Todos los jugadores tienen sus cuentas al día.</p>
   </div>
 
-  <!-- JS PRINCIPAL -->
-  <script type="module" src="/recursos/js/alertas.js"></script>
-  
-  <!-- SCRIPT INLINE PARA MENU MÓVIL (Solución rápida) -->
-  <script>
-    const openBtn = document.getElementById('open-sidebar');
-    const closeBtn = document.getElementById('close-sidebar');
-    const sidebar = document.getElementById('mobile-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
+  <!-- TABLA DE DEUDORES -->
+  <div id="con-alertas" class="bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
+    
+    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+      <div>
+        <h3 class="font-bold text-slate-900 text-lg">Lista de Deudores</h3>
+        <p class="text-xs text-slate-500 mt-1">Jugadores con saldo pendiente (Meta: $50.000)</p>
+      </div>
+      <div class="text-right">
+        <span class="text-xs font-bold text-rose-600 uppercase tracking-wider">Alertas Activas</span>
+      </div>
+    </div>
 
-    const openMenu = () => {
-      if (sidebar && overlay) {
-        sidebar.classList.remove('-translate-x-full');
-        sidebar.classList.add('translate-x-0');
-        overlay.classList.remove('hidden');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
-      }
-    };
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-sm">
+        <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-bold tracking-wider border-b border-slate-200">
+          <tr>
+            <th class="px-6 py-4">Jugador</th>
+            <th class="px-6 py-4 text-center">Progreso de Pago</th>
+            <th class="px-6 py-4 text-center">Deuda Total</th>
+            <th class="px-6 py-4 text-center">Teléfono</th>
+            <th class="px-6 py-4 text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="tabla-alertas" class="divide-y divide-slate-100">
+          <!-- Se llena con JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
 
-    const closeMenu = () => {
-      if (sidebar && overlay) {
-        sidebar.classList.add('-translate-x-full');
-        sidebar.classList.remove('translate-x-0');
-        overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.classList.add('hidden'), 300);
-      }
-    };
+</main>
 
-    if (openBtn) openBtn.addEventListener('click', openMenu);
-    if (closeBtn) closeBtn.addEventListener('click', closeMenu);
-    if (overlay) overlay.addEventListener('click', closeMenu);
-  </script>
+<!-- JS -->
+<script type="module" src="/recursos/js/alertas.js"></script>
 
 </body>
 </html>
