@@ -1,11 +1,16 @@
 import { apiFetch } from './configuracion.js';
 
+// CONFIGURACIÓN
 const META_MENSUALIDAD = 50000;
 const FILAS_POR_PAGINA = 8;
+
+// VARIABLES GLOBALES
 let todosLosJugadores = [];
 let jugadoresFiltrados = [];
 let actividadCombinada = [];
+let todosLosPagos = []; // <--- AQUÍ ESTABA EL FALTA (CORREGIDO)
 
+// DOM ELEMENTS
 const tbody = document.getElementById('tabla-jugadores');
 const feedEl = document.getElementById('actividad-feed');
 const infoPaginacion = document.getElementById('info-paginacion');
@@ -22,14 +27,16 @@ document.addEventListener('DOMContentLoaded', async () => {
   const hoy = new Date();
   document.getElementById('fecha-actual').innerText = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
+  // Listeners
   if (buscador) buscador.addEventListener('input', aplicarFiltros);
   if (filtroCat) filtroCat.addEventListener('change', aplicarFiltros);
 
+  // Cargar Datos
   await cargarDatos();
 });
 
 // ==========================
-// LÓGICA DEL SALUDO ANIMADO
+// LÓGICA DEL SALUDO
 // ==========================
 function configurarSaludo() {
   const hora = new Date().getHours();
@@ -65,7 +72,7 @@ async function cargarDatos() {
     ]);
 
     todosLosJugadores = Array.isArray(jugadoresData) ? jugadoresData : [];
-    todosLosPagos = Array.isArray(pagosData) ? pagosData : [];
+    todosLosPagos = Array.isArray(pagosData) ? pagosData : []; // Ahora la variable existe
     
     generarActividadFeed();
     actualizarKPIs();
