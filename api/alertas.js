@@ -12,26 +12,40 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Método no permitido' });
     }
 
-    // 1. Obtener todos los jugadores
-    const { rows: jugadores } = await pool.query(`
-      SELECT id, nombre, telefono, mensualidad, categoria
-      FROM jugadores
-      WHERE activo = true
-      ORDER BY nombre ASC
-    `);
-
     const META_MENSUALIDAD = 50000;
 
-    // 2. Filtrar solo deudores (Acumulado < Meta)
-    const deudores = jugadores.filter(j => j.mensualidad < META_MENSUALIDAD).map(j => {
-      const deuda = META_MENSUALIDAD - j.mensualidad;
+    // 1. Obtener jugadores con deudas y el último mes que pagaron
+    const { rows: deudoresData } = await pool.query(`
+      SELECT
+        j.id,
+        j.nombre,
+        j.categoria,
+        j.telefono,
+        j.mensualidad,
+        p.mes_pago AS mes_abono
+      FROM jugadores j
+      LEFT JOIN (
+        -- Subconsulta para obtener solo el ÚLTIMO pago de cada jugador
+        SELECT DISTINCT ON (jugador_id) 
+          jugador_id, 
+          mes_pago
+        FROM pagos
+        ORDER BY jugador_id, fecha DESC
+      ) p ON j.id = p.jugador_id
+      WHERE j.activo = true AND j.mensualidad < $1
+      ORDER BY j.mensualidad ASC
+    `, [META_MENSUALIDAD]);
+
+    // 2. Calcular la deuda para cada uno
+    const deudores = deudoresData.map(j => {
       return {
         id: j.id,
         nombre: j.nombre,
         categoria: j.categoria,
         telefono: j.telefono,
         pagado: j.mensualidad,
-        deuda: deuda
+        deuda: META_MENSUALIDAD - j.mensualidad,
+        mes_abono: j.mes_abono // Nuevo campo: En qué mes pagó
       };
     });
 
