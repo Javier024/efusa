@@ -7,6 +7,7 @@ let jugadoresFiltrados = [];
 let actividadCombinada = [];
 let todosLosPagos = [];
 
+// DOM ELEMENTS
 const tbody = document.getElementById('tabla-jugadores');
 const feedEl = document.getElementById('actividad-feed');
 const infoPaginacion = document.getElementById('info-paginacion');
@@ -16,20 +17,22 @@ const buscador = document.getElementById('buscador');
 const filtroCat = document.getElementById('filtro-categoria');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Configurar Saludo
+  // 1. Configurar Saludo
   configurarSaludo();
 
-  // Configurar Fecha
+  // 2. Configurar Fecha
   const hoy = new Date();
-  document.getElementById('fecha-actual').innerText = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  const fechaEl = document.getElementById('fecha-actual');
+  if (fechaEl) fechaEl.innerText = hoy.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
 
-  // Listeners
+  // 3. Listeners
   if (buscador) buscador.addEventListener('input', aplicarFiltros);
   if (filtroCat) filtroCat.addEventListener('change', aplicarFiltros);
 
-  // Lógica Responsive (Menú Móvil)
+  // 4. Configurar Menú Responsive (LAS 3 RAYITAS)
   setupMobileMenu();
 
+  // 5. Cargar Datos
   await cargarDatos();
 });
 
@@ -41,36 +44,47 @@ function setupMobileMenu() {
   const closeBtn = document.getElementById('close-sidebar');
   const sidebar = document.getElementById('mobile-sidebar');
   const overlay = document.getElementById('sidebar-overlay');
+  const links = sidebar.querySelectorAll('a'); // Todos los enlaces del menú
 
+  // Función para abrir menú
   const openMenu = () => {
     if (sidebar && overlay) {
+      // Quitar clase de ocultar (-translate-x-full) y poner visible (translate-x-0)
       sidebar.classList.remove('-translate-x-full');
       sidebar.classList.add('translate-x-0');
+      
+      // Mostrar overlay
       overlay.classList.remove('hidden');
       setTimeout(() => overlay.classList.remove('opacity-0'), 10);
     }
   };
 
+  // Función para cerrar menú
   const closeMenu = () => {
     if (sidebar && overlay) {
+      // Ocultar sidebar
       sidebar.classList.add('-translate-x-full');
       sidebar.classList.remove('translate-x-0');
+      
+      // Desvanecer overlay
       overlay.classList.add('opacity-0');
       setTimeout(() => overlay.classList.add('hidden'), 300);
     }
   };
 
+  // Asignar evento a las rayitas
   if (openBtn) openBtn.addEventListener('click', openMenu);
+  
+  // Asignar evento al botón X dentro del menú
   if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  
+  // Asignar evento al fondo oscuro
   if (overlay) overlay.addEventListener('click', closeMenu);
 
-  // Exportar a window para usar en HTML onclick (opcional pero útil)
-  window.toggleSidebar = function() {
-    // Si estamos en móvil, cerrar al hacer clic en un enlace
-    if (window.innerWidth < 768) {
-      closeMenu();
-    }
-  };
+  // Asignar evento a los enlaces (cerrar menú al navegar)
+  links.forEach(link => {
+    link.addEventListener('click', closeMenu);
+  });
 }
 
 // ==========================
@@ -87,7 +101,7 @@ function configurarSaludo() {
   if (saludoEl) {
     saludoEl.innerText = `${textoSaludo}, Admin`;
     saludoEl.classList.remove('animar-saludo');
-    void saludoEl.offsetWidth;
+    void saludoEl.offsetWidth; 
     saludoEl.classList.add('animar-saludo');
   }
 }
@@ -167,7 +181,7 @@ window.exportarPDF = function() {
   const doc = new jsPDF();
 
   doc.setFontSize(18);
-  doc.setTextColor(22, 163, 74); // Brand Green
+  doc.setTextColor(22, 163, 74); // Verde
   doc.text("Reporte de Jugadores - EFUSA", 14, 20);
   
   doc.setFontSize(10);
@@ -187,7 +201,7 @@ window.exportarPDF = function() {
     body: body,
     startY: 35,
     theme: 'grid',
-    headStyles: { fillColor: [22, 163, 74] }, // Green
+    headStyles: { fillColor: [22, 163, 74] },
     styles: { fontSize: 9, cellPadding: 3 }
   });
 
