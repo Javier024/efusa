@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Panel Principal | EFUSA</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
   <!-- FAVORITO VERDE SOLICITADO -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2222c55e%22>⚽</text></svg>">
@@ -20,7 +20,6 @@
           },
           boxShadow: {
             'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-            'float': '0 10px 40px -10px rgba(0,0,0,0.1)'
           }
         }
       }
@@ -40,17 +39,11 @@
 
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; }
-    
-    /* Scrollbars personalizados */
+    .nav-link.active { background-color: #EFF6FF; color: #2563EB; border-right: 3px solid #2563EB; }
     .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: transparent; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
-    
-    /* Sidebar transition para móvil */
-    .sidebar-transition {
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
     
     /* Estilo de línea de tiempo */
     .activity-line::before {
@@ -69,48 +62,27 @@
       0% { opacity: 0; transform: translateY(-15px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    .animar-saludo { animation: slideInFade 0.8s ease-out forwards; }
-
-    /* Overlay oscuro para el menú móvil */
-    #mobile-overlay {
-      background-color: rgba(0,0,0,0.5);
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s ease;
-    }
-    #mobile-overlay.active {
-      opacity: 1;
-      pointer-events: auto;
+    .animar-saludo {
+      animation: slideInFade 0.8s ease-out forwards;
     }
   </style>
 </head>
 
 <body class="text-slate-800 antialiased h-screen flex overflow-hidden">
 
-  <!-- OVERLAY PARA MÓVIL -->
-  <div id="mobile-overlay" class="fixed inset-0 z-20 md:hidden" onclick="toggleSidebar()"></div>
-
   <!-- SIDEBAR -->
-  <!-- En móvil: fixed, off-canvas left. En Desktop: static, visible. -->
-  <aside id="sidebar" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 flex flex-col transform -translate-x-full md:relative md:translate-x-0 sidebar-transition shadow-xl md:shadow-none h-full">
-    
-    <div class="h-20 flex items-center justify-between px-6 border-b border-slate-100">
-      <div class="flex items-center">
-        <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-500/30">
-          <i class="ph ph-soccer-ball text-xl"></i>
-        </div>
-        <div>
-          <h1 class="text-xl font-bold text-slate-900 tracking-tight">EFUSA</h1>
-          <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión Deportiva</p>
-        </div>
+  <aside class="w-64 bg-white border-r border-slate-200 flex flex-col z-20 shadow-lg hidden md:flex">
+    <div class="h-20 flex items-center px-6 border-b border-slate-100">
+      <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-500/30">
+        <i class="ph ph-soccer-ball text-xl"></i>
       </div>
-      <!-- Botón cerrar solo visible en móvil -->
-      <button onclick="toggleSidebar()" class="md:hidden text-slate-400 hover:text-slate-600">
-        <i class="ph ph-x text-2xl"></i>
-      </button>
+      <div>
+        <h1 class="text-xl font-bold text-slate-900 tracking-tight">EFUSA</h1>
+        <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión Deportiva</p>
+      </div>
     </div>
 
-    <nav class="flex-1 py-6 space-y-1 px-3 overflow-y-auto custom-scroll">
+    <nav class="flex-1 py-6 space-y-1 px-3">
       <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
         <i class="ph ph-squares-four text-lg"></i> Panel Principal
       </a>
@@ -136,99 +108,77 @@
     </div>
   </aside>
 
-  <!-- MAIN CONTENT WRAPPER -->
-  <div class="flex-1 flex flex-col h-full overflow-hidden relative w-full">
-    
-    <!-- HEADER MÓVIL Y ESCRITORIO -->
-    <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 md:px-6 shrink-0">
-      <div class="flex items-center gap-3">
-        <button onclick="toggleSidebar()" class="md:hidden text-slate-600 p-1 rounded-md hover:bg-slate-100 transition">
-          <i class="ph ph-list text-2xl"></i>
-        </button>
-        <span class="font-bold text-lg text-brand-600 md:hidden">EFUSA Móvil</span>
-      </div>
-      
-      <!-- Opcional: Notificaciones o Perfil en el header derecho -->
-      <div class="hidden md:flex items-center gap-4">
-        <span class="text-xs text-slate-500 font-medium" id="fecha-header"></span>
-        <div class="w-8 h-8 rounded-full bg-slate-200 overflow-hidden border border-slate-300">
-           <img src="https://picsum.photos/seed/admin/100/100" alt="Admin" class="w-full h-full object-cover">
-        </div>
-      </div>
+  <!-- MAIN CONTENT -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden relative">
+    <header class="md:hidden h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4">
+      <div class="font-bold text-lg text-brand-600">EFUSA</div>
+      <button class="text-slate-600"><i class="ph ph-list text-2xl"></i></button>
     </header>
 
-    <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/50 p-4 md:p-6 lg:p-8">
+    <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/50 p-4 md:p-8">
       
-      <div class="max-w-7xl mx-auto space-y-6 pb-20 md:pb-0">
+      <div class="max-w-7xl mx-auto space-y-6">
 
         <!-- Top Row: Bienvenida y Acciones Rápidas -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <!-- Bienvenida -->
           <div class="md:col-span-2">
-            <h2 id="saludo-dinamico" class="text-2xl md:text-3xl font-bold text-slate-900 animar-saludo">Bienvenido, Admin</h2>
-            <p class="text-slate-500 text-sm md:text-base">Aquí tienes el resumen de operaciones de hoy.</p>
-            <div class="mt-2 text-xs text-slate-400 md:hidden" id="fecha-mobile"></div>
+            <!-- ID para el saludo dinámico -->
+            <h2 id="saludo-dinamico" class="text-2xl font-bold text-slate-900">Bienvenido, Admin</h2>
+            <p class="text-slate-500">Aquí tienes el resumen de operaciones de hoy.</p>
+            <div class="mt-2 text-xs text-slate-400" id="fecha-actual"></div>
           </div>
 
           <!-- Botones Rápidos -->
-          <div class="flex gap-3 h-full items-stretch md:items-end">
-            <a href="jugadores.html" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-brand-500/20 transition flex flex-col items-center justify-center gap-1 group active:scale-95 duration-150">
-              <i class="ph ph-user-plus text-xl md:text-2xl group-hover:scale-110 transition"></i>
-              <span class="text-[10px] md:text-xs">Nuevo Jugador</span>
+          <div class="flex gap-3 h-full items-end">
+            <a href="jugadores.html" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-brand-500/20 transition flex flex-col items-center justify-center gap-1 group">
+              <i class="ph ph-user-plus text-xl group-hover:scale-110 transition"></i>
+              <span class="text-xs">Nuevo Jugador</span>
             </a>
-            <a href="pagos.html" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition flex flex-col items-center justify-center gap-1 group active:scale-95 duration-150">
-              <i class="ph ph-money text-xl md:text-2xl group-hover:scale-110 transition"></i>
-              <span class="text-[10px] md:text-xs">Registrar Pago</span>
+            <a href="pagos.html" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition flex flex-col items-center justify-center gap-1 group">
+              <i class="ph ph-money text-xl group-hover:scale-110 transition"></i>
+              <span class="text-xs">Registrar Pago</span>
             </a>
           </div>
         </div>
 
         <!-- KPI CARDS -->
-        <!-- Grid: 2 columnas en móvil, 4 en escritorio -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-          <!-- Total -->
-          <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-soft flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Jugadores</p>
-              <div class="w-8 h-8 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center shrink-0"><i class="ph ph-users text-lg"></i></div>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Total</p>
+              <h3 id="stat-total" class="text-2xl font-bold text-slate-900">0</h3>
             </div>
-            <h3 id="stat-total" class="text-2xl md:text-3xl font-bold text-slate-900 mt-2">0</h3>
+            <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center"><i class="ph ph-users text-lg"></i></div>
           </div>
-          
-          <!-- Dinero -->
-          <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-soft flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recaudado</p>
-              <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0"><i class="ph ph-currency-dollar text-lg"></i></div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Dinero</p>
+              <h3 id="stat-dinero" class="text-lg font-bold text-emerald-600">$0</h3>
             </div>
-            <h3 id="stat-dinero" class="text-xl md:text-2xl font-bold text-emerald-600 mt-2 truncate">$0</h3>
+            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="ph ph-currency-dollar text-lg"></i></div>
           </div>
-          
-          <!-- Activos -->
-          <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-soft flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Activos</p>
-              <div class="w-8 h-8 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center shrink-0"><i class="ph ph-check text-lg"></i></div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Activos</p>
+              <h3 id="stat-activos" class="text-2xl font-bold text-brand-600">0</h3>
             </div>
-            <h3 id="stat-activos" class="text-2xl md:text-3xl font-bold text-brand-600 mt-2">0</h3>
+            <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center"><i class="ph ph-check text-lg"></i></div>
           </div>
-          
-          <!-- Deudores -->
-          <div class="bg-white p-4 md:p-5 rounded-2xl border border-slate-200 shadow-soft flex flex-col justify-between">
-            <div class="flex justify-between items-start">
-              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Deudores</p>
-              <div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0"><i class="ph ph-warning text-lg"></i></div>
+          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase">Deudores</p>
+              <h3 id="stat-deudores" class="text-2xl font-bold text-rose-600">0</h3>
             </div>
-            <h3 id="stat-deudores" class="text-2xl md:text-3xl font-bold text-rose-600 mt-2">0</h3>
+            <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="ph ph-warning text-lg"></i></div>
           </div>
         </div>
 
         <!-- MAIN CONTENT AREA: Grid 1/3 - 2/3 -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
           <!-- COLUMNA IZQUIERDA: ACTIVIDAD RECIENTE -->
-          <!-- En móvil esta sección puede ir debajo de la tabla, pero para el demo la dejo primero o ajustamos el orden visual si es necesario -->
-          <section class="xl:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden h-full order-2 xl:order-1">
+          <section class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden h-full">
             <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <i class="ph ph-clock-counter-clockwise text-brand-600"></i> Actividad
@@ -241,64 +191,54 @@
           </section>
 
           <!-- COLUMNA DERECHA: LISTADO DE JUGADORES -->
-          <section class="xl:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden flex flex-col order-1 xl:order-2">
-            
-            <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex flex-col gap-4 bg-slate-50/50">
-              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                  <i class="ph ph-list-dashes text-brand-600"></i> Directorio
-                </h3>
-                <div class="flex gap-2 self-end md:self-auto">
-                  <button onclick="exportarExcel()" class="text-xs font-bold px-3 py-2 border rounded text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition flex items-center gap-1">
-                    <i class="ph ph-file-xls"></i> <span class="hidden sm:inline">Excel</span>
-                  </button>
-                  <button onclick="exportarPDF()" class="text-xs font-bold px-3 py-2 border rounded text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition flex items-center gap-1">
-                    <i class="ph ph-file-pdf"></i> <span class="hidden sm:inline">PDF</span>
-                  </button>
-                </div>
+          <section class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
+              <h3 class="font-bold text-slate-900 flex items-center gap-2">
+                <i class="ph ph-list-dashes text-brand-600"></i> Directorio
+              </h3>
+              <div class="flex gap-2">
+                <button onclick="exportarExcel()" class="text-xs font-bold px-3 py-1.5 border rounded text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition"><i class="ph ph-file-xls"></i> Excel</button>
+                <button onclick="exportarPDF()" class="text-xs font-bold px-3 py-1.5 border rounded text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"><i class="ph ph-file-pdf"></i> PDF</button>
               </div>
-              
-              <!-- Filtros Responsivos -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div class="md:col-span-2 relative">
-                  <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
-                  <input type="text" id="buscador" placeholder="Buscar nombre o categoría..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
-                </div>
-                <div>
-                  <select id="filtro-categoria" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none">
-                    <option value="">Todas las categorías</option>
-                    <option value="Sub 17-18">Sub 17-18</option>
-                    <option value="Sub 16-15">Sub 16-15</option>
-                    <option value="Sub 14-13">Sub 14-13</option>
-                    <option value="Sub 12-11">Sub 12-11</option>
-                    <option value="Sub 10-9">Sub 10-9</option>
-                    <option value="Sub 8-7">Sub 8-7</option>
-                  </select>
-                </div>
+            </div>
+            
+            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-100">
+              <div class="md:col-span-2 relative">
+                <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
+                <input type="text" id="buscador" placeholder="Buscar jugador..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+              </div>
+              <div>
+                <select id="filtro-categoria" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none">
+                  <option value="">Todas las categorías</option>
+                  <option value="Sub 17-18">Sub 17-18</option>
+                  <option value="Sub 16-15">Sub 16-15</option>
+                  <option value="Sub 14-13">Sub 14-13</option>
+                  <option value="Sub 12-11">Sub 12-11</option>
+                  <option value="Sub 10-9">Sub 10-9</option>
+                  <option value="Sub 8-7">Sub 8-7</option>
+                </select>
               </div>
             </div>
 
-            <!-- Tabla Responsive -->
-            <div class="overflow-x-auto flex-1 custom-scroll">
-              <table class="w-full text-left text-xs whitespace-nowrap">
-                <thead class="bg-slate-50 text-slate-500 uppercase font-bold sticky top-0 z-10 shadow-sm">
+            <div class="overflow-x-auto flex-1">
+              <table class="w-full text-left text-xs">
+                <thead class="bg-slate-50 text-slate-500 uppercase font-bold">
                   <tr>
-                    <th class="px-4 md:px-6 py-3">Jugador</th>
-                    <th class="px-4 md:px-6 py-3">Categoría</th>
-                    <th class="px-4 md:px-6 py-3">Estado</th>
-                    <th class="px-4 md:px-6 py-3 text-right">Acción</th>
+                    <th class="px-4 py-3">Jugador</th>
+                    <th class="px-4 py-3">Categoría</th>
+                    <th class="px-4 py-3">Estado</th>
+                    <th class="px-4 py-3">Acción</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-jugadores" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
 
-            <!-- Paginación -->
-            <div class="px-4 md:px-6 py-3 border-t border-slate-200 flex justify-between items-center bg-slate-50/30">
+            <div class="px-6 py-3 border-t border-slate-200 flex justify-between items-center bg-slate-50/30">
               <span id="info-paginacion" class="text-[10px] text-slate-500 font-medium"></span>
               <div class="flex gap-1">
-                <button id="btn-prev" onclick="cambiarPagina(-1)" class="px-3 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"><i class="ph ph-caret-left"></i></button>
-                <button id="btn-next" onclick="cambiarPagina(1)" class="px-3 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"><i class="ph ph-caret-right"></i></button>
+                <button id="btn-prev" onclick="cambiarPagina(-1)" class="px-2 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"><</button>
+                <button id="btn-next" onclick="cambiarPagina(1)" class="px-2 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50">></button>
               </div>
             </div>
           </section>
@@ -308,256 +248,7 @@
     </main>
   </div>
 
-  <!-- LÓGICA DEL DASHBOARD -->
-  <script>
-    // --- DATOS MOCK ---
-    const jugadoresMock = [
-      { id: 1, nombre: "Mateo Rojas", categoria: "Sub 17-18", estado: "activo", deuda: 0 },
-      { id: 2, nombre: "Lucas Fernández", categoria: "Sub 14-13", estado: "activo", deuda: 0 },
-      { id: 3, nombre: "Sofia Morales", categoria: "Sub 16-15", estado: "deudor", deuda: 50 },
-      { id: 4, nombre: "Valentina Díaz", categoria: "Sub 12-11", estado: "activo", deuda: 0 },
-      { id: 5, nombre: "Santiago Torres", categoria: "Sub 10-9", estado: "inactivo", deuda: 0 },
-      { id: 6, nombre: "Martina García", categoria: "Sub 8-7", estado: "deudor", deuda: 25 },
-      { id: 7, nombre: "Joaquín López", categoria: "Sub 17-18", estado: "activo", deuda: 0 },
-      { id: 8, nombre: "Emily Ramos", categoria: "Sub 14-13", estado: "activo", deuda: 0 },
-      { id: 9, nombre: "Tomás Ruiz", categoria: "Sub 16-15", estado: "deudor", deuda: 100 },
-      { id: 10, nombre: "Camila Silva", categoria: "Sub 12-11", estado: "activo", deuda: 0 },
-      { id: 11, nombre: "Sebastián Castro", categoria: "Sub 17-18", estado: "activo", deuda: 0 },
-      { id: 12, nombre: "Isabella Ortiz", categoria: "Sub 8-7", estado: "inactivo", deuda: 0 },
-    ];
+  <script type="module" src="recursos/js/dashboard.js"></script>
 
-    const actividadesMock = [
-      { texto: "Nuevo pago de Mateo Rojas", tiempo: "Hace 5 min", icono: "ph-money", color: "text-emerald-600" },
-      { texto: "Jugador Sofía Morales marcado como Deudor", tiempo: "Hace 1 hora", icono: "ph-warning", color: "text-rose-600" },
-      { texto: "Categoría Sub 14-13 actualizada", tiempo: "Hace 3 horas", icono: "ph-pencil-simple", color: "text-brand-600" },
-      { texto: "Nuevo jugador registrado: Tomás Ruiz", tiempo: "Ayer", icono: "ph-user-plus", color: "text-slate-600" },
-      { texto: "Reporte mensual generado", tiempo: "Hace 2 días", icono: "ph-file-pdf", color: "text-slate-600" },
-    ];
-
-    // --- ESTADO ---
-    let paginaActual = 1;
-    const filasPorPagina = 5;
-    let filtroTexto = "";
-    let filtroCategoria = "";
-
-    // --- INICIALIZACIÓN ---
-    document.addEventListener('DOMContentLoaded', () => {
-      iniciarFecha();
-      renderizarStats();
-      renderizarActividad();
-      renderizarTabla();
-      
-      // Listeners para filtros
-      document.getElementById('buscador').addEventListener('input', (e) => {
-        filtroTexto = e.target.value.toLowerCase();
-        paginaActual = 1;
-        renderizarTabla();
-      });
-
-      document.getElementById('filtro-categoria').addEventListener('change', (e) => {
-        filtroCategoria = e.target.value;
-        paginaActual = 1;
-        renderizarTabla();
-      });
-    });
-
-    // --- FUNCIONES DE UI ---
-
-    // Control del Sidebar Móvil
-    function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('mobile-overlay');
-      
-      if (sidebar.classList.contains('-translate-x-full')) {
-        sidebar.classList.remove('-translate-x-full');
-        overlay.classList.add('active');
-      } else {
-        sidebar.classList.add('-translate-x-full');
-        overlay.classList.remove('active');
-      }
-    }
-
-    function iniciarFecha() {
-      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-      const now = new Date();
-      const dateStr = now.toLocaleDateString('es-ES', options);
-      const capitalized = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
-      
-      // Saludo dinámico
-      const hour = now.getHours();
-      let saludo = "Buenos días";
-      if (hour >= 12 && hour < 18) saludo = "Buenas tardes";
-      if (hour >= 18) saludo = "Buenas noches";
-      
-      document.getElementById('saludo-dinamico').innerText = `${saludo}, Admin`;
-      
-      // Fechas en headers
-      const fechaHeader = document.getElementById('fecha-header');
-      if(fechaHeader) fechaHeader.innerText = capitalized;
-
-      const fechaMobile = document.getElementById('fecha-mobile');
-      if(fechaMobile) fechaMobile.innerText = capitalized;
-    }
-
-    function renderizarStats() {
-      const total = jugadoresMock.length;
-      const activos = jugadoresMock.filter(j => j.estado === 'activo').length;
-      const deudores = jugadoresMock.filter(j => j.estado === 'deudor').length;
-      
-      // Calculo ficticio de dinero (solo para demo)
-      const dinero = jugadoresMock.reduce((acc, curr) => acc + (curr.deuda === 0 ? 50 : 0), 0); 
-      
-      // Animación simple de conteo
-      animateValue("stat-total", 0, total, 1000);
-      animateValue("stat-dinero", 0, dinero, 1000, "$");
-      animateValue("stat-activos", 0, activos, 1000);
-      animateValue("stat-deudores", 0, deudores, 1000);
-    }
-
-    function animateValue(id, start, end, duration, prefix = "") {
-      const obj = document.getElementById(id);
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        const value = Math.floor(progress * (end - start) + start);
-        obj.innerHTML = prefix + value;
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      window.requestAnimationFrame(step);
-    }
-
-    function renderizarActividad() {
-      const container = document.getElementById('actividad-feed');
-      container.innerHTML = '';
-      
-      actividadesMock.forEach(act => {
-        const html = `
-          <div class="activity-item flex gap-3 relative activity-line">
-            <div class="w-8 h-8 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center shrink-0 z-10">
-              <i class="ph ${act.icono} ${act.color}"></i>
-            </div>
-            <div class="pt-0.5">
-              <p class="text-xs font-medium text-slate-700 leading-tight mb-0.5">${act.texto}</p>
-              <p class="text-[10px] text-slate-400">${act.tiempo}</p>
-            </div>
-          </div>
-        `;
-        container.innerHTML += html;
-      });
-    }
-
-    function renderizarTabla() {
-      const tbody = document.getElementById('tabla-jugadores');
-      tbody.innerHTML = '';
-      
-      // Filtrado
-      const filtrados = jugadoresMock.filter(j => {
-        const coincideTexto = j.nombre.toLowerCase().includes(filtroTexto) || j.categoria.toLowerCase().includes(filtroTexto);
-        const coincideCat = filtroCategoria === "" || j.categoria === filtroCategoria;
-        return coincideTexto && coincideCat;
-      });
-
-      // Paginación
-      const totalPaginas = Math.ceil(filtrados.length / filasPorPagina) || 1;
-      const inicio = (paginaActual - 1) * filasPorPagina;
-      const fin = inicio + filasPorPagina;
-      const paginaJugadores = filtrados.slice(inicio, fin);
-
-      // Render filas
-      if (paginaJugadores.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-slate-400 text-xs">No se encontraron jugadores</td></tr>`;
-      } else {
-        paginaJugadores.forEach(j => {
-          // Estilo badge según estado
-          let badgeClass = "";
-          if(j.estado === 'activo') badgeClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
-          else if(j.estado === 'deudor') badgeClass = "bg-rose-100 text-rose-700 border-rose-200";
-          else badgeClass = "bg-slate-100 text-slate-600 border-slate-200";
-
-          tbody.innerHTML += `
-            <tr class="hover:bg-slate-50 transition-colors group">
-              <td class="px-4 md:px-6 py-3">
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600 border border-white shadow-sm">
-                    ${j.nombre.split(' ').map(n=>n[0]).join('')}
-                  </div>
-                  <div>
-                    <p class="font-semibold text-slate-800">${j.nombre}</p>
-                    <p class="text-[10px] text-slate-400 md:hidden">${j.categoria}</p>
-                  </div>
-                </div>
-              </td>
-              <td class="px-4 md:px-6 py-3 hidden md:table-cell">
-                <span class="text-slate-600">${j.categoria}</span>
-              </td>
-              <td class="px-4 md:px-6 py-3">
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium border ${badgeClass}">
-                  ${j.estado.charAt(0).toUpperCase() + j.estado.slice(1)}
-                </span>
-              </td>
-              <td class="px-4 md:px-6 py-3 text-right">
-                <button class="text-slate-400 hover:text-brand-600 p-1.5 rounded-md hover:bg-brand-50 transition">
-                  <i class="ph ph-dots-three-vertical text-lg"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-        });
-      }
-
-      // Actualizar controles de paginación
-      document.getElementById('info-paginacion').innerText = `Página ${paginaActual} de ${totalPaginas}`;
-      document.getElementById('btn-prev').disabled = paginaActual === 1;
-      document.getElementById('btn-next').disabled = paginaActual === totalPaginas;
-    }
-
-    function cambiarPagina(delta) {
-      paginaActual += delta;
-      renderizarTabla();
-    }
-
-    // --- FUNCIONES DE EXPORTACIÓN ---
-    
-    function exportarExcel() {
-      // Usamos la librería XLSX incluida en el head
-      const ws = XLSX.utils.json_to_sheet(jugadoresMock);
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "Jugadores");
-      XLSX.writeFile(wb, "Reporte_EFUSA_Jugadores.xlsx");
-    }
-
-    function exportarPDF() {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
-      
-      // Título
-      doc.setFontSize(16);
-      doc.text("Reporte de Jugadores - EFUSA", 14, 20);
-      doc.setFontSize(10);
-      doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 14, 28);
-
-      // Preparar datos para la tabla
-      const tablaData = jugadoresMock.map(j => [
-        j.nombre,
-        j.categoria,
-        j.estado.toUpperCase(),
-        j.deuda > 0 ? `$${j.deuda}` : "$0"
-      ]);
-
-      doc.autoTable({
-        head: [['Nombre', 'Categoría', 'Estado', 'Deuda']],
-        body: tablaData,
-        startY: 35,
-        theme: 'grid',
-        headStyles: { fillColor: [37, 99, 235] }, // Brand color
-        styles: { fontSize: 8 }
-      });
-
-      doc.save("Reporte_EFUSA_Jugadores.pdf");
-    }
-  </script>
 </body>
 </html>

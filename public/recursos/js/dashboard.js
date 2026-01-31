@@ -1,16 +1,12 @@
 import { apiFetch } from './configuracion.js';
 
-// CONFIGURACIÓN
 const META_MENSUALIDAD = 50000;
 const FILAS_POR_PAGINA = 8;
-
-// VARIABLES GLOBALES
 let todosLosJugadores = [];
 let jugadoresFiltrados = [];
 let actividadCombinada = [];
-let todosLosPagos = []; // <--- AQUÍ ESTABA EL FALTA (CORREGIDO)
+let todosLosPagos = [];
 
-// DOM ELEMENTS
 const tbody = document.getElementById('tabla-jugadores');
 const feedEl = document.getElementById('actividad-feed');
 const infoPaginacion = document.getElementById('info-paginacion');
@@ -20,7 +16,7 @@ const buscador = document.getElementById('buscador');
 const filtroCat = document.getElementById('filtro-categoria');
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Configurar Saludo Animado
+  // Configurar Saludo
   configurarSaludo();
 
   // Configurar Fecha
@@ -31,9 +27,51 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (buscador) buscador.addEventListener('input', aplicarFiltros);
   if (filtroCat) filtroCat.addEventListener('change', aplicarFiltros);
 
-  // Cargar Datos
+  // Lógica Responsive (Menú Móvil)
+  setupMobileMenu();
+
   await cargarDatos();
 });
+
+// ==========================
+// LOGICA RESPONSIVE (MÓVIL)
+// ==========================
+function setupMobileMenu() {
+  const openBtn = document.getElementById('open-sidebar');
+  const closeBtn = document.getElementById('close-sidebar');
+  const sidebar = document.getElementById('mobile-sidebar');
+  const overlay = document.getElementById('sidebar-overlay');
+
+  const openMenu = () => {
+    if (sidebar && overlay) {
+      sidebar.classList.remove('-translate-x-full');
+      sidebar.classList.add('translate-x-0');
+      overlay.classList.remove('hidden');
+      setTimeout(() => overlay.classList.remove('opacity-0'), 10);
+    }
+  };
+
+  const closeMenu = () => {
+    if (sidebar && overlay) {
+      sidebar.classList.add('-translate-x-full');
+      sidebar.classList.remove('translate-x-0');
+      overlay.classList.add('opacity-0');
+      setTimeout(() => overlay.classList.add('hidden'), 300);
+    }
+  };
+
+  if (openBtn) openBtn.addEventListener('click', openMenu);
+  if (closeBtn) closeBtn.addEventListener('click', closeMenu);
+  if (overlay) overlay.addEventListener('click', closeMenu);
+
+  // Exportar a window para usar en HTML onclick (opcional pero útil)
+  window.toggleSidebar = function() {
+    // Si estamos en móvil, cerrar al hacer clic en un enlace
+    if (window.innerWidth < 768) {
+      closeMenu();
+    }
+  };
+}
 
 // ==========================
 // LÓGICA DEL SALUDO
@@ -43,20 +81,13 @@ function configurarSaludo() {
   const saludoEl = document.getElementById('saludo-dinamico');
   
   let textoSaludo = "Buenas noches";
+  if (hora >= 6 && hora < 12) textoSaludo = "Buenos días";
+  else if (hora >= 12 && hora < 18) textoSaludo = "Buenas tardes";
   
-  if (hora >= 6 && hora < 12) {
-    textoSaludo = "Buenos días";
-  } else if (hora >= 12 && hora < 18) {
-    textoSaludo = "Buenas tardes";
-  }
-  
-  // Cambiar el texto
   if (saludoEl) {
     saludoEl.innerText = `${textoSaludo}, Admin`;
-    
-    // Resetear y agregar la clase para reiniciar la animación
     saludoEl.classList.remove('animar-saludo');
-    void saludoEl.offsetWidth; // Hack para forzar el reflow del navegador
+    void saludoEl.offsetWidth;
     saludoEl.classList.add('animar-saludo');
   }
 }
@@ -72,7 +103,7 @@ async function cargarDatos() {
     ]);
 
     todosLosJugadores = Array.isArray(jugadoresData) ? jugadoresData : [];
-    todosLosPagos = Array.isArray(pagosData) ? pagosData : []; // Ahora la variable existe
+    todosLosPagos = Array.isArray(pagosData) ? pagosData : [];
     
     generarActividadFeed();
     actualizarKPIs();
@@ -80,7 +111,7 @@ async function cargarDatos() {
 
   } catch (error) {
     console.error('Error cargando dashboard:', error);
-    if (tbody) tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-red-500 text-xs">Error de conexión.</td></tr>`;
+    if (tbody) tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-red-500 text-xs">Error de conexión.</td></tr>`;
   }
 }
 
@@ -136,7 +167,7 @@ window.exportarPDF = function() {
   const doc = new jsPDF();
 
   doc.setFontSize(18);
-  doc.setTextColor(37, 99, 235);
+  doc.setTextColor(22, 163, 74); // Brand Green
   doc.text("Reporte de Jugadores - EFUSA", 14, 20);
   
   doc.setFontSize(10);
@@ -156,7 +187,7 @@ window.exportarPDF = function() {
     body: body,
     startY: 35,
     theme: 'grid',
-    headStyles: { fillColor: [37, 99, 235] },
+    headStyles: { fillColor: [22, 163, 74] }, // Green
     styles: { fontSize: 9, cellPadding: 3 }
   });
 
@@ -258,7 +289,7 @@ function renderizarTabla() {
   const datosPagina = jugadoresFiltrados.slice(inicio, fin);
 
   if (jugadoresFiltrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-4 text-slate-400 text-xs">No hay resultados.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-4 text-slate-400 text-xs">No hay resultados.</td></tr>`;
   } else {
     datosPagina.forEach(j => {
       const estado = calcularEstado(j.mensualidad);
@@ -270,6 +301,7 @@ function renderizarTabla() {
           <div class="font-bold text-slate-900 text-xs">${j.nombre}</div>
         </td>
         <td class="px-4 py-3 text-[10px] text-slate-500">${j.categoria}</td>
+        <td class="px-4 py-3 text-[10px] text-slate-600">${j.telefono || '-'}</td>
         <td class="px-4 py-3">
           <span class="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${estado.color}">
             ${estado.texto}
