@@ -59,9 +59,7 @@ async function cargarJugadoresSelect() {
 // ==========================
 // WHATSAPP (CORREGIDO)
 // ==========================
-// Ahora recibe solo el ID, no el objeto completo para evitar errores de sintaxis
 function enviarWhatsapp(idPago) {
-  // Buscamos el pago usando el ID
   const pago = todosLosPagos.find(p => p.id === idPago);
 
   if (!pago) {
@@ -318,8 +316,6 @@ function renderPagos(pagos) {
     // HTML Desktop
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-50 transition";
-    // AQUÍ ESTÁ LA CORRECCIÓN: En lugar de onclick="enviarWhatsapp({...objeto...})",
-    // Pasamos solo el ID: onclick="enviarWhatsapp(${p.id})"
     tr.innerHTML = `
       <td class="px-6 py-4 font-medium text-slate-900">${p.jugador}</td>
       <td class="px-6 py-4 text-slate-600">${p.fecha.split('T')[0]}</td>
@@ -360,7 +356,6 @@ function renderPagos(pagos) {
       </div>
       <div class="flex justify-between items-center pt-2 border-t border-slate-50">
          <button onclick="eliminarPago(${p.id})" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition">Eliminar</button>
-         <!-- AQUÍ TAMBIÉN LA CORRECCIÓN -->
          <button onclick="enviarWhatsapp(${p.id})" class="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-100 transition">
             <i class="ph ph-whatsapp-logo text-base"></i> Enviar
          </button>
@@ -382,3 +377,4 @@ window.eliminarPago = eliminarPago;
 window.limpiarFiltros = limpiarFiltros;
 window.irAPagar = irAPagar;
 window.renderizarResumen = renderizarResumen;
+window.enviarWhatsapp = enviarWhatsapp; // <--- ESTA ERA LA LÍNEA QUE FALTABA
