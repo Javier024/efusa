@@ -15,7 +15,9 @@
       theme: {
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: { slate: { 850: '#151f32' } },
+          colors: {
+            slate: { 850: '#151f32' } 
+          },
           boxShadow: { 'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)' }
         }
       }
@@ -31,10 +33,11 @@
     .custom-scroll::-webkit-scrollbar { height: 6px; }
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
 
-<body class="text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen flex flex flex-col">
 
 <!-- HEADER -->
 <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
@@ -52,7 +55,7 @@
       </div>
 
       <!-- Botón Volver: Icono en móvil, Texto completo en PC -->
-      <a href="/index.html" class="inline-flex items-center justify-center px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 active:scale-95">
+      <a href="/index.html" class="inline-flex items-center justify-center px-3 md:px-4 py-2.5 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 active:scale-95">
         <i class="ph ph-arrow-left text-lg md:mr-2"></i>
         <span class="hidden md:inline">Volver</span>
       </a>
@@ -71,7 +74,7 @@
         <h2 class="text-base md:text-lg font-bold text-slate-900">Registrar Nuevo Pago</h2>
     </div>
 
-    <form id="formPago" class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+    <form id="formPago" class="grid grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
       
       <!-- Sección Principal -->
       <div class="md:col-span-6 lg:col-span-4">
@@ -149,7 +152,8 @@
       <!-- Botón -->
       <div class="md:col-span-12 mt-2">
         <button type="submit" class="w-full flex justify-center items-center rounded-lg bg-emerald-600 px-3 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-emerald-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-all transform active:scale-[0.98]">
-          <i class="ph ph-check text-lg mr-2"></i> Guardar Pago
+          <i class="ph ph-check text-lg mr-2 text-lg md:mr-2"></i>
+          <span class="hidden md:inline">Guardar Pago</span>
         </button>
       </div>
 
@@ -163,7 +167,7 @@
 
   <!-- ESTADO DE CUENTAS (RESUMEN) -->
   <section class="bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
-    <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50/50">
+    <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50/50">
       <div class="flex items-center gap-2">
         <i class="ph ph-chart-pie-slice text-xl text-slate-600"></i>
         <h3 class="text-base md:text-lg font-bold text-slate-900">Estado de Cuentas</h3>
@@ -173,17 +177,16 @@
       <div class="flex bg-slate-100 p-1 rounded-lg text-xs md:text-sm">
         <label class="cursor-pointer">
           <input type="radio" name="filtro-resumen" value="todos" class="peer sr-only" checked onchange="renderizarResumen('todos')">
-          <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">Todos</span>
-        </label>
-        <label class="cursor-pointer">
+            <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">Todos</span>
+          </label>
           <input type="radio" name="filtro-resumen" value="deudores" class="peer sr-only" onchange="renderizarResumen('deudores')">
-          <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition-all">Deudores</span>
-        </label>
-        <label class="cursor-pointer">
-          <input type="radio" name="filtro-resumen" value="pagados" class="peer sr-only" onchange="renderizarResumen('pagados')">
-          <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">Pagados</span>
-        </label>
-      </div>
+            <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition-all">Deudores</span>
+          </label>
+          <label class="cursor-pointer">
+            <input type="radio" name="filtro-resumen" value="pagados" class="peer sr-only" onchange="renderizarResumen('pagados')">
+              <span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">Pagados</span>
+            </label>
+        </div>
     </div>
 
     <!-- Vista Desktop (Tabla) -->
@@ -191,11 +194,11 @@
       <table class="w-full text-left text-sm">
         <thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold">
           <tr>
-            <th class="px-4 py-3">Jugador</th>
-            <th class="px-4 py-3 text-center">Estado</th>
-            <th class="px-4 py-3 text-center">Detalle</th>
-            <th class="px-4 py-3 text-center">Acumulado</th>
-            <th class="px-4 py-3 text-right">Acción</th>
+            <th class="px-4 py-4">Jugador</th>
+            <th class="px-4 py-4 text-center">Estado</th>
+            <th class="px-4 py-4 text-center">Detalle</th>
+            <th class="px-4 py-4 text-center">Acumulado</th>
+            <th class="px-4 py-4 text-right">Acción</th>
           </tr>
         </thead>
         <tbody id="tabla-resumen" class="divide-y divide-slate-100">
@@ -211,15 +214,15 @@
   </section>
 
   <!-- FILTROS HISTORIAL -->
-  <section class="grid grid-cols-1 md:grid-cols-4 gap-4">
+  <section class="grid grid grid-cols-1 md:grid-cols-4 gap-4">
     <div class="md:col-span-2 relative">
       <i class="ph ph-magnifying-glass absolute left-4 top-3.5 text-slate-400 text-lg"></i>
       <input id="buscador" type="text" placeholder="Buscar por nombre, concepto..." class="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm shadow-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all">
     </div>
     <div class="bg-white p-2 rounded-xl border border-slate-200 flex items-center gap-2 shadow-sm">
-      <input id="filtro-inicio" type="date" class="text-xs border rounded px-2 py-2 bg-slate-50 focus:outline-none focus:border-emerald-500 text-slate-600">
+      <input id="filtro-inicio" type="date" class="text-xs border rounded-lg px-2 py-2 bg-slate-50 focus:outline-none focus:border-emerald-500 text-slate-600">
       <span class="text-slate-400 text-xs">-</span>
-      <input id="filtro-fin" type="date" class="text-xs border rounded px-2 py-2 bg-slate-50 focus:outline-none focus:border-emerald-500 text-slate-600">
+      <input id="filtro-fin" type="date" class="text-xs border rounded-lg px-2 py-2 bg-slate-50 focus:outline-none focus:border-emerald-500 text-slate-600">
       <button onclick="limpiarFiltros()" class="ml-auto text-xs text-rose-500 font-medium hover:underline px-2">Limpiar</button>
     </div>
     <div class="bg-slate-900 rounded-xl p-3 md:p-4 text-white shadow-lg flex items-center justify-between">
@@ -264,8 +267,7 @@
 
 </main>
 
-<!-- NAVEGACIÓN RÁPIDA (BOTTOM BAR) -->
-<!-- Asegúrate de que este bloque esté antes del cierre de body -->
+<!-- NAVEGACIÓN INFERIOR (BOTTOM BAR) -->
 <nav class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-lg border border-slate-200/80 rounded-2xl shadow-2xl z-50 flex justify-around items-center p-3 md:hidden max-w-sm mx-auto">
   <a href="/index.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition group">
     <i class="ph ph-house text-2xl group-hover:scale-110 transition-transform"></i>
@@ -289,4 +291,4 @@
 <script type="module" src="/recursos/js/pagos.js"></script>
 
 </body>
-</html> 
+</html>
