@@ -41,7 +41,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="flex justify-between items-center h-16 md:h-20">
       
-      <div class="flex items-center gap-3">
+      <div class="flex items-center gap-3 md:gap-4">
         <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 text-white">
           <i class="ph ph-money text-xl md:text-2xl"></i>
         </div>
@@ -51,8 +51,10 @@
         </div>
       </div>
 
-      <a href="/index.html" class="inline-flex items-center justify-center px-3 py-2 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 active:scale-95">
-        <i class="ph ph-arrow-left text-lg"></i>
+      <!-- Botón Volver: Icono en móvil, Texto completo en PC -->
+      <a href="/index.html" class="inline-flex items-center justify-center px-3 md:px-4 py-2 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 active:scale-95">
+        <i class="ph ph-arrow-left text-lg md:mr-2"></i>
+        <span class="hidden md:inline">Volver</span>
       </a>
     </div>
   </div>
@@ -62,13 +64,16 @@
 
   <!-- FORMULARIO DE REGISTRO -->
   <section class="bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-soft p-4 md:p-8">
-    <h2 class="text-base md:text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-      <i class="ph ph-plus-circle text-emerald-600"></i> Registrar Nuevo Pago
-    </h2>
+    <div class="mb-6 flex items-center gap-2">
+        <div class="p-1.5 bg-emerald-100 rounded-lg text-emerald-600">
+            <i class="ph ph-plus-circle text-lg"></i>
+        </div>
+        <h2 class="text-base md:text-lg font-bold text-slate-900">Registrar Nuevo Pago</h2>
+    </div>
 
     <form id="formPago" class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
       
-      <!-- Jugador -->
+      <!-- Sección Principal -->
       <div class="md:col-span-6 lg:col-span-4">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Jugador</label>
         <div class="relative">
@@ -79,7 +84,6 @@
         </div>
       </div>
 
-      <!-- Monto -->
       <div class="md:col-span-3">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Monto ($)</label>
         <div class="relative rounded-lg shadow-sm">
@@ -90,13 +94,14 @@
         </div>
       </div>
 
-      <!-- Fecha -->
       <div class="md:col-span-3">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Fecha Pago</label>
         <input id="fecha" type="date" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
       </div>
 
-      <!-- Concepto -->
+      <!-- Divisor Visual -->
+      <div class="md:col-span-12 border-t border-slate-100 my-2"></div>
+      
       <div class="md:col-span-6">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Concepto</label>
         <select id="tipo" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none">
@@ -107,7 +112,6 @@
         </select>
       </div>
       
-      <!-- Mes y Cantidad (NUEVO) -->
       <div class="md:col-span-3">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Mes de Pago</label>
         <select id="mes_pago" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none">
@@ -132,7 +136,6 @@
         <input id="cantidad_meses" type="number" value="1" min="1" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
       </div>
 
-      <!-- Periodo Fechas -->
       <div class="md:col-span-3">
         <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Inicio Periodo</label>
         <input id="periodo_inicio" type="date" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
@@ -261,6 +264,29 @@
 
 </main>
 
+<!-- NAVEGACIÓN RÁPIDA (BOTTOM BAR) -->
+<!-- Asegúrate de que este bloque esté antes del cierre de body -->
+<nav class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-lg border border-slate-200/80 rounded-2xl shadow-2xl z-50 flex justify-around items-center p-3 md:hidden max-w-sm mx-auto">
+  <a href="/index.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition group">
+    <i class="ph ph-house text-2xl group-hover:scale-110 transition-transform"></i>
+    <span class="text-[10px] font-medium">Inicio</span>
+  </a>
+  <a href="/jugadores.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition group">
+    <i class="ph ph-users text-2xl group-hover:scale-110 transition-transform"></i>
+    <span class="text-[10px] font-medium">Jugadores</span>
+  </a>
+  <a href="/pagos.html" class="flex flex-col items-center gap-1 text-emerald-600 transition group relative">
+    <div class="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+    <i class="ph ph-money text-2xl group-hover:scale-110 transition-transform"></i>
+    <span class="text-[10px] font-bold">Pagos</span>
+  </a>
+  <a href="/alertas.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-600 transition group">
+    <i class="ph ph-bell text-2xl group-hover:scale-110 transition-transform"></i>
+    <span class="text-[10px] font-medium">Alertas</span>
+  </a>
+</nav>
+
 <script type="module" src="/recursos/js/pagos.js"></script>
+
 </body>
-</html>  
+</html> 
