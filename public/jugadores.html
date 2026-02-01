@@ -311,25 +311,51 @@
 </div>
 
 <!-- NAVEGACIÓN RÁPIDA (BOTTOM BAR) -->
-<nav class="fixed bottom-4 left-4 right-4 bg-white/90 backdrop-blur-lg border border-slate-200/80 rounded-2xl shadow-2xl z-50 flex justify-around items-center p-3 md:hidden max-w-sm mx-auto">
-  <a href="/index.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-blue-600 transition group">
-    <i class="ph ph-house text-2xl group-hover:scale-110 transition-transform"></i>
-    <span class="text-[10px] font-medium">Inicio</span>
-  </a>
-  <a href="/jugadores.html" class="flex flex-col items-center gap-1 text-blue-600 transition group relative">
-    <div class="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-    <i class="ph ph-users text-2xl group-hover:scale-110 transition-transform"></i>
-    <span class="text-[10px] font-bold">Jugadores</span>
-  </a>
-  <a href="/pagos.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-emerald-600 transition group">
-    <i class="ph ph-money text-2xl group-hover:scale-110 transition-transform"></i>
-    <span class="text-[10px] font-medium">Pagos</span>
-  </a>
-  <a href="/alertas.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-600 transition group">
-    <i class="ph ph-bell text-2xl group-hover:scale-110 transition-transform"></i>
-    <span class="text-[10px] font-medium">Alertas</span>
-  </a>
-</nav>
+  <!-- NAVEGACIÓN LATERAL (SIDEBAR FIJO A LA IZQUIERDA) -->
+  <!-- Reemplaza todo el bloque de navegación (Barra inferior o Sidebar existente) por este -->
+  <nav class="hidden md:flex fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col shadow-xl z-30 h-screen transition-transform duration-300">
+    <!-- Logo -->
+    <div class="h-20 flex items-center px-6 border-b border-slate-100 bg-slate-50">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-brand-100 text-brand-600 flex items-center justify-center">
+          <i class="ph ph-users-three text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-slate-900">EFUSA</h1>
+          <p class="text-[10px] font-semibold text-brand-600 uppercase tracking-wider">Gestión Deportiva</p>
+        </div>
+      </div>
+
+    <!-- Links -->
+    <nav class="flex-1 py-6 space-y-1 px-3">
+      <a href="/index.html" class="nav-link flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-all">
+        <i class="ph ph-house text-lg"></i>
+        Inicio
+      </a>
+      <a href="/jugadores.html" class="nav-link active flex items-center gap-3 px-3 py-2 text-sm font-semibold text-brand-700 bg-brand-50 rounded-lg transition-all">
+        <i class="ph ph-users-three text-lg text-brand-600"></i>
+        Jugadores
+      </a>
+      <a href="/pagos.html" class="nav-link flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-emerald-900 rounded-lg transition-all">
+        <i class="ph ph-money text-lg"></i>
+        Pagos
+      </a>
+      <a href="/alertas.html" class="nav-link flex items-center gap-3 px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-rose-900 rounded-lg transition-all">
+        <i class="ph ph-warning text-lg"></i>
+        Alertas
+      </a>
+    </nav>
+
+    <!-- Footer Sidebar -->
+    <div class="mt-auto px-6 border-t border-slate-100">
+      <div class="flex items-center gap-3 p-2 bg-slate-50 rounded-lg border border-slate-200">
+        <div class="w-8 h-8 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs">AD</div>
+        <div>
+          <p class="text-xs font-bold text-slate-900">Administrador</p>
+          <p class="text-[10px] text-slate-500">admin@efusa.com</p>
+        </div>
+      </div>
+    </nav>
 
 <!-- SCRIPT JS PRINCIPAL (MANTENIDO IGUAL) -->
 <script>
