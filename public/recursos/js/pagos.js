@@ -57,7 +57,7 @@ async function cargarJugadoresSelect() {
 }
 
 // ==========================
-// WHATSAPP (CORREGIDO)
+// WHATSAPP CON DETECCIÓN DE MESES ADELANTADOS
 // ==========================
 function enviarWhatsapp(idPago) {
   const pago = todosLosPagos.find(p => p.id === idPago);
@@ -78,13 +78,41 @@ function enviarWhatsapp(idPago) {
   const fecha = pago.fecha.split('T')[0];
   const obs = pago.observacion ? `Obs: ${pago.observacion}` : '';
   const mes = pago.mes_pago ? `Mes: ${pago.mes_pago}` : '';
+  
+  let mensaje = '';
 
-  let mensaje = `Hola ${nombre}, confirmamos tu pago en EFUSA.%0A`;
-  mensaje += `💰 *Valor:* $${monto}%0A`;
-  mensaje += `📅 *Fecha:* ${fecha}%0A`;
-  mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-  if (mes) mensaje += `📆 ${mes}%0A`;
-  if (obs) mensaje += `📝 ${obs}`;
+  // Lógica para detectar cuántos meses pagó
+  if (pago.cantidad_meses >= 3) {
+    // --- CASO 1: PAGO DE 3 O MÁS MESES ---
+    mensaje = `Hola ${nombre}, ¡Muchas gracias por pagar ${pago.cantidad_meses} meses por adelantado! 🚀🌟%0A`;
+    mensaje += `Tu compromiso y apoyo con el club son excelentes. Tu estado está al día.%0A%0A`;
+    mensaje += `💰 *Monto:* $${monto}%0A`;
+    mensaje += `📅 *Fecha:* ${fecha}%0A`;
+    mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
+    if (mes) mensaje += `📆 ${mes}%0A`;
+    if (obs) mensaje += `📝 ${obs}%0A`;
+    mensaje += `¡Te esperamos en el entrenamiento! ⚽`;
+  
+  } else if (pago.cantidad_meses === 2) {
+    // --- CASO 2: PAGO DE 2 MESES (NUEVO) ---
+    mensaje = `Hola ${nombre}, muchas gracias por adelantar 2 meses de mensualidad! ✨%0A`;
+    mensaje += `Gracias por tu apoyo, tu cuenta está al día por dos periodos.%0A%0A`;
+    mensaje += `💰 *Monto:* $${monto}%0A`;
+    mensaje += `📅 *Fecha:* ${fecha}%0A`;
+    mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
+    if (mes) mensaje += `📆 ${mes}%0A`;
+    if (obs) mensaje += `📝 ${obs}%0A`;
+    mensaje += `¡Nos vemos en la cancha! 🏟️`;
+
+  } else {
+    // --- CASO 3: PAGO NORMAL (1 MES) ---
+    mensaje = `Hola ${nombre}, confirmamos tu pago en EFUSA.%0A`;
+    mensaje += `💰 *Valor:* $${monto}%0A`;
+    mensaje += `📅 *Fecha:* ${fecha}%0A`;
+    mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
+    if (mes) mensaje += `📆 ${mes}%0A`;
+    if (obs) mensaje += `📝 ${obs}`;
+  }
 
   window.open(`https://wa.me/57${pago.jugador_telefono}?text=${mensaje}`, '_blank');
 }
@@ -377,4 +405,4 @@ window.eliminarPago = eliminarPago;
 window.limpiarFiltros = limpiarFiltros;
 window.irAPagar = irAPagar;
 window.renderizarResumen = renderizarResumen;
-window.enviarWhatsapp = enviarWhatsapp; // <--- ESTA ERA LA LÍNEA QUE FALTABA
+window.enviarWhatsapp = enviarWhatsapp;
