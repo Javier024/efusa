@@ -20,6 +20,7 @@
           },
           boxShadow: {
             'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
+            'card': '0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)'
           }
         }
       }
@@ -62,7 +63,7 @@
       0% { opacity: 0; transform: translateY(-15px); }
       100% { opacity: 1; transform: translateY(0); }
     }
-    .animar-saludo { animation: slideInFade 0.8s ease-out forwards; }
+    .anim-saludo { animation: slideInFade 0.8s ease-out forwards; }
 
     /* Sidebar Móvil Transición */
     #mobile-sidebar {
@@ -76,8 +77,7 @@
   <!-- OVERLAY OSCURO (Para móvil) -->
   <div id="sidebar-overlay" class="fixed inset-0 bg-slate-900/50 z-20 hidden md:hidden backdrop-blur-sm transition-opacity opacity-0"></div>
 
-  <!-- SIDEBAR (Desktop fijo, Móvil deslizante) -->
-  <!-- AGREGADO ID 'mobile-sidebar' -->
+  <!-- SIDEBAR -->
   <aside id="mobile-sidebar" class="fixed inset-y-0 left-0 w-64 bg-white border-r border-slate-200 flex flex-col z-30 shadow-xl transform -translate-x-full md:translate-x-0 md:static md:flex transition-transform duration-300">
     <div class="h-20 flex items-center px-6 border-b border-slate-100">
       <div class="w-10 h-10 bg-brand-600 rounded-lg flex items-center justify-center text-white mr-3 shadow-lg shadow-brand-500/30">
@@ -94,16 +94,16 @@
     </div>
 
     <nav class="flex-1 py-6 space-y-1 px-3">
-      <a href="#" onclick="toggleSidebar()" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
+      <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
         <i class="ph ph-squares-four text-lg"></i> Panel Principal
       </a>
-      <a href="jugadores.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="jugadores.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-users-three text-lg"></i> Gestión Jugadores
       </a>
-      <a href="pagos.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="pagos.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-money text-lg"></i> Gestión Pagos
       </a>
-      <a href="alertas.html" onclick="toggleSidebar()" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="alertas.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-warning-octagon text-lg"></i> Alertas
       </a>
     </nav>
@@ -130,65 +130,75 @@
         </div>
         <div class="font-bold text-lg text-brand-700">EFUSA</div>
       </div>
-      <!-- BOTÓN HAMBURGUESA (Funcional) -->
+      <!-- BOTÓN HAMBURGUESA -->
       <button id="open-sidebar" class="text-slate-600 p-2 hover:bg-slate-100 rounded-lg">
         <i class="ph ph-list text-2xl"></i>
       </button>
     </header>
 
-    <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/50 p-4 md:p-8">
+    <main class="flex-1 overflow-y-auto custom-scroll bg-slate-50/30 p-4 md:p-8">
       
       <div class="max-w-7xl mx-auto space-y-6">
 
-        <!-- Top Row -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div class="md:col-span-2">
-            <h2 id="saludo-dinamico" class="text-2xl font-bold text-slate-900">Bienvenido, Admin</h2>
-            <p class="text-slate-500">Aquí tienes el resumen de operaciones de hoy.</p>
-            <div class="mt-2 text-xs text-slate-400" id="fecha-actual"></div>
-          </div>
-
-          <div class="flex gap-3 h-full items-end">
-            <a href="jugadores.html" class="flex-1 bg-brand-600 hover:bg-brand-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-brand-500/20 transition flex flex-col items-center justify-center gap-1 group">
-              <i class="ph ph-user-plus text-xl group-hover:scale-110 transition"></i>
-              <span class="text-xs">Nuevo Jugador</span>
-            </a>
-            <a href="pagos.html" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-center py-3 rounded-xl font-bold shadow-lg shadow-emerald-500/20 transition flex flex-col items-center justify-center gap-1 group">
-              <i class="ph ph-money text-xl group-hover:scale-110 transition"></i>
-              <span class="text-xs">Registrar Pago</span>
-            </a>
+        <!-- SECCIÓN DE BIENVENIDA (SIN BOTONES DE ACCESO DIRECTO) -->
+        <div class="bg-white p-6 md:p-8 rounded-2xl shadow-card border border-slate-100">
+          <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div>
+              <h2 id="saludo-dinamico" class="text-2xl md:text-3xl font-extrabold text-slate-800 anim-saludo">Bienvenido, Admin</h2>
+              <p class="text-slate-500 mt-1 max-w-md">...Panel de control administrativo...</p>
+              <div class="mt-4 flex items-center gap-2 text-sm text-slate-400">
+                <i class="ph ph-calendar-blank"></i>
+                <span id="fecha-actual" class="font-medium text-slate-600">Cargando fecha...</span>
+              </div>
+            </div>
+            
+            <!-- Logo decorativo grande para elegante -->
+            <div class="hidden md:flex items-center justify-center w-32 h-32 bg-brand-50 rounded-2xl text-brand-600">
+                <i class="ph ph-soccer-ball text-6xl"></i>
+            </div>
           </div>
         </div>
 
         <!-- KPI CARDS -->
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+          <div class="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between transition hover:shadow-md">
             <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Total</p>
-              <h3 id="stat-total" class="text-2xl font-bold text-slate-900">0</h3>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Total Jugadores</p>
+              <h3 id="stat-total" class="text-2xl md:text-3xl font-bold text-slate-900 mt-1">0</h3>
             </div>
-            <div class="w-10 h-10 rounded-full bg-slate-50 text-slate-600 flex items-center justify-center"><i class="ph ph-users text-lg"></i></div>
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+              <i class="ph ph-users text-lg md:text-xl"></i>
+            </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+          
+          <div class="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between transition hover:shadow-md">
             <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Dinero</p>
-              <h3 id="stat-dinero" class="text-lg font-bold text-emerald-600">$0</h3>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Recaudado Total</p>
+              <h3 id="stat-dinero" class="text-xl md:text-2xl font-bold text-emerald-600 mt-1">$0</h3>
             </div>
-            <div class="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center"><i class="ph ph-currency-dollar text-lg"></i></div>
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <i class="ph ph-currency-dollar text-lg md:text-xl"></i>
+            </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+
+          <div class="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between transition hover:shadow-md">
             <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Activos</p>
-              <h3 id="stat-activos" class="text-2xl font-bold text-brand-600">0</h3>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Activos</p>
+              <h3 id="stat-activos" class="text-2xl md:text-3xl font-bold text-brand-600 mt-1">0</h3>
             </div>
-            <div class="w-10 h-10 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center"><i class="ph ph-check text-lg"></i></div>
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
+              <i class="ph ph-check-circle text-lg md:text-xl"></i>
+            </div>
           </div>
-          <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-soft flex items-center justify-between">
+
+          <div class="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between transition hover:shadow-md">
             <div>
-              <p class="text-[10px] font-bold text-slate-400 uppercase">Deudores</p>
-              <h3 id="stat-deudores" class="text-2xl font-bold text-rose-600">0</h3>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Deudores</p>
+              <h3 id="stat-deudores" class="text-2xl md:text-3xl font-bold text-rose-600 mt-1">0</h3>
             </div>
-            <div class="w-10 h-10 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center"><i class="ph ph-warning text-lg"></i></div>
+            <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center">
+              <i class="ph ph-warning text-lg md:text-xl"></i>
+            </div>
           </div>
         </div>
 
@@ -196,68 +206,72 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
           
           <!-- ACTIVIDAD RECIENTE -->
-          <section class="lg:col-span-1 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden h-full">
-            <div class="px-5 py-4 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
-                <i class="ph ph-clock-counter-clockwise text-brand-600"></i> Actividad
+          <section class="lg:col-span-1 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm overflow-hidden h-full">
+            <div class="px-5 py-4 border-b border-slate-50 flex justify-between items-center bg-brand-50/30">
+              <h3 class="font-bold text-brand-900 text-sm flex items-center gap-2">
+                <i class="ph ph-clock-counter-clockwise text-brand-600"></i> Actividad Reciente
               </h3>
-              <span class="text-[10px] font-semibold bg-slate-100 text-slate-600 px-2 py-0.5 rounded">Últimos 5</span>
+              <span class="text-[10px] font-semibold bg-white text-brand-600 border border-brand-200 px-2 py-0.5 rounded shadow-sm">Últimos 5</span>
             </div>
-            <div class="p-4 space-y-4 max-h-[400px] overflow-y-auto custom-scroll" id="actividad-feed">
-              <div class="text-center text-xs text-slate-400 py-4">Cargando actividad...</div>
+            <div class="p-4 space-y-0 max-h-[500px] overflow-y-auto custom-scroll" id="actividad-feed">
+              <div class="text-center text-xs text-slate-400 py-8 italic">No hay actividad reciente.</div>
             </div>
           </section>
 
           <!-- LISTADO DE JUGADORES -->
-          <section class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-soft overflow-hidden flex flex-col">
-            <div class="px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-50/50">
-              <h3 class="font-bold text-slate-900 flex items-center gap-2">
-                <i class="ph ph-list-dashes text-brand-600"></i> Directorio
+          <section class="lg:col-span-2 bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[600px]">
+            <div class="px-5 md:px-6 py-4 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white">
+              <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <i class="ph ph-list-dashes text-brand-600"></i> Directorio de Jugadores
               </h3>
-              <div class="flex gap-2">
-                <button onclick="exportarExcel()" class="text-xs font-bold px-3 py-1.5 border rounded text-slate-600 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 transition"><i class="ph ph-file-xls"></i> Excel</button>
-                <button onclick="exportarPDF()" class="text-xs font-bold px-3 py-1.5 border rounded text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition"><i class="ph ph-file-pdf"></i> PDF</button>
+              <div class="flex gap-2 md:gap-3">
+                <button onclick="exportarExcel()" class="text-[10px] md:text-xs font-bold px-3 py-1.5 border rounded-lg text-brand-700 bg-brand-50 hover:bg-brand-100 hover:shadow-sm transition-all flex items-center gap-2">
+                  <i class="ph ph-file-xls text-base"></i> <span class="hidden md:inline">Descargar Excel</span>
+                </button>
+                <button onclick="exportarPDF()" class="text-[10px] md:text-xs font-bold px-3 py-1.5 border rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 hover:shadow-sm transition-all flex items-center gap-2">
+                  <i class="ph ph-file-pdf text-base"></i> <span class="hidden md:inline">Descargar PDF</span>
+                </button>
               </div>
             </div>
             
-            <div class="px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-4 border-b border-slate-100">
+            <div class="px-5 md:px-6 py-4 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 border-b border-slate-50 bg-slate-50/20">
               <div class="md:col-span-2 relative">
                 <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-slate-400"></i>
-                <input type="text" id="buscador" placeholder="Buscar jugador..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500">
+                <input type="text" id="buscador" placeholder="Buscar por nombre..." class="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-700">
               </div>
               <div>
-                <select id="filtro-categoria" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none">
-                  <option value="">Todas las categorías</option>
-                  <option value="Sub 17-18">Sub 17-18</option>
-                  <option value="Sub 16-15">Sub 16-15</option>
-                  <option value="Sub 14-13">Sub 14-13</option>
-                  <option value="Sub 12-11">Sub 12-11</option>
-                  <option value="Sub 10-9">Sub 10-9</option>
-                  <option value="Sub 8-7">Sub 8-7</option>
+                <select id="filtro-categoria" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-1 focus:ring-brand-500 text-slate-600">
+                    <option value="">Todas las categorías</option>
+                    <option value="Sub 17-18">Sub 17-18</option>
+                    <option value="Sub 16-15">Sub 16-15</option>
+                    <option value="Sub 14-13">Sub 14-13</option>
+                    <option value="Sub 12-11">Sub 12-11</option>
+                    <option value="Sub 10-9">Sub 10-9</option>
+                    <option value="Sub 8-7">Sub 8-7</option>
                 </select>
               </div>
             </div>
 
-            <div class="overflow-x-auto flex-1">
+            <div id="contenedor-tabla" class="overflow-y-auto custom-scroll flex-1">
               <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 text-slate-500 uppercase font-bold">
+                <thead class="bg-slate-50 sticky top-0 z-10 text-slate-500 uppercase font-bold shadow-sm">
                   <tr>
-                    <th class="px-4 py-3">Jugador</th>
-                    <th class="px-4 py-3">Categoría</th>
-                    <th class="px-4 py-3">Contacto</th>
-                    <th class="px-4 py-3">Estado</th>
-                    <th class="px-4 py-3">Acción</th>
+                    <th class="px-4 py-3 border-b border-slate-200">Jugador</th>
+                    <th class="px-4 py-3 border-b border-slate-200">Categoría</th>
+                    <th class="px-4 py-3 border-b border-slate-200">Contacto</th>
+                    <th class="px-4 py-3 border-b border-slate-200">Estado</th>
+                    <th class="px-4 py-3 border-b border-slate-200 text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-jugadores" class="divide-y divide-slate-100"></tbody>
               </table>
             </div>
 
-            <div class="px-6 py-3 border-t border-slate-200 flex justify-between items-center bg-slate-50/30">
+            <div class="px-5 md:px-6 py-3 border-t border-slate-100 flex justify-between items-center bg-white">
               <span id="info-paginacion" class="text-[10px] text-slate-500 font-medium"></span>
               <div class="flex gap-1">
-                <button id="btn-prev" onclick="cambiarPagina(-1)" class="px-2 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50"><</button>
-                <button id="btn-next" onclick="cambiarPagina(1)" class="px-2 py-1 bg-white border rounded text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50">></button>
+                <button id="btn-prev" onclick="cambiarPagina(-1)" class="px-2 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="ph ph-caret-left"></i></button>
+                <button id="btn-next" onclick="cambiarPagina(1)" class="px-2 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="ph ph-caret-right"></i></button>
               </div>
             </div>
           </section>

@@ -57,7 +57,29 @@ async function cargarJugadoresSelect() {
 }
 
 // ==========================
-// WHATSAPP CON DETECCIÓN DE MESES ADELANTADOS
+// UTILIDADES DE FECHA Y HORARIO
+// ==========================
+
+function obtenerSaludo() {
+  const hora = new Date().getHours();
+  if (hora >= 5 && hora < 12) return "Buenos días";
+  if (hora >= 12 && hora < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+function obtenerMesSiguiente(mesActual) {
+  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+  const index = meses.indexOf(mesActual);
+  
+  // Si no encuentra el mes o es diciembre, pasa a enero
+  if (index === -1) return "el próximo mes"; 
+  if (index === 11) return "Enero";
+  
+  return meses[index + 1];
+}
+
+// ==========================
+// WHATSAPP CORDIAL Y DETALLADO
 // ==========================
 function enviarWhatsapp(idPago) {
   const pago = todosLosPagos.find(p => p.id === idPago);
@@ -73,44 +95,54 @@ function enviarWhatsapp(idPago) {
   }
 
   const nombre = pago.jugador;
+  const saludo = obtenerSaludo(); // Mañana/Tarde/Noche
   const monto = Number(pago.monto).toLocaleString();
   const concepto = pago.tipo.toUpperCase();
   const fecha = pago.fecha.split('T')[0];
   const obs = pago.observacion ? `Obs: ${pago.observacion}` : '';
   const mes = pago.mes_pago ? `Mes: ${pago.mes_pago}` : '';
-  
   let mensaje = '';
 
-  // Lógica para detectar cuántos meses pagó
+  // Calculamos el próximo mes de pago
+  let infoProximoPago = '';
+  if (pago.mes_pago) {
+    const proximo = obtenerMesSiguiente(pago.mes_pago);
+    infoProximoPago = `Tu próximo pago será para ${proximo}. 📆`;
+  }
+
+  // Estructura del mensaje según cantidad de meses
   if (pago.cantidad_meses >= 3) {
-    // --- CASO 1: PAGO DE 3 O MÁS MESES ---
-    mensaje = `Hola ${nombre}, ¡Muchas gracias por pagar ${pago.cantidad_meses} meses por adelantado! 🚀🌟%0A`;
+    // --- CASO 1: 3 O MÁS MESES ---
+    mensaje = `${saludo} ${nombre}, ¡Muchas gracias por pagar ${pago.cantidad_meses} meses por adelantado! 🚀🌟%0A`;
     mensaje += `Tu compromiso y apoyo con el club son excelentes. Tu estado está al día.%0A%0A`;
-    mensaje += `💰 *Monto:* $${monto}%0A`;
+    mensaje += `💰 *Valor:* $${monto}%0A`;
     mensaje += `📅 *Fecha:* ${fecha}%0A`;
+    if (mes) mensaje += `🏷️ *Cobertura:* ${mes}%0A`;
+    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
     mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-    if (mes) mensaje += `📆 ${mes}%0A`;
     if (obs) mensaje += `📝 ${obs}%0A`;
     mensaje += `¡Te esperamos en el entrenamiento! ⚽`;
   
   } else if (pago.cantidad_meses === 2) {
-    // --- CASO 2: PAGO DE 2 MESES (NUEVO) ---
-    mensaje = `Hola ${nombre}, muchas gracias por adelantar 2 meses de mensualidad! ✨%0A`;
+    // --- CASO 2: 2 MESES (ADELANTADO) ---
+    mensaje = `${saludo} ${nombre}, muchas gracias por adelantar 2 meses de mensualidad! ✨%0A`;
     mensaje += `Gracias por tu apoyo, tu cuenta está al día por dos periodos.%0A%0A`;
     mensaje += `💰 *Monto:* $${monto}%0A`;
     mensaje += `📅 *Fecha:* ${fecha}%0A`;
+    if (mes) mensaje += `🏷️ *Cobertura:* ${mes}%0A`;
+    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
     mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-    if (mes) mensaje += `📆 ${mes}%0A`;
     if (obs) mensaje += `📝 ${obs}%0A`;
     mensaje += `¡Nos vemos en la cancha! 🏟️`;
 
   } else {
     // --- CASO 3: PAGO NORMAL (1 MES) ---
-    mensaje = `Hola ${nombre}, confirmamos tu pago en EFUSA.%0A`;
+    mensaje = `${saludo} ${nombre}, confirmamos tu pago en EFUSA.%0A`;
     mensaje += `💰 *Valor:* $${monto}%0A`;
     mensaje += `📅 *Fecha:* ${fecha}%0A`;
     mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-    if (mes) mensaje += `📆 ${mes}%0A`;
+    if (mes) mensaje += `📆 ${mes}.%0A`;
+    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
     if (obs) mensaje += `📝 ${obs}`;
   }
 
