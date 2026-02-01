@@ -57,9 +57,18 @@ async function cargarJugadoresSelect() {
 }
 
 // ==========================
-// WHATSAPP
+// WHATSAPP (CORREGIDO)
 // ==========================
-function enviarWhatsapp(pago) {
+// Ahora recibe solo el ID, no el objeto completo para evitar errores de sintaxis
+function enviarWhatsapp(idPago) {
+  // Buscamos el pago usando el ID
+  const pago = todosLosPagos.find(p => p.id === idPago);
+
+  if (!pago) {
+    alert('Error: No se encontró el pago.');
+    return;
+  }
+
   if (!pago.jugador_telefono) {
     alert('El jugador no tiene teléfono registrado en la base de datos.');
     return;
@@ -116,7 +125,7 @@ function renderizarResumen(tipo) {
     const debe = 50000 - pagado;
     
     let estadoBadge = '';
-    let deudaTexto = ''; // <--- VARIABLE CORRECTA DEFINIDA AQUÍ
+    let deudaTexto = '';
     
     if (debe <= 0) {
       estadoBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs font-bold">Al día</span>`;
@@ -138,7 +147,7 @@ function renderizarResumen(tipo) {
         <div class="text-xs text-slate-500">${j.categoria}</div>
       </td>
       <td class="px-4 py-3 text-center">${estadoBadge}</td>
-      <td class="px-4 py-3 text-center text-xs text-slate-600">${deudaTexto}</td> <!-- <--- CORREGIDO AQUÍ -->
+      <td class="px-4 py-3 text-center text-xs text-slate-600">${deudaTexto}</td>
       <td class="px-4 py-3 text-center text-sm font-bold text-slate-900">$${pagado.toLocaleString()}</td>
       <td class="px-4 py-3 text-right">
         <button onclick="irAPagar(${j.id})" class="text-blue-600 hover:bg-blue-50 text-xs font-semibold px-3 py-1.5 rounded-md transition flex items-center gap-1 ml-auto">
@@ -165,7 +174,7 @@ function renderizarResumen(tipo) {
             <p class="font-bold text-slate-900">$${pagado.toLocaleString()}</p>
           </div>
           <div class="text-right">
-            <p class="text-xs text-slate-600">${deudaTexto}</p> <!-- <--- CORREGIDO AQUÍ -->
+            <p class="text-xs text-slate-600">${deudaTexto}</p>
           </div>
        </div>
        <button onclick="irAPagar(${j.id})" class="w-full py-2 rounded-lg bg-blue-50 text-blue-600 font-semibold text-sm hover:bg-blue-100 transition">
@@ -309,6 +318,8 @@ function renderPagos(pagos) {
     // HTML Desktop
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-50 transition";
+    // AQUÍ ESTÁ LA CORRECCIÓN: En lugar de onclick="enviarWhatsapp({...objeto...})",
+    // Pasamos solo el ID: onclick="enviarWhatsapp(${p.id})"
     tr.innerHTML = `
       <td class="px-6 py-4 font-medium text-slate-900">${p.jugador}</td>
       <td class="px-6 py-4 text-slate-600">${p.fecha.split('T')[0]}</td>
@@ -321,7 +332,7 @@ function renderPagos(pagos) {
       <td class="px-6 py-4 font-bold text-slate-900">$${p.monto.toLocaleString()}</td>
       <td class="px-6 py-4 text-center">
         <div class="flex justify-center gap-1">
-          <button onclick="enviarWhatsapp(${JSON.stringify(p)})" class="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Enviar WhatsApp">
+          <button onclick="enviarWhatsapp(${p.id})" class="text-green-600 hover:bg-green-50 p-1.5 rounded-lg transition" title="Enviar WhatsApp">
             <i class="ph ph-whatsapp-logo text-lg"></i>
           </button>
           <button onclick="eliminarPago(${p.id})" class="text-rose-600 hover:bg-rose-50 p-1.5 rounded-lg transition" title="Eliminar">
@@ -349,7 +360,8 @@ function renderPagos(pagos) {
       </div>
       <div class="flex justify-between items-center pt-2 border-t border-slate-50">
          <button onclick="eliminarPago(${p.id})" class="text-xs text-rose-500 hover:bg-rose-50 px-2 py-1 rounded transition">Eliminar</button>
-         <button onclick="enviarWhatsapp(${JSON.stringify(p)})" class="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-100 transition">
+         <!-- AQUÍ TAMBIÉN LA CORRECCIÓN -->
+         <button onclick="enviarWhatsapp(${p.id})" class="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-green-100 transition">
             <i class="ph ph-whatsapp-logo text-base"></i> Enviar
          </button>
       </div>
