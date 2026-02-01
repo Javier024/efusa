@@ -3,15 +3,22 @@ import { apiFetch } from './configuracion.js';
 
 // VARIABLES GLOBALES
 let jugadoresList = [];
+let listaPagos = []; // Para la actividad reciente
 let paginaActual = 1;
-const FILAS_POR_PAGINA = 8; // Aumentado un poco para el dashboard
+const FILAS_POR_PAGINA = 8;
 
 // ELEMENTOS DOM
-let tabla, buscador, filtroCategoria, infoPaginacion, btnPrev, btnNext;
+let tabla, buscador, filtroCategoria, infoPaginacion, btnPrev, btnNext, containerActividad;
 
 document.addEventListener('DOMContentLoaded', () => {
   inicializarFecha();
-  cargarDatos();
+  // Cargamos ambos datos: Jugadores y Pagos
+  Promise.all([cargarJugadores(), cargarPagos()])
+    .then(() => {
+      actualizarEstadisticas();
+      renderTabla();
+      renderActividad();
+    });
 
   // Listeners
   buscador = document.getElementById('buscador');
@@ -20,6 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
   btnPrev = document.getElementById('btn-prev');
   btnNext = document.getElementById('btn-next');
   tabla = document.getElementById('tabla-jugadores');
+  containerActividad = document.getElementById('actividad-feed');
 
   if (buscador) buscador.addEventListener('input', renderTabla);
   if (filtroCategoria) filtroCategoria.addEventListener('change', renderTabla);
@@ -59,17 +67,27 @@ function toggleSidebar(abrir) {
 // ==========================
 // CARGA DE DATOS
 // ==========================
-async function cargarDatos() {
+async function cargarJugadores() {
   try {
     const data = await apiFetch('/jugadores');
     jugadoresList = data;
-    actualizarEstadisticas();
-    renderTabla();
   } catch (error) {
-    console.error('Error cargando dashboard:', error);
+    console.error('Error cargando jugadores:', error);
   }
 }
 
+async function cargarPagos() {
+  try {
+    const data = await apiFetch('/pagos');
+    listaPagos = data;
+  } catch (error) {
+    console.error('Error cargando pagos:', error);
+  }
+}
+
+// ==========================
+// ESTADÍSTICAS
+// ==========================
 function actualizarEstadisticas() {
   const total = jugadoresList.length;
   const activos = jugadoresList.filter(j => j.activo).length;
@@ -80,6 +98,49 @@ function actualizarEstadisticas() {
   document.getElementById('stat-activos').innerText = activos;
   document.getElementById('stat-deudores').innerText = deudores;
   document.getElementById('stat-dinero').innerText = `$${dinero.toLocaleString()}`;
+}
+
+// ==========================
+// ACTIVIDAD RECIENTE (IMPLEMENTADA)
+// ==========================
+function renderActividad() {
+  if (!containerActividad) return;
+  containerActividad.innerHTML = '';
+
+  if (!listaPagos || listaPagos.length === 0) {
+    containerActividad.innerHTML = '<div class="text-center text-xs text-slate-400 py-8 italic">Sin actividad registrada aún.</div>';
+    return;
+  }
+
+  // Tomamos los últimos 5 pagos
+  const recientes = listaPagos.slice(0, 5);
+
+  recientes.forEach(p => {
+    const fechaObj = new Date(p.fecha);
+    const hora = fechaObj.toLocaleTimeString('es-CO', { hour: 'numeric', minute: '2-digit' });
+    const fecha = fechaObj.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+
+    const item = document.createElement('div');
+    item.className = "activity-item flex gap-3 relative pb-4";
+    item.innerHTML = `
+      <div class="relative flex-shrink-0">
+        <div class="h-8 w-8 rounded-full bg-brand-100 border-2 border-white text-brand-600 flex items-center justify-center z-10 shadow-sm">
+          <i class="ph ph-money text-xs font-bold"></i>
+        </div>
+      </div>
+      <div class="flex-1 min-w-0 bg-white p-3 rounded-lg border border-slate-100 shadow-sm">
+        <div class="flex justify-between items-start mb-1">
+          <p class="text-xs font-bold text-slate-900">Pago de <span class="text-brand-600">${p.jugador}</span></p>
+          <span class="text-[10px] text-slate-400 font-medium">${hora} • ${fecha}</span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-600 bg-slate-50 px-2 py-0.5 rounded border border-slate-200">${p.tipo}</span>
+          <span class="text-xs font-bold text-emerald-600">$${Number(p.monto).toLocaleString()}</span>
+        </div>
+      </div>
+    `;
+    containerActividad.appendChild(item);
+  });
 }
 
 // ==========================
@@ -114,7 +175,7 @@ function renderTabla() {
     datosPagina.forEach(j => {
       const estado = Number(j.mensualidad) >= 50000 
         ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-bold">Al día</span>'
-        : '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-xs font-bold">Deuda</span>';
+        : '<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-xs font-bold">Pendiente</span>';
 
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors";
@@ -123,11 +184,11 @@ function renderTabla() {
           <div class="font-bold text-slate-800">${j.nombre}</div>
           ${j.apellidos ? `<div class="text-[10px] text-slate-400">${j.apellidos}</div>` : ''}
         </td>
-        <td class="px-4 py-3 text-slate-600">${j.categoria}</td>
-        <td class="px-4 py-3 text-slate-600">${j.telefono || '-'}</td>
+        <td class="px-4 py-3 text-slate-600 text-xs uppercase">${j.categoria}</td>
+        <td class="px-4 py-3 text-slate-600 text-xs">${j.telefono || '-'}</td>
         <td class="px-4 py-3">${estado}</td>
         <td class="px-4 py-3 text-center">
-          <a href="jugadores.html" class="text-brand-600 hover:bg-brand-50 p-1.5 rounded transition inline-block">
+          <a href="jugadores.html" class="text-brand-600 hover:text-brand-800 p-1.5 rounded transition inline-block">
             <i class="ph ph-eye text-lg"></i>
           </a>
         </td>
@@ -136,7 +197,7 @@ function renderTabla() {
     });
   }
 
-  if (infoPaginacion) infoPaginacion.innerText = `Pág ${paginaActual} de ${totalPages}`;
+  if (infoPaginacion) infoPaginacion.innerText = `Pág ${paginaActual} de ${totalPages} (${totalItems} registros)`;
   if (btnPrev) btnPrev.disabled = paginaActual === 1;
   if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
@@ -147,50 +208,61 @@ function cambiarPagina(delta) {
 }
 
 // ==========================
-// EXPORTAR EXCEL (LIMPIO Y FUNCIONAL)
+// EXPORTAR A EXCEL (ROBUSTO)
 // ==========================
 function exportarExcel() {
-  if (jugadoresList.length === 0) {
-    alert('No hay datos para exportar a Excel.');
+  if (!jugadoresList || jugadoresList.length === 0) {
+    alert("No hay datos de jugadores para exportar.");
     return;
   }
 
-  // Preparar datos limpios
-  const datosExportar = jugadoresList.map(j => ({
-    "Nombre Completo": `${j.nombre} ${j.apellidos || ''}`,
-    "Categoría": j.categoria,
-    "Teléfono": j.telefono || '-',
-    "Estado": Number(j.mensualidad) >= 50000 ? 'Pagado' : 'Pendiente',
-    "Acumulado": Number(j.mensualidad)
-  }));
+  try {
+    // 1. Preparar datos limpios
+    const datosExportar = [
+      { "Nombre Completo": "NOMBRE COMPLETO", "Categoría": "CATEGORÍA", "Teléfono": "TELÉFONO", "Estado": "ESTADO", "Acumulado": "ACUMULADO" }
+    ];
 
-  // Crear hoja
-  const ws = XLSX.utils.json_to_sheet(datosExportar);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Reporte EFUSA");
+    jugadoresList.forEach(j => {
+      datosExportar.push({
+        "Nombre Completo": `${j.nombre} ${j.apellidos || ''}`,
+        "Categoría": j.categoria,
+        "Teléfono": j.telefono || '-',
+        "Estado": Number(j.mensualidad) >= 50000 ? 'Pagado' : 'Pendiente',
+        "Acumulado": Number(j.mensualidad)
+      });
+    });
 
-  // Descargar
-  XLSX.writeFile(wb, "Reporte_Jugadores_Efusa.xlsx");
+    // 2. Crear hoja de trabajo
+    const hoja = XLSX.utils.json_to_sheet(datosExportar);
+    const libro = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(libro, hoja, "Jugadores EFUSA");
+
+    // 3. Guardar archivo
+    XLSX.writeFile(libro, "Reporte_Jugadores_Efusa.xlsx");
+    console.log("Excel exportado correctamente");
+  } catch (error) {
+    console.error("Error en Excel:", error);
+    alert("Hubo un error inesperado al generar el Excel.");
+  }
 }
 
 // ==========================
-// EXPORTAR PDF (DISEÑO EFUSA VERDE - CORREGIDO)
+// EXPORTAR A PDF (MÉTODO ARRAY - CORREGIDO)
 // ==========================
 function exportarPDF() {
-  if (jugadoresList.length === 0) {
-    alert('No hay datos para exportar a PDF.');
+  if (!jugadoresList || jugadoresList.length === 0) {
+    alert("No hay datos para exportar a PDF.");
     return;
   }
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  // 1. Encabezado Verde Institucional (Corrección: Usar HEX en lugar de Arrays RGB)
-  // Usamos Brand 600 (#16a34a - Verde oscuro) para fondo y Blanco para texto, mejor contraste.
+  // 1. Encabezado Verde Institucional
   doc.setFillColor(22, 163, 74); // #16a34a
   doc.rect(0, 0, 210, 45, 'F');
 
-  // Texto EFUSA y Balón
+  // Textos
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(28);
@@ -200,23 +272,16 @@ function exportarPDF() {
   doc.setFont("helvetica", "normal");
   doc.text("Escuela de Fútbol", 105, 33, { align: "center" });
 
-  // Balón de fútbol
   doc.setFontSize(24);
   doc.text("⚽", 105, 18, { align: "center" });
 
-  // Línea separadora
   doc.setDrawColor(255, 255, 255);
   doc.setLineWidth(1);
   doc.line(20, 40, 190, 40);
 
-  // 2. Contenido del reporte
-  doc.setTextColor(30, 41, 59); // Slate 800
-  doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.text("Directorio de Jugadores", 14, 60);
-
-  // Preparar tabla de datos
-  const datosTabla = jugadoresList.map(j => [
+  // 2. Preparar datos para la tabla (Array de Arrays para mayor estabilidad)
+  // El primer elemento son los encabezados
+  const cuerpoTabla = jugadoresList.map(j => [
     `${j.nombre} ${j.apellidos || ''}`,
     j.categoria,
     j.telefono || '-',
@@ -224,53 +289,48 @@ function exportarPDF() {
     `$${Number(j.mensualidad).toLocaleString()}`
   ]);
 
-  // Estilos CORREGIDOS (Usando HEX para evitar el error de arrays)
-  // fillColor: '#dcfce7' (Brand 50 - Verde claro para filas)
-  // headStyles: Usamos HEX directo para asegurar compatibilidad
+  const encabezados = [['Jugador', 'Categoría', 'Teléfono', 'Estado', 'Acumulado']];
+
+  // 3. Generar Tabla usando Arrays
   doc.autoTable({
-    html: `<table style="width:100%; text-align:left; border-collapse: collapse;">
-            <thead>
-              <tr style="background-color: #16a34a; color: white;">
-                <th style="padding:8px;">Jugador</th>
-                <th style="padding:8px;">Categoría</th>
-                <th style="padding:8px;">Contacto</th>
-                <th style="padding:8px;">Estado</th>
-                <th style="padding:8px;">Acumulado</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${datosTabla.map(row => `
-                <tr>
-                  ${row.map(cell => `<td style="padding:6px; border-bottom: 1px solid #e2e8f0;">${cell}</td>`).join('')}
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>`,
+    head: encabezados,
+    body: cuerpoTabla,
     startY: 70,
-    theme: 'grid',
+    theme: 'striped', // 'grid' también funciona, pero 'striped' se ve mejor
     headStyles: { 
-      fillColor: '#16a34a', 
-      textColor: '#ffffff', 
+      fillColor: [22, 163, 74], 
+      textColor: 255, 
       fontStyle: 'bold', 
       halign: 'center' 
     },
     styles: {
       fontSize: 10,
       overflow: 'linebreak',
-      cellPadding: 3
+      cellPadding: 4,
+      lineWidth: 0.1,
+      lineColor: [220, 220, 220]
     },
     margin: { top: 10, right: 10, bottom: 10, left: 10 }
   });
 
-  // Footer
+  // 4. Footer
   doc.setFontSize(8);
   doc.setTextColor(150, 150, 150);
   doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 280, { align: "right" });
 
-  doc.save("Reporte_Efusa.pdf");
+  // 5. Descargar (Este método fuerza la descarga en la mayoría de navegadores)
+  try {
+    doc.save("Reporte_Efusa.pdf");
+    console.log("PDF exportado correctamente");
+  } catch (error) {
+    console.error("Error al guardar PDF:", error);
+    alert("El navegador bloqueó la descarga automática. Por favor permite las descargas.");
+  }
 }
 
-// Exportar funciones
+// ==========================
+// EXPORTAR FUNCIONES
+// ==========================
 window.toggleSidebar = toggleSidebar;
 window.cambiarPagina = cambiarPagina;
 window.exportarExcel = exportarExcel;
