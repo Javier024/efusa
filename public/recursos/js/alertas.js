@@ -194,7 +194,7 @@ window.enviarWhatsApp = function(telefono, nombre, deuda, mesAbono, tipoAlerta) 
     }
   }
   
-  mensaje += `Te agradecemos ponernos al día a la brevedad posible. 🚀`;
+  mensaje += `Te agradecemos ponernos al día a la brevedad posible, gracias. 🚀`;
 
   const url = `https://wa.me/${numeroLimpio}?text=${mensaje}`;
   window.open(url, '_blank');

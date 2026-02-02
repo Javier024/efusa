@@ -40,37 +40,51 @@ window.toggleMultiplePayment = function() {
   else { wrapper.classList.add('hidden'); }
 };
 
+// --- CÁLCULO DE PERIODOS MEJORADO ---
 window.calcularPeriodo = function() {
   const cantidad = parseInt(document.getElementById('cantidad_meses').value) || 1;
   const mesInicioIdx = parseInt(document.getElementById('mes_inicio_select').value);
   const fechaInicioVal = document.getElementById('periodo_inicio').value;
   if(!fechaInicioVal) return;
 
+  // 1. Fecha Inicio Segura
   const fechaInicio = new Date(fechaInicioVal + 'T12:00:00'); 
-  const fechaFin = new Date(fechaInicio);
-  fechaFin.setMonth(fechaFin.getMonth() + cantidad);
-  
-  // Formatear fecha fin
-  const y = fechaFin.getFullYear(), m = String(fechaFin.getMonth() + 1).padStart(2, '0'), d = String(fechaFin.getDate()).padStart(2, '0');
-  document.getElementById('periodo_fin').value = `${y}-${m}-${d}`;
 
-  // Generar lista de meses
+  // 2. Calcular Lista de Meses (Texto)
   let lista = [];
   for(let i=0; i<cantidad; i++) {
+    // (Año actual + offset de meses) para detectar cambio de año en el nombre si fuera necesario,
+    // pero para la lista simple usamos solo los nombres rotativos.
     let idx = (mesInicioIdx + i) % 12; 
     lista.push(MESES[idx]);
   }
   const textoLista = lista.join(', ');
   document.getElementById('resumen-meses-texto').innerText = textoLista;
 
-  // Calcular próximo pago (Fin + 1 mes)
+  // 3. Calcular FECHA FIN CORRECTA (Último día del último mes pagado)
+  const fechaFin = new Date(fechaInicio);
+  // Sumamos la cantidad de meses. Si es 15 Enero y pagamos 2 meses -> Marzo 15.
+  fechaFin.setMonth(fechaFin.getMonth() + cantidad);
+  // Restamos 1 día para quedar en el último día del mes anterior (Febrero 28).
+  fechaFin.setDate(fechaFin.getDate() - 1);
+  
+  // Formatear fecha fin
+  const y = fechaFin.getFullYear();
+  const m = String(fechaFin.getMonth() + 1).padStart(2, '0');
+  const d = String(fechaFin.getDate()).padStart(2, '0');
+  document.getElementById('periodo_fin').value = `${y}-${m}-${d}`;
+
+  // 4. Calcular PRÓXIMO PAGO (Día 1 del mes siguiente al fin)
   const proximo = new Date(fechaFin);
-  proximo.setMonth(proximo.getMonth() + 1);
+  proximo.setDate(proximo.getDate() + 1); // Pasamos al primer día del siguiente mes
+  
   const diaProx = String(proximo.getDate()).padStart(2,'0');
   const mesProx = MESES[proximo.getMonth()];
   const anioProx = proximo.getFullYear();
+  
   document.getElementById('next_payment_preview').value = `${diaProx} de ${mesProx} de ${anioProx}`;
   
+  // Guardamos el mes inicial para el registro
   document.getElementById('mes_pago').value = MESES[mesInicioIdx];
   document.getElementById('mes_pago').dataset.listaMeses = textoLista;
 };
@@ -80,7 +94,17 @@ async function cargarPagos() {
   try { const data = await apiFetch('/pagos'); todosLosPagos = data; } catch (e) { console.error(e); }
 }
 async function cargarJugadoresSelect() {
-  try { const data = await apiFetch('/jugadores'); jugadoresList = data; const select = document.getElementById('jugador_id'); if(select) { select.innerHTML = '<option value="">Seleccione...</option>'; data.forEach(j => { select.innerHTML += `<option value="${j.id}">${j.nombre} (${j.categoria})</option>`; }); } } catch(e) {}
+  try { 
+    const data = await apiFetch('/jugadores'); 
+    jugadoresList = data; 
+    const select = document.getElementById('jugador_id'); 
+    if(select) { 
+      select.innerHTML = '<option value="">Seleccione...</option>'; 
+      data.forEach(j => { 
+        select.innerHTML += `<option value="${j.id}">${j.nombre} (${j.categoria})</option>`; 
+      }); 
+    } 
+  } catch(e) {}
 }
 
 // --- WHATSAPP INTELIGENTE ---
@@ -96,7 +120,7 @@ function enviarWhatsapp(idPago) {
 
   if(pago.cantidad_meses > 1 && pago.periodo_fin) {
     const fFin = new Date(pago.periodo_fin);
-    const proximo = new Date(fFin); proximo.setMonth(proximo.getMonth() + 1);
+    const proximo = new Date(fFin); proximo.setDate(proximo.getDate() + 1);
     
     mensaje = `${saludo} ${pago.jugador}, gracias por tu pago adelantado. 🚀%0A%0A`;
     mensaje += `💰 *Monto:* $${monto}%0A`;
@@ -141,19 +165,85 @@ async function guardarPago(e) {
   } catch (error) { mostrarNotificacion('Error', 'error'); }
 }
 
-// --- RENDERIZADO ---
+// --- RENDERIZADO RESUMEN (ESTADO DE CUENTAS MEJORADO) ---
 function renderizarResumen(tipo) {
   const tbody = document.getElementById('tabla-resumen'), vm = document.getElementById('vista-movil-resumen');
   if(!tbody || !vm) return; tbody.innerHTML = ''; vm.innerHTML = '';
+  
   let lista = jugadoresList;
-  if(tipo === 'deudores') lista = lista.filter(j => j.mensualidad < 50000);
-  if(tipo === 'pagados') lista = lista.filter(j => j.mensualidad >= 50000);
-  lista.sort((a, b) => b.mensualidad - a.mensualidad);
-  if(lista.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6">No hay datos</td></tr>'; return; }
+  
+  // Lógica de filtros
+  if(tipo === 'deudores') {
+    // Filtra a quienes deben dinero: (0 pagado) o (Parcial < 50000)
+    lista = lista.filter(j => j.mensualidad < 50000);
+  }
+  if(tipo === 'pagados') {
+    // Filtra a quienes están al día
+    lista = lista.filter(j => j.mensualidad >= 50000);
+  }
+  
+  lista.sort((a, b) => b.mensualidad - a.mensualidad); // Ordenar de mayor a menor saldo
+  
+  if(lista.length === 0) { 
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay registros en esta vista</td></tr>'; 
+    return; 
+  }
+
   lista.forEach(j => {
-    const estado = j.mensualidad >= 50000 ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-xs">Al día</span>' : '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded-full text-xs">Debe</span>';
-    const tr = `<tr class="hover:bg-slate-50 border-b"><td class="px-4 py-3 font-medium">${j.nombre}</td><td class="px-4 py-3 text-center">${estado}</td><td class="px-4 py-3 text-center text-slate-500">$${j.mensualidad.toLocaleString()}</td><td class="px-4 py-3 text-right"><button onclick="window.irAPagar(${j.id})" class="text-blue-600 text-xs font-bold">Pagar</button></td></tr>`;
+    let estadoBadge = '';
+    let estadoTexto = '';
+
+    // Lógica Visual Detallada
+    if (j.mensualidad === 0) {
+      // No ha pagado nada
+      estadoBadge = '<span class="bg-rose-100 text-rose-700 px-3 py-1 rounded-full text-xs font-bold border border-rose-200">No Pagado ($0)</span>';
+      estadoTexto = 'No ha pagado';
+    } else if (j.mensualidad >= 50000) {
+      // Pagado completo (o más)
+      estadoBadge = '<span class="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">Al día</span>';
+      estadoTexto = 'Al día';
+    } else {
+      // Pagó pero le falta (Deudor Parcial)
+      estadoBadge = `<span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">Parcial ($${j.mensualidad.toLocaleString()})</span>`;
+      estadoTexto = 'Debe';
+    }
+
+    // Render Tabla
+    const tr = `
+      <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+        <td class="px-4 py-3">
+          <div class="font-medium text-slate-900">${j.nombre}</div>
+          <div class="text-[10px] text-slate-400">${j.categoria}</div>
+        </td>
+        <td class="px-4 py-3 text-center">${estadoBadge}</td>
+        <td class="px-4 py-3 text-center">
+          <div class="text-xs font-bold text-slate-700">$${j.mensualidad.toLocaleString()}</div>
+          ${j.mensualidad > 0 && j.mensualidad < 50000 ? `<div class="text-[10px] text-rose-500">Faltan $${(50000 - j.mensualidad).toLocaleString()}</div>` : ''}
+        </td>
+        <td class="px-4 py-3 text-right">
+          <button onclick="window.irAPagar(${j.id})" class="text-blue-600 hover:text-blue-800 text-xs font-bold underline decoration-blue-200 hover:decoration-blue-600 underline-offset-4 transition-all">
+            Pagar
+          </button>
+        </td>
+      </tr>
+    `;
     tbody.innerHTML += tr;
+
+    // Render Móvil
+    vm.innerHTML += `
+      <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm flex justify-between items-center">
+        <div>
+          <h4 class="font-bold text-slate-900">${j.nombre}</h4>
+          <div class="mt-1">${estadoBadge}</div>
+        </div>
+        <div class="text-right">
+          <div class="font-bold text-lg ${j.mensualidad >= 50000 ? 'text-emerald-600' : (j.mensualidad === 0 ? 'text-rose-600' : 'text-amber-600')}">
+            $${j.mensualidad.toLocaleString()}
+          </div>
+          <button onclick="window.irAPagar(${j.id})" class="mt-2 text-xs bg-slate-100 px-3 py-1 rounded hover:bg-slate-200 font-medium">Pagar</button>
+        </div>
+      </div>
+    `;
   });
 }
 
@@ -169,18 +259,49 @@ function filtrarPagos() {
 function renderPagos(pagos) {
   const tb = document.getElementById('tabla-pagos'), mv = document.getElementById('vista-movil-historial');
   if(!tb || !mv) return; tb.innerHTML = ''; mv.innerHTML = '';
-  if(pagos.length === 0) { tb.innerHTML = '<tr><td colspan="6" class="text-center py-6">Vacio</td></tr>'; return; }
+  if(pagos.length === 0) { tb.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Vacio</td></tr>'; return; }
   pagos.forEach(p => {
-    let det = ''; if(p.cantidad_meses > 1) det += `<div class="text-[10px] text-emerald-600 font-bold">Pagó ${p.cantidad_meses} meses</div>`; if(p.observacion) det += `<div class="text-[10px] text-slate-400 truncate">${p.observacion}</div>`;
-    tb.innerHTML += `<tr class="hover:bg-slate-50 border-b"><td class="px-6 py-4 font-medium">${p.jugador}</td><td class="px-6 py-4">${p.fecha.split('T')[0]}</td><td class="px-6 py-4"><span class="bg-slate-100 px-2 py-1 rounded text-xs">${p.tipo}</span></td><td class="px-6 py-4">${det||'-'}</td><td class="px-6 py-4 font-bold">$${p.monto.toLocaleString()}</td><td class="px-6 py-4 text-center"><button onclick="window.enviarWhatsapp(${p.id})" class="text-green-600 p-2"><i class="ph ph-whatsapp-logo text-xl"></i></button> <button onclick="window.eliminarPago(${p.id})" class="text-rose-600 p-2"><i class="ph ph-trash text-xl"></i></button></td></tr>`;
-    mv.innerHTML += `<div class="bg-white p-4 rounded border mb-2"><div class="flex justify-between"><h3 class="font-bold">${p.jugador}</h3><span class="font-bold text-emerald-600">$${p.monto.toLocaleString()}</span></div><p class="text-xs text-slate-500">${p.fecha.split('T')[0]} - ${p.tipo}</p>${det}<div class="flex gap-2 mt-2"><button onclick="window.enviarWhatsapp(${p.id})" class="flex-1 bg-green-50 text-green-600 py-1 rounded text-xs">WhatsApp</button><button onclick="window.eliminarPago(${p.id})" class="bg-rose-50 text-rose-600 px-3 py-1 rounded text-xs">Eliminar</button></div></div>`;
+    let det = ''; 
+    if(p.cantidad_meses > 1) det += `<div class="text-[10px] text-emerald-600 font-bold flex items-center gap-1"><i class="ph ph-calendar"></i> Pagó ${p.cantidad_meses} meses</div>`; 
+    if(p.observacion) det += `<div class="text-[10px] text-slate-400 truncate" title="${p.observacion}">${p.observacion}</div>`;
+    
+    tb.innerHTML += `
+      <tr class="hover:bg-slate-50 border-b border-slate-100 transition">
+        <td class="px-6 py-4 font-medium text-slate-900">${p.jugador}</td>
+        <td class="px-6 py-4 text-slate-600">${p.fecha.split('T')[0]}</td>
+        <td class="px-6 py-4"><span class="bg-slate-100 text-slate-600 px-2 py-1 rounded text-xs border border-slate-200 capitalize">${p.tipo}</span></td>
+        <td class="px-6 py-4 text-slate-500">${det||'-'}</td>
+        <td class="px-6 py-4 font-bold text-slate-900">$${p.monto.toLocaleString()}</td>
+        <td class="px-6 py-4 text-center">
+          <button onclick="window.enviarWhatsapp(${p.id})" class="text-green-600 p-1 hover:bg-green-50 rounded transition"><i class="ph ph-whatsapp-logo text-xl"></i></button> 
+          <button onclick="window.eliminarPago(${p.id})" class="text-rose-600 p-1 hover:bg-rose-50 rounded transition"><i class="ph ph-trash text-xl"></i></button>
+        </td>
+      </tr>
+    `;
+    
+    mv.innerHTML += `
+      <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm mb-3">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <h3 class="font-bold text-slate-900">${p.jugador}</h3>
+            <p class="text-xs text-slate-500">${p.fecha.split('T')[0]} · ${p.tipo}</p>
+          </div>
+          <span class="font-bold text-emerald-600 text-lg">$${p.monto.toLocaleString()}</span>
+        </div>
+        ${det ? `<div class="bg-slate-50 p-2 rounded text-xs text-slate-600 mb-3">${det}</div>` : ''}
+        <div class="flex gap-2 mt-2">
+          <button onclick="window.enviarWhatsapp(${p.id})" class="flex-1 bg-green-50 text-green-700 py-2 rounded-lg text-xs font-bold hover:bg-green-100 transition flex justify-center items-center gap-1"><i class="ph ph-whatsapp-logo"></i> WhatsApp</button>
+          <button onclick="window.eliminarPago(${p.id})" class="bg-rose-50 text-rose-700 px-3 py-2 rounded-lg text-xs font-bold hover:bg-rose-100 transition">Eliminar</button>
+        </div>
+      </div>
+    `;
   });
 }
 
 async function eliminarPago(id) {
-  if(!confirm('¿Borrar?')) return;
+  if(!confirm('¿Seguro que deseas borrar este pago? Esto disminuirá el saldo del jugador.')) return;
   await apiFetch(`/pagos?id=${id}`, {method:'DELETE'});
-  mostrarNotificacion('Borrado');
+  mostrarNotificacion('Pago eliminado');
   await cargarPagos(); filtrarPagos(); await cargarJugadoresSelect();
 }
 
@@ -188,5 +309,5 @@ window.irAPagar = (id) => { document.getElementById('jugador_id').value = id; do
 window.eliminarPago = eliminarPago;
 window.enviarWhatsapp = enviarWhatsapp;
 window.renderizarResumen = renderizarResumen;
-window.limpiarFiltros = () => { document.getElementById('buscador').value=''; filtrarPagos(); };
+window.limpiarFiltros = () => { document.getElementById('buscador').value=''; document.getElementById('filtro-inicio').value=''; document.getElementById('filtro-fin').value=''; filtrarPagos(); };
 function mostrarNotificacion(m) { console.log(m); }
