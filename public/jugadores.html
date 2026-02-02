@@ -16,12 +16,17 @@
         extend: {
           fontFamily: { sans: ['Inter', 'sans-serif'] },
           colors: {
-            slate: { 850: '#151f32' } 
+            slate: { 
+              50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1', 400: '#94a3b8', 500: '#64748b', 600: '#475569', 800: '#1e293b', 900: '#0f172a'
+            },
+            primary: {
+              50: '#eff6ff', 100: '#dbeafe', 500: '#3b82f6', 600: '#2563eb', 700: '#1d4ed8'
+            }
           },
           boxShadow: {
             'soft': '0 4px 20px -2px rgba(0, 0, 0, 0.05)',
-            'glow': '0 0 15px rgba(37, 99, 235, 0.15)',
-            'float': '0 10px 30px -5px rgba(0,0,0,0.1)'
+            'card': '0 2px 10px rgba(0,0,0,0.03)',
+            'float': '0 10px 40px -10px rgba(0, 0, 0, 0.1)'
           }
         }
       }
@@ -32,14 +37,14 @@
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
 
   <!-- Fuente Google Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
+    body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; color: #1e293b; }
     
     /* Scrollbar personalizado */
-    .custom-scroll::-webkit-scrollbar { height: 6px; }
-    .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+    .custom-scroll::-webkit-scrollbar-track { background: transparent; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
@@ -55,18 +60,18 @@
     .toast-enter { animation: slideIn 0.3s ease-out forwards; }
     .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
 
-    /* NAVEGACIÓN OCULTA (LEFT SIDEBAR) */
+    /* NAVEGACIÓN (LEFT SIDEBAR) */
     #nav-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
+      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px);
       z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
     }
     #nav-backdrop.active { opacity: 1; pointer-events: auto; }
 
     .sidebar-menu {
       position: fixed; top: 0; left: 0; bottom: 0; width: 280px; max-width: 85%;
-      background: white; z-index: 50; box-shadow: 20px 0 40px rgba(0,0,0,0.1);
-      transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      padding: 2rem 1rem; display: flex; flex-direction: column; gap: 1rem;
+      background: white; z-index: 50; box-shadow: 20px 0 50px rgba(0,0,0,0.15);
+      transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 0.5rem;
     }
     .sidebar-menu.active { transform: translateX(0); }
 
@@ -75,19 +80,17 @@
       position: fixed; z-index: 45;
       background: white; color: #64748b;
       border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 4px 0 12px rgba(0,0,0,0.05); /* Sombra hacia la derecha */
-      transition: all 0.2s;
+      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     }
-    .nav-trigger:hover { transform: translateX(4px); color: #3b82f6; } /* Se mueve a la derecha al hacer hover */
+    .nav-trigger:hover { transform: scale(1.05); color: #2563eb; } 
     
     @media (min-width: 768px) {
-      /* Desktop: Pestaña en el centro izquierdo, mitad oculta */
-      .nav-trigger { top: 50%; left: 0; transform: translateY(-50%) translateX(-50%); border-radius: 0 8px 8px 0; padding: 12px 6px; cursor: pointer; }
+      .nav-trigger { top: 50%; left: 0; transform: translateY(-50%) translateX(-50%); border-radius: 0 12px 12px 0; padding: 16px 8px; cursor: pointer; }
       .nav-trigger:hover { transform: translateY(-50%) translateX(0); }
     }
     @media (max-width: 767px) {
-      /* Mobile: Botón flotante abajo izquierda */
-      .nav-trigger { bottom: 24px; left: 20px; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+      .nav-trigger { bottom: 24px; left: 24px; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     }
 
     /* Links del menú */
@@ -97,11 +100,11 @@
       transition: all 0.2s;
     }
     .nav-link:hover { background: #f1f5f9; color: #0f172a; }
-    .nav-link.active { background: #eff6ff; color: #2563eb; } /* Blue para Jugadores */
+    .nav-link.active { background: #eff6ff; color: #2563eb; } 
   </style>
 </head>
 
-<body class="text-slate-800 antialiased min-h-screen">
+<body class="text-slate-800 antialiased min-h-screen pb-20 md:pb-0">
 
 <!-- NOTIFICACIONES -->
 <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-3 pointer-events-none"></div>
@@ -109,8 +112,14 @@
 <!-- NAVEGACIÓN OCULTA IZQUIERDA -->
 <div id="nav-backdrop" onclick="toggleMenu()"></div>
 <nav class="sidebar-menu">
-  <div class="mb-6 pl-2">
-    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Menú EFUSA</span>
+  <div class="mb-8 px-2 flex items-center gap-3">
+    <div class="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center text-white">
+      <i class="ph ph-soccer-ball text-lg"></i>
+    </div>
+    <div>
+      <h2 class="text-lg font-bold text-slate-900">EFUSA</h2>
+      <p class="text-[10px] font-semibold text-primary-600 uppercase tracking-wider">Panel Admin</p>
+    </div>
   </div>
   <a href="/index.html" class="nav-link" onclick="toggleMenu()">
     <i class="ph ph-house text-xl"></i> Inicio
@@ -124,41 +133,41 @@
   <a href="/alertas.html" class="nav-link" onclick="toggleMenu()">
     <i class="ph ph-bell text-xl"></i> Alertas
   </a>
-  <div class="mt-auto pt-6 border-t border-slate-100">
-     <button onclick="toggleMenu()" class="w-full text-left px-4 py-2 text-sm text-slate-400 hover:text-slate-600">
-       <i class="ph ph-x-circle text-lg mr-2"></i> Cerrar menú
+  <div class="mt-auto pt-6 border-t border-slate-100 px-2">
+     <button onclick="toggleMenu()" class="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors">
+       <i class="ph ph-sign-out text-lg"></i> Cerrar menú
      </button>
   </div>
 </nav>
 
-<!-- BOTÓN TRIGGER (El único elemento visible por defecto) -->
+<!-- BOTÓN TRIGGER -->
 <button class="nav-trigger" onclick="toggleMenu()" title="Abrir menú">
   <i class="ph ph-list text-2xl"></i>
 </button>
 
 <!-- HEADER -->
-<header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200/60 shadow-sm">
+<header class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-slate-200/60 shadow-sm transition-all">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pl-20 md:pl-8">
     <div class="flex justify-between items-center h-16 md:h-20">
       
       <!-- Logo / Brand -->
-      <div class="flex items-center gap-3 md:gap-4">
-        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 text-white">
+      <div class="flex items-center gap-4">
+        <div class="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-primary-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/20 text-white">
           <i class="ph ph-users-three text-xl md:text-2xl"></i>
         </div>
         <div>
           <h1 class="text-lg md:text-xl font-bold text-slate-900 tracking-tight">Gestión de Jugadores</h1>
-          <p class="hidden sm:block text-sm text-slate-500 font-medium">Efusa • Cuota Base: <span class="text-blue-600 font-bold">$50,000</span></p>
+          <p class="hidden sm:block text-sm text-slate-500 font-medium">Directorio • Cuota Base: <span class="text-primary-600 font-bold">$50,000</span></p>
         </div>
       </div>
 
       <!-- Botones de Acción Header -->
       <div class="flex items-center gap-2 md:gap-3">
-        <button onclick="abrirModal()" class="group relative inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-white transition-all duration-200 bg-blue-600 font-pj rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-600 hover:bg-blue-700 hover:shadow-lg hover:shadow-blue-500/30 active:scale-95">
+        <button onclick="abrirModal()" class="group relative inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-white transition-all duration-200 bg-primary-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-600 hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-500/30 active:scale-95">
           <i class="ph ph-plus-circle text-lg md:mr-2 group-hover:rotate-90 transition-transform"></i>
           <span class="hidden sm:inline">Nuevo Jugador</span>
         </button>
-        <a href="index.html" class="inline-flex items-center justify-center px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900">
+        <a href="index.html" class="inline-flex items-center justify-center px-3 md:px-4 py-2 md:py-2.5 text-xs md:text-sm font-semibold text-slate-600 transition-all duration-200 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-400 hover:bg-slate-50 hover:border-slate-300 hover:text-slate-900">
           <i class="ph ph-arrow-left text-lg md:mr-2"></i>
           <span class="hidden md:inline">Volver</span>
         </a>
@@ -167,56 +176,56 @@
   </div>
 </header>
 
-<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 w-full space-y-6 md:space-y-8">
+<main class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 w-full space-y-8">
 
   <!-- DASHBOARD ESTADÍSTICAS -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
     <!-- Card Total -->
-    <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 flex items-center gap-4 md:gap-5">
-      <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-slate-100 flex items-center justify-center text-slate-600">
-        <i class="ph ph-users-three text-xl md:text-2xl"></i>
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-card hover:shadow-md transition-all duration-300 flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600">
+        <i class="ph ph-users-three text-2xl"></i>
       </div>
       <div>
-        <p class="text-xs md:text-sm font-medium text-slate-500 uppercase tracking-wider">Total</p>
-        <h3 id="stat-total" class="text-2xl md:text-3xl font-bold text-slate-900">0</h3>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total</p>
+        <h3 id="stat-total" class="text-3xl font-bold text-slate-900">0</h3>
       </div>
     </div>
 
     <!-- Card Pagados -->
-    <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 flex items-center gap-4 md:gap-5">
-      <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
-        <i class="ph ph-check-circle text-xl md:text-2xl"></i>
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-card hover:shadow-md transition-all duration-300 flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+        <i class="ph ph-check-circle text-2xl"></i>
       </div>
       <div>
-        <p class="text-xs md:text-sm font-medium text-slate-500 uppercase tracking-wider">Pagados</p>
-        <h3 id="stat-pagados" class="text-2xl md:text-3xl font-bold text-emerald-600">0</h3>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pagados</p>
+        <h3 id="stat-pagados" class="text-3xl font-bold text-emerald-600">0</h3>
       </div>
     </div>
 
     <!-- Card Pendientes -->
-    <div class="bg-white rounded-xl md:rounded-2xl p-4 md:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow duration-300 flex items-center gap-4 md:gap-5">
-      <div class="w-12 h-12 md:w-14 md:h-14 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
-        <i class="ph ph-clock text-xl md:text-2xl"></i>
+    <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-card hover:shadow-md transition-all duration-300 flex items-center gap-4">
+      <div class="w-14 h-14 rounded-2xl bg-rose-50 flex items-center justify-center text-rose-600">
+        <i class="ph ph-clock-countdown text-2xl"></i>
       </div>
       <div>
-        <p class="text-xs md:text-sm font-medium text-slate-500 uppercase tracking-wider">Pendientes</p>
-        <h3 id="stat-pendientes" class="text-2xl md:text-3xl font-bold text-rose-600">0</h3>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Pendientes</p>
+        <h3 id="stat-pendientes" class="text-3xl font-bold text-rose-600">0</h3>
       </div>
     </div>
   </div>
 
   <!-- TABLA DE DATOS -->
-  <section class="bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-soft overflow-hidden flex flex-col">
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-card overflow-hidden flex flex-col">
     <div class="overflow-x-auto custom-scroll">
       <table class="w-full text-left border-collapse">
         <thead>
-          <tr class="bg-slate-50/80 border-b border-slate-200 text-xs uppercase text-slate-500 font-semibold tracking-wider">
-            <th class="px-4 md:px-6 py-3 md:py-4 w-1/3">Jugador / Identificación</th>
-            <th class="px-4 md:px-6 py-3 md:py-4 hidden sm:table-cell">Fecha Nac.</th> <!-- Oculto en móvil -->
-            <th class="px-4 md:px-6 py-3 md:py-4">Categoría</th>
-            <th class="px-4 md:px-6 py-3 md:py-4">Contacto</th>
-            <th class="px-4 md:px-6 py-3 md:py-4 text-center">Estado</th>
-            <th class="px-4 md:px-6 py-3 md:py-4 text-center">Acciones</th>
+          <tr class="bg-slate-50/80 border-b border-slate-200 text-xs uppercase text-slate-500 font-bold tracking-wider">
+            <th class="px-6 py-4 w-1/3">Jugador / Identificación</th>
+            <th class="px-6 py-4 hidden sm:table-cell">Fecha Nac.</th> 
+            <th class="px-6 py-4">Categoría</th>
+            <th class="px-6 py-4">Contacto</th>
+            <th class="px-6 py-4 text-center">Estado</th>
+            <th class="px-6 py-4 text-center">Acciones</th>
           </tr>
         </thead>
         <tbody id="tabla-jugadores" class="divide-y divide-slate-100 text-sm">
@@ -226,117 +235,156 @@
     </div>
 
     <!-- PAGINACIÓN INFERIOR -->
-    <div class="bg-slate-50/50 px-4 md:px-6 py-3 md:py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-      <span id="info-paginacion" class="text-xs md:text-sm text-slate-500 font-medium bg-white px-3 py-1 rounded-full border border-slate-200 shadow-sm">
+    <div class="bg-slate-50/50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
+      <span id="info-paginacion" class="text-sm text-slate-500 font-medium bg-white px-4 py-2 rounded-full border border-slate-200 shadow-sm">
         Mostrando 0 registros
       </span>
       <div class="flex items-center gap-2">
-        <button id="btn-prev" onclick="cambiarPagina(-1)" class="flex items-center gap-1 px-3 py-2 text-xs md:text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+        <button id="btn-prev" onclick="cambiarPagina(-1)" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-primary-600 hover:border-primary-200 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
           <i class="ph ph-caret-left"></i> <span class="hidden sm:inline">Anterior</span>
         </button>
-        <button id="btn-next" onclick="cambiarPagina(1)" class="flex items-center gap-1 px-3 py-2 text-xs md:text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+        <button id="btn-next" onclick="cambiarPagina(1)" class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-primary-600 hover:border-primary-200 focus:ring-2 focus:ring-primary-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
           <span class="hidden sm:inline">Siguiente</span> <i class="ph ph-caret-right"></i>
         </button>
       </div>
     </div>
   </section>
   
-  <!-- CONTENEDOR VISTA MÓVIL (Faltaba esto) -->
-  <div id="vista-movil" class="md:hidden space-y-4"></div>
+  <!-- CONTENEDOR VISTA MÓVIL -->
+  <div id="vista-movil" class="md:hidden space-y-4 pb-20"></div>
 
 </main>
 
-<!-- MODAL (Overlay & Content) -->
+<!-- MODAL PROFESIONAL (Overlay & Content) -->
 <div id="modal-jugador" class="fixed inset-0 z-40 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
   <!-- Backdrop -->
-  <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity opacity-0"></div>
+  <div id="modal-backdrop" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity opacity-0"></div>
 
   <div class="fixed inset-0 z-10 overflow-y-auto">
     <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
       
       <!-- Modal Panel -->
-      <div id="modal-panel" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0">
+      <div id="modal-panel" class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl scale-95 opacity-0">
         
         <!-- Header Modal -->
-        <div class="bg-slate-50/50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-          <h3 class="text-lg font-bold leading-6 text-slate-900 flex items-center gap-2">
-            <i id="modal-icon" class="ph ph-user-plus text-blue-600"></i>
+        <div class="bg-slate-50/50 px-6 py-5 border-b border-slate-100 flex justify-between items-center">
+          <h3 class="text-lg font-bold leading-6 text-slate-900 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
+              <i id="modal-icon" class="ph ph-user-plus text-lg"></i>
+            </div>
             <span id="modal-title">Registrar Jugador</span>
           </h3>
-          <button onclick="cerrarModal()" class="text-slate-400 hover:text-rose-500 transition-colors p-1 rounded-md hover:bg-rose-50">
+          <button onclick="cerrarModal()" class="text-slate-400 hover:text-rose-500 transition-colors p-2 rounded-full hover:bg-rose-50">
             <i class="ph ph-x text-xl"></i>
           </button>
         </div>
 
         <!-- Body Formulario -->
-        <form id="formJugador" class="p-6 space-y-6">
+        <form id="formJugador" class="bg-slate-50/30 p-6 md:p-8 space-y-6">
           <input type="hidden" id="jugador-id">
 
-          <!-- SECCIÓN: DATOS PERSONALES -->
-          <div class="space-y-4">
-            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Datos Personales</h4>
+          <!-- SECCIÓN 1: DATOS PERSONALES (Card Style) -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i class="ph ph-identification-card text-primary-500 text-xl"></i>
+              <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Datos Personales</h4>
+            </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Nombre -->
-              <div>
-                <label for="nombre" class="block text-xs font-semibold text-slate-500 mb-1.5">Nombres <span class="text-red-500">*</span></label>
-                <input type="text" id="nombre" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. Juan Carlos">
+              <div class="space-y-1.5">
+                <label for="nombre" class="block text-xs font-semibold text-slate-500 ml-1">Nombres <span class="text-rose-500">*</span></label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-user text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <input type="text" id="nombre" required class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all placeholder:text-slate-400" placeholder="Ej. Juan Carlos">
+                </div>
               </div>
               <!-- Apellidos -->
-              <div>
-                <label for="apellidos" class="block text-xs font-semibold text-slate-500 mb-1.5">Apellidos <span class="text-red-500">*</span></label>
-                <input type="text" id="apellidos" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. Pérez López">
+              <div class="space-y-1.5">
+                <label for="apellidos" class="block text-xs font-semibold text-slate-500 ml-1">Apellidos <span class="text-rose-500">*</span></label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-identification-badge text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <input type="text" id="apellidos" required class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all placeholder:text-slate-400" placeholder="Ej. Pérez López">
+                </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Fecha de Nacimiento -->
-              <div>
-                <label for="fecha_nacimiento" class="block text-xs font-semibold text-slate-500 mb-1.5">Fecha de Nacimiento</label>
-                <input type="date" id="fecha_nacimiento" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all">
+              <div class="space-y-1.5">
+                <label for="fecha_nacimiento" class="block text-xs font-semibold text-slate-500 ml-1">Fecha de Nacimiento</label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-calendar-blank text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <input type="date" id="fecha_nacimiento" class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all">
+                </div>
               </div>
               <!-- Teléfono -->
-              <div>
-                <label for="telefono" class="block text-xs font-semibold text-slate-500 mb-1.5">Teléfono de Contacto <span class="text-red-500">*</span></label>
-                <input type="tel" id="telefono" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Ej. 300 123 4567">
+              <div class="space-y-1.5">
+                <label for="telefono" class="block text-xs font-semibold text-slate-500 ml-1">Teléfono de Contacto <span class="text-rose-500">*</span></label>
+                <div class="relative group">
+                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-phone text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <input type="tel" id="telefono" required class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all placeholder:text-slate-400" placeholder="Ej. 300 123 4567">
+                </div>
               </div>
             </div>
           </div>
 
-          <div class="border-t border-slate-100"></div>
+          <!-- SECCIÓN 2: IDENTIFICACIÓN Y DEPORTIVA (Card Style) -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+            <div class="flex items-center gap-2 border-b border-slate-100 pb-2">
+              <i class="ph ph-basketball text-primary-500 text-xl"></i>
+              <h4 class="text-sm font-bold text-slate-800 uppercase tracking-wider">Ficha Deportiva</h4>
+            </div>
 
-          <!-- SECCIÓN: IDENTIFICACIÓN Y DEPORTIVA -->
-          <div class="space-y-4">
-            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Identificación & Deporte</h4>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Tipo Identificación -->
-              <div>
-                <label for="tipo_identificacion" class="block text-xs font-semibold text-slate-500 mb-1.5">Tipo ID</label>
-                <div class="relative">
-                  <select id="tipo_identificacion" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none appearance-none transition-all">
+              <div class="space-y-1.5">
+                <label for="tipo_identificacion" class="block text-xs font-semibold text-slate-500 ml-1">Tipo de Documento</label>
+                <div class="relative group">
+                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-cards text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <select id="tipo_identificacion" class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-8 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none appearance-none transition-all cursor-pointer">
                     <option value="" disabled selected>Seleccione...</option>
                     <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
                     <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
                     <option value="Registro Civil">Registro Civil</option>
                     <option value="Cédula Extranjería">Cédula Extranjería</option>
                   </select>
-                  <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i class="ph ph-caret-down text-slate-400"></i>
+                  </div>
                 </div>
               </div>
               <!-- Número Identificación -->
-              <div>
-                <label for="numero_identificacion" class="block text-xs font-semibold text-slate-500 mb-1.5">Número ID</label>
-                <input type="text" id="numero_identificacion" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none transition-all" placeholder="Documento">
+              <div class="space-y-1.5">
+                <label for="numero_identificacion" class="block text-xs font-semibold text-slate-500 ml-1">Número de Documento</label>
+                <div class="relative group">
+                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-number-nine text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <input type="text" id="numero_identificacion" class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-4 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all placeholder:text-slate-400" placeholder="Documento">
+                </div>
               </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
               <!-- Categoría -->
-              <div>
-                <label for="categoria" class="block text-xs font-semibold text-slate-500 mb-1.5">Categoría <span class="text-red-500">*</span></label>
-                <div class="relative">
-                  <select id="categoria" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-blue-600 focus:outline-none appearance-none cursor-pointer transition-all">
+              <div class="space-y-1.5">
+                <label for="categoria" class="block text-xs font-semibold text-slate-500 ml-1">Categoría <span class="text-rose-500">*</span></label>
+                <div class="relative group">
+                   <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <i class="ph ph-trophy text-slate-400 text-lg group-focus-within:text-primary-500 transition-colors"></i>
+                  </div>
+                  <select id="categoria" required class="block w-full rounded-xl border-slate-200 bg-slate-50/50 pl-10 pr-8 py-3 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-primary-500/20 focus:border-primary-500 outline-none appearance-none cursor-pointer transition-all">
                     <option value="" disabled selected>Seleccionar...</option>
                     <option value="Sub 17-18">Sub 17-18</option>
                     <option value="Sub 16-15">Sub 16-15</option>
@@ -345,32 +393,40 @@
                     <option value="Sub 10-9">Sub 10-9</option>
                     <option value="Sub 8-7">Sub 8-7</option>
                   </select>
-                  <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+                  <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <i class="ph ph-caret-down text-slate-400"></i>
+                  </div>
                 </div>
               </div>
               
               <!-- Estado Activo -->
-              <div class="flex items-center gap-3 p-2.5 bg-slate-50 rounded-lg border border-slate-200 hover:border-blue-200 transition-colors cursor-pointer h-[46px]" onclick="document.getElementById('activo').click()">
-                <div class="relative flex items-center">
-                  <input type="checkbox" id="activo" checked class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-blue-600 checked:bg-blue-600 hover:border-blue-400">
-                  <i class="ph ph-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-xs"></i>
+              <div class="space-y-1.5">
+                 <label class="block text-xs font-semibold text-slate-500 ml-1">Estado del Jugador</label>
+                 <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 group hover:border-primary-200 hover:bg-white transition-all cursor-pointer h-[54px]" onclick="document.getElementById('activo').click()">
+                   <div class="flex items-center gap-3">
+                      <div class="relative flex items-center">
+                        <input type="checkbox" id="activo" checked class="peer h-5 w-5 cursor-pointer appearance-none rounded-md border border-slate-300 transition-all checked:border-primary-500 checked:bg-primary-500 hover:border-primary-400">
+                        <i class="ph ph-check absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white opacity-0 peer-checked:opacity-100 pointer-events-none text-xs font-bold"></i>
+                      </div>
+                      <span class="text-sm font-medium text-slate-700 select-none">Jugador Activo</span>
+                   </div>
+                   <i class="ph ph-toggle-right text-slate-400 text-xl group-focus-within:text-primary-500 transition-colors"></i>
                 </div>
-                <span class="text-sm font-medium text-slate-700 select-none">Jugador Activo</span>
               </div>
             </div>
 
             <!-- Mensualidad (Read Only) -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-               <div class="md:col-span-2">
-                  <label for="mensualidad" class="block text-xs font-semibold text-slate-500 mb-1.5">Valor Pagado (Acumulado)</label>
-                  <div class="relative rounded-lg shadow-sm group cursor-not-allowed">
-                    <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span class="text-slate-400 sm:text-sm">$</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+               <div class="md:col-span-2 space-y-1.5">
+                  <label for="mensualidad" class="block text-xs font-semibold text-slate-500 ml-1">Valor Pagado (Acumulado)</label>
+                  <div class="relative group cursor-not-allowed">
+                    <div class="absolute inset-y-0 left-0 flex items-center pl-4">
+                      <i class="ph ph-currency-dollar text-slate-400"></i>
                     </div>
-                    <input type="number" id="mensualidad" readonly class="block w-full bg-slate-100 text-slate-500 border-slate-200 rounded-lg pl-7 pr-3 py-2.5 text-sm shadow-sm ring-1 ring-inset ring-slate-200 cursor-not-allowed" placeholder="0">
+                    <input type="number" id="mensualidad" readonly class="block w-full bg-slate-100 text-slate-500 border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm shadow-sm ring-1 ring-inset ring-slate-200 cursor-not-allowed" placeholder="0">
                   </div>
-                  <p class="text-[10px] text-amber-600 mt-1 flex items-center gap-1">
-                    <i class="ph ph-warning"></i> Usa la sección "Pagos" para registrar abonos.
+                  <p class="text-[10px] text-amber-600 flex items-center gap-1 ml-1">
+                    <i class="ph ph-info"></i> Usa la sección "Pagos" para registrar abonos.
                   </p>
                </div>
             </div>
@@ -378,7 +434,7 @@
 
           <!-- Botón Submit -->
           <div class="pt-2">
-            <button type="submit" class="w-full flex justify-center items-center rounded-lg bg-blue-600 px-3 py-3 text-sm font-semibold text-white shadow-lg shadow-blue-500/25 hover:bg-blue-700 hover:shadow-blue-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 transition-all transform active:scale-[0.99]">
+            <button type="submit" class="w-full flex justify-center items-center rounded-xl bg-primary-600 px-3 py-4 text-sm font-semibold text-white shadow-lg shadow-primary-500/25 hover:bg-primary-700 hover:shadow-primary-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-600 transition-all transform hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]">
               <i class="ph ph-floppy-disk mr-2 text-lg"></i> Guardar Información
             </button>
           </div>
@@ -388,8 +444,7 @@
   </div>
 </div>
 
-<!-- IMPORTACIÓN DEL SCRIPT CORREGIDO -->
-<!-- Este es el único script que debe estar aquí. -->
+<!-- SCRIPT -->
 <script type="module" src="/recursos/js/jugadores.js"></script>
 
 </body>

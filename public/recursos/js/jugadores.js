@@ -36,9 +36,6 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================
 async function cargarJugadores() {
   try {
-    // Estado de carga visual (opcional)
-    // tbody.innerHTML = '<tr><td colspan="6" class="text-center p-4">Cargando...</td></tr>';
-    
     const data = await apiFetch('/jugadores');
     todosLosJugadores = Array.isArray(data) ? data : [];
     
@@ -56,7 +53,6 @@ async function guardarJugador(e) {
   const id = document.getElementById('jugador-id').value;
   const esEdicion = !!id;
 
-  // Recopilamos datos
   const payload = {
     nombre: document.getElementById('nombre').value,
     apellidos: document.getElementById('apellidos').value,
@@ -74,13 +70,12 @@ async function guardarJugador(e) {
       await apiFetch(`/jugadores?id=${id}`, { method: 'PUT', body: payload });
       mostrarNotificacion('✅ Jugador actualizado correctamente');
     } else {
-      // CREACIÓN (Aquí ocurría el error 400 si faltaban headers)
       await apiFetch('/jugadores', { method: 'POST', body: payload });
       mostrarNotificacion('✅ Jugador registrado correctamente');
     }
     
     cerrarModal();
-    cargarJugadores(); // Recargar lista
+    cargarJugadores(); 
   } catch (error) {
     mostrarNotificacion('❌ Error: ' + error.message, 'error');
   }
@@ -133,7 +128,9 @@ function renderTabla() {
   datosPagina.forEach(j => {
     const estado = calcularEstado(j.mensualidad);
     const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
-    const fechaVisual = j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('/') : '-';
+    
+    // CORRECCIÓN DE FORMATO FECHA (guiones en vez de barras)
+    const fechaVisual = j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('-') : '-';
     
     const tr = document.createElement('tr');
     tr.className = "hover:bg-slate-50 transition duration-150 border-b border-slate-100";
@@ -142,7 +139,7 @@ function renderTabla() {
         <div class="font-bold text-slate-900 text-sm md:text-base">${nombreCompleto}</div>
         <div class="mt-1 text-xs text-slate-500">${j.numero_identificacion || 'Sin ID'}</div>
       </td>
-      <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600 hidden sm:table-cell">${fechaVisual}</td>
+      <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600 hidden sm:table-cell font-medium">${fechaVisual}</td>
       <td class="px-4 md:px-6 py-3 md:py-4"><span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span></td>
       <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600">${j.telefono || '-'}</td>
       <td class="px-4 md:px-6 py-3 md:py-4 text-center">
@@ -156,6 +153,55 @@ function renderTabla() {
       </td>
     `;
     tbody.appendChild(tr);
+
+    // RENDERIZADO MÓVIL (TARJETA)
+    const card = document.createElement('div');
+    card.className = "bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4";
+    
+    // Color de borde según estado
+    const borderClass = j.mensualidad >= MENSUALIDAD_OBJETIVO ? 'border-l-4 border-l-emerald-500' : (j.mensualidad > 0 ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-rose-500');
+    card.classList.add(...borderClass.split(' '));
+
+    card.innerHTML = `
+      <div class="flex justify-between items-start mb-3">
+        <div>
+          <h3 class="font-bold text-slate-900 text-base">${nombreCompleto}</h3>
+          <p class="text-xs text-slate-500 mt-1">${j.numero_identificacion || 'Sin ID'}</p>
+        </div>
+        <button onclick="window.toggleMenuCard(${j.id})" class="text-slate-400 hover:text-slate-600">
+          <i class="ph ph-dots-three-vertical text-xl"></i>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
+         <div>
+            <span class="text-slate-400 block mb-0.5">Fecha Nac.</span>
+            <span class="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded inline-block">${fechaVisual}</span>
+         </div>
+         <div>
+            <span class="text-slate-400 block mb-0.5">Categoría</span>
+            <span class="font-medium text-slate-700">${j.categoria}</span>
+         </div>
+      </div>
+
+      <div class="flex justify-between items-center pt-3 border-t border-slate-100">
+        <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${estado.color}">
+          ${estado.texto}
+        </span>
+        <div class="flex gap-2">
+          <button onclick="editarJugador(${j.id})" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
+            <i class="ph ph-pencil-simple text-lg"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Menú desplegable simple para móviles -->
+      <div id="menu-${j.id}" class="hidden mt-3 pt-3 border-t border-slate-100 flex gap-2">
+         <a href="https://wa.me/57${j.telefono}" target="_blank" class="flex-1 text-center py-2 bg-green-50 text-green-600 rounded-lg text-xs font-bold">WhatsApp</a>
+         <button onclick="eliminarJugador(${j.id})" class="px-4 py-2 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold">Eliminar</button>
+      </div>
+    `;
+    containerMovil.appendChild(card);
   });
 
   // Actualizar Paginación
@@ -248,7 +294,7 @@ function editarJugador(id) {
 function mostrarNotificacion(mensaje, tipo = 'success') {
   const container = document.getElementById('toast-container');
   if (!container) {
-    alert(mensaje); // Fallback si no existe el contenedor
+    alert(mensaje); 
     return;
   }
   const toast = document.createElement('div');
@@ -286,11 +332,16 @@ window.cerrarModal = cerrarModal;
 window.editarJugador = editarJugador;
 window.eliminarJugador = eliminarJugador;
 window.cambiarPagina = cambiarPagina;
-window.toggleMenu = () => { // Función simple para menú si no se usa otro js
+window.toggleMenu = () => { 
   const menu = document.querySelector('.sidebar-menu');
   const backdrop = document.getElementById('nav-backdrop');
   if(menu && backdrop) {
     menu.classList.toggle('active');
     backdrop.classList.toggle('active');
   }
+};
+// Función auxiliar para el menú de tarjeta móvil
+window.toggleMenuCard = (id) => {
+  const menu = document.getElementById(`menu-${id}`);
+  if(menu) menu.classList.toggle('hidden');
 };
