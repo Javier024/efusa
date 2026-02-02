@@ -32,7 +32,7 @@
     .custom-scroll::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
 
-    /* NAVEGACIÓN OCULTA (LEFT SIDEBAR) */
+    /* NAVEGACIÓN OCULTA */
     #nav-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
       z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
@@ -47,12 +47,11 @@
     }
     .sidebar-menu.active { transform: translateX(0); }
 
-    /* BOTÓN TRIGGER */
     .nav-trigger {
       position: fixed; z-index: 45;
       background: white; color: #64748b;
       border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 4px 0 12px rgba(0,0,0,0.05); /* Sombra derecha */
+      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
       transition: all 0.2s;
     }
     .nav-trigger:hover { transform: translateX(4px); color: #10b981; }
@@ -71,7 +70,7 @@
       transition: all 0.2s;
     }
     .nav-link:hover { background: #f1f5f9; color: #0f172a; }
-    .nav-link.active { background: #ecfdf5; color: #059669; } /* Emerald para Pagos */
+    .nav-link.active { background: #ecfdf5; color: #059669; }
   </style>
 </head>
 
@@ -121,18 +120,114 @@
   <!-- FORMULARIO DE REGISTRO -->
   <section class="bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-soft p-4 md:p-8">
     <div class="mb-6 flex items-center gap-2"><div class="p-1.5 bg-emerald-100 rounded-lg text-emerald-600"><i class="ph ph-plus-circle text-lg"></i></div><h2 class="text-base md:text-lg font-bold text-slate-900">Registrar Nuevo Pago</h2></div>
-    <form id="formPago" class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
-      <div class="md:col-span-6 lg:col-span-4"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Jugador</label><div class="relative"><select id="jugador_id" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none"><option value="" disabled selected>Cargando jugadores...</option></select><i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i></div></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Monto ($)</label><div class="relative rounded-lg shadow-sm"><div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span class="text-slate-400 sm:text-sm">$</span></div><input id="monto" type="number" min="1" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 pl-7 pr-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Fecha Pago</label><input id="fecha" type="date" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div>
+    
+    <form id="formPago" class="space-y-6">
+      <!-- Sección 1: Datos Básicos -->
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6">
+        <div class="md:col-span-6 lg:col-span-4">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Jugador</label>
+          <div class="relative">
+            <select id="jugador_id" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none">
+              <option value="" disabled selected>Cargando jugadores...</option>
+            </select>
+            <i class="ph ph-caret-down absolute right-3 top-3 text-slate-400 pointer-events-none"></i>
+          </div>
+        </div>
+        <div class="md:col-span-3">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Monto ($)</label>
+          <div class="relative rounded-lg shadow-sm">
+            <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3"><span class="text-slate-400 sm:text-sm">$</span></div>
+            <input id="monto" type="number" min="1" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 pl-7 pr-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
+          </div>
+        </div>
+        <div class="md:col-span-3">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Fecha Pago</label>
+          <input id="fecha" type="date" required class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
+        </div>
+      </div>
+
       <div class="md:col-span-12 border-t border-slate-100 my-2"></div>
-      <div class="md:col-span-6"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Concepto</label><select id="tipo" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none"><option value="abono">Mensualidad</option><option value="inscripcion">Inscripción</option><option value="uniforme">Uniforme</option><option value="otro">Otro</option></select></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Mes de Pago</label><select id="mes_pago" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none"><option value="">Seleccione...</option><option value="Enero">Enero</option><option value="Febrero">Febrero</option><option value="Marzo">Marzo</option><option value="Abril">Abril</option><option value="Mayo">Mayo</option><option value="Junio">Junio</option><option value="Julio">Julio</option><option value="Agosto">Agosto</option><option value="Septiembre">Septiembre</option><option value="Octubre">Octubre</option><option value="Noviembre">Noviembre</option><option value="Diciembre">Diciembre</option></select></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Cant. Meses</label><input id="cantidad_meses" type="number" value="1" min="1" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Inicio Periodo</label><input id="periodo_inicio" type="date" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div>
-      <div class="md:col-span-3"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Fin Periodo</label><input id="periodo_fin" type="date" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div>
-      <div class="md:col-span-12 mt-2"><button type="submit" class="w-full flex justify-center items-center rounded-lg bg-emerald-600 px-3 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-emerald-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-all transform active:scale-[0.98]"><i class="ph ph-check text-lg mr-2"></i> Guardar Pago</button></div>
-      <div class="md:col-span-12"><label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Observación</label><input id="observacion" type="text" placeholder="Detalles adicionales..." class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none"></div>
+
+      <!-- PREGUNTA DE CONFIRMACIÓN -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-3">¿Desea pagar varios meses por adelantado?</label>
+        <div class="flex gap-4">
+          <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
+            <input type="radio" name="pago_multiple" value="no" checked class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+            <span class="text-sm font-medium text-slate-700">No (Solo este mes)</span>
+          </label>
+          <label class="flex items-center gap-2 cursor-pointer bg-slate-50 px-4 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
+            <input type="radio" name="pago_multiple" value="si" class="w-4 h-4 text-emerald-600 focus:ring-emerald-500">
+            <span class="text-sm font-medium text-slate-700">Sí (Varios meses)</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- SECCIÓN OCULTA: PAGO MÚLTIPLE -->
+      <div id="pago-multiple-wrapper" class="hidden bg-emerald-50/50 border border-emerald-100 rounded-xl p-4 space-y-4 transition-all">
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-1.5">Cantidad de Meses</label>
+            <input id="cantidad_meses" type="number" value="2" min="2" class="block w-full rounded-lg border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+          
+          <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-1.5">Mes Inicial</label>
+            <select id="mes_inicio_select" class="block w-full rounded-lg border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+              <!-- Se llena con JS -->
+            </select>
+          </div>
+
+          <div class="md:col-span-4">
+            <label class="block text-xs font-semibold text-emerald-800 uppercase tracking-wide mb-1.5">Periodo Inicio (Fecha)</label>
+            <input id="periodo_inicio" type="date" class="block w-full rounded-lg border-emerald-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+          </div>
+        </div>
+
+        <!-- Resumen Visual de Meses -->
+        <div class="bg-white p-3 rounded-lg border border-emerald-100">
+          <p class="text-xs font-bold text-slate-400 uppercase mb-1">Detalle de meses a pagar:</p>
+          <div id="resumen-meses-texto" class="text-sm font-semibold text-emerald-700">Seleccione los datos arriba...</div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+           <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Periodo Fin (Calculado)</label>
+            <input id="periodo_fin" type="date" readonly class="block w-full rounded-lg border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Mes Final (Para referencia)</label>
+            <input id="mes_final_text" type="text" readonly class="block w-full rounded-lg border-slate-200 bg-slate-100 px-3 py-2 text-sm text-slate-500 cursor-not-allowed">
+          </div>
+        </div>
+      </div>
+      <!-- FIN SECCIÓN PAGO MÚLTIPLE -->
+
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-6 pt-4">
+        <div class="md:col-span-6">
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Concepto</label>
+          <select id="tipo" class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2.5 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none appearance-none">
+            <option value="abono">Mensualidad</option>
+            <option value="inscripcion">Inscripción</option>
+            <option value="uniforme">Uniforme</option>
+            <option value="otro">Otro</option>
+          </select>
+        </div>
+        
+        <div class="md:col-span-6">
+             <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1.5">Observación</label>
+             <input id="observacion" type="text" placeholder="Detalles adicionales..." class="block w-full rounded-lg border-slate-200 bg-slate-50/50 px-3 py-2 text-sm text-slate-900 shadow-sm ring-1 ring-inset ring-slate-200 focus:bg-white focus:ring-2 focus:ring-inset focus:ring-emerald-600 focus:outline-none">
+        </div>
+      </div>
+      
+      <!-- Input oculto para asegurar compatibilidad con backend antiguo si es necesario -->
+      <input type="hidden" id="mes_pago" name="mes_pago">
+
+      <div class="md:col-span-12 mt-4">
+        <button type="submit" class="w-full flex justify-center items-center rounded-lg bg-emerald-600 px-3 py-3 text-sm font-semibold text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-700 hover:shadow-emerald-500/40 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-600 transition-all transform active:scale-[0.98]">
+          <i class="ph ph-check text-lg mr-2"></i> Guardar Pago
+        </button>
+      </div>
     </form>
   </section>
 
@@ -140,7 +235,11 @@
   <section class="bg-white rounded-xl md:rounded-2xl border border-slate-200 shadow-soft overflow-hidden">
     <div class="px-4 md:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3 bg-slate-50/50">
       <div class="flex items-center gap-2"><i class="ph ph-chart-pie-slice text-xl text-slate-600"></i><h3 class="text-base md:text-lg font-bold text-slate-900">Estado de Cuentas</h3></div>
-      <div class="flex bg-slate-100 p-1 rounded-lg text-xs md:text-sm"><label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="todos" class="peer sr-only" checked onchange="renderizarResumen('todos')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">Todos</span></label><label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="deudores" class="peer sr-only" onchange="renderizarResumen('deudores')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition-all">Deudores</span></label><label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="pagados" class="peer sr-only" onchange="renderizarResumen('pagados')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">Pagados</span></label></div>
+      <div class="flex bg-slate-100 p-1 rounded-lg text-xs md:text-sm">
+        <label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="todos" class="peer sr-only" checked onchange="renderizarResumen('todos')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-emerald-600 peer-checked:shadow-sm transition-all">Todos</span></label>
+        <label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="deudores" class="peer sr-only" onchange="renderizarResumen('deudores')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-rose-600 peer-checked:shadow-sm transition-all">Deudores</span></label>
+        <label class="cursor-pointer"><input type="radio" name="filtro-resumen" value="pagados" class="peer sr-only" onchange="renderizarResumen('pagados')"><span class="px-2 md:px-3 py-1 rounded-md font-medium text-slate-500 peer-checked:bg-white peer-checked:text-blue-600 peer-checked:shadow-sm transition-all">Pagados</span></label>
+      </div>
     </div>
     <div class="hidden md:block overflow-x-auto"><table class="w-full text-left text-sm"><thead class="bg-slate-50 text-slate-500 uppercase text-xs font-semibold"><tr><th class="px-4 py-3">Jugador</th><th class="px-4 py-3 text-center">Estado</th><th class="px-4 py-3 text-center">Detalle</th><th class="px-4 py-3 text-center">Acumulado</th><th class="px-4 py-3 text-right">Acción</th></tr></thead><tbody id="tabla-resumen" class="divide-y divide-slate-100"></tbody></table></div>
     <div id="vista-movil-resumen" class="md:hidden p-4 space-y-4"></div>

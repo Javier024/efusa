@@ -1,18 +1,19 @@
-// recursos/js/pagos.js
 import { apiFetch } from './configuracion.js';
 
 // VARIABLES GLOBALES
 let todosLosPagos = [];
 let jugadoresList = [];
+const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
 
 document.addEventListener('DOMContentLoaded', () => {
   Promise.all([cargarPagos(), cargarJugadoresSelect()])
     .then(() => {
       filtrarPagos();
       renderizarResumen('todos');
+      initMultipleMonthsLogic(); // INICIALIZAR NUEVA LÓGICA
     });
 
-  // Listeners
+  // Listeners existentes
   const buscador = document.getElementById('buscador');
   const fechaInicio = document.getElementById('filtro-inicio');
   const fechaFin = document.getElementById('filtro-fin');
@@ -26,7 +27,94 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================
-// CARGA DE DATOS
+// NUEVA LÓGICA: PAGO MÚLTIPLE
+// ==========================
+
+function initMultipleMonthsLogic() {
+  const radios = document.getElementsByName('pago_multiple');
+  const wrapper = document.getElementById('pago-multiple-wrapper');
+  const mesInicioSelect = document.getElementById('mes_inicio_select');
+  const cantidadInput = document.getElementById('cantidad_meses');
+  const periodoInicioInput = document.getElementById('periodo_inicio');
+
+  // 1. Llenar el select de meses iniciales
+  mesInicioSelect.innerHTML = MESES.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+
+  // Poner por defecto el mes actual
+  const mesActualIndex = new Date().getMonth();
+  mesInicioSelect.value = mesActualIndex;
+
+  // 2. Manejar visibilidad del wrapper
+  radios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+      if (e.target.value === 'si') {
+        wrapper.classList.remove('hidden');
+        calcularPeriodo(); // Calcular inicialmente
+      } else {
+        wrapper.classList.add('hidden');
+        // Resetear campos ocultos si se cancela
+        document.getElementById('periodo_fin').value = '';
+        document.getElementById('mes_final_text').value = '';
+        document.getElementById('resumen-meses-texto').innerText = '';
+      }
+    });
+  });
+
+  // 3. Listeners para recalcular
+  const inputsToWatch = [cantidadInput, mesInicioSelect, periodoInicioInput];
+  inputsToWatch.forEach(input => {
+    input.addEventListener('change', calcularPeriodo);
+    input.addEventListener('input', calcularPeriodo);
+  });
+
+  // Si no hay fecha de inicio, poner hoy por defecto
+  if(!periodoInicioInput.value) {
+    periodoInicioInput.valueAsDate = new Date();
+  }
+}
+
+function calcularPeriodo() {
+  const cantidad = parseInt(document.getElementById('cantidad_meses').value) || 1;
+  const mesInicioIdx = parseInt(document.getElementById('mes_inicio_select').value);
+  const fechaInicioVal = document.getElementById('periodo_inicio').value;
+
+  if (!fechaInicioVal) return;
+
+  const fechaInicio = new Date(fechaInicioVal + 'T00:00:00'); // Forzar zona horaria local aprox
+  const fechaFin = new Date(fechaInicio);
+  
+  // Sumar meses a la fecha
+  fechaFin.setMonth(fechaFin.getMonth() + cantidad);
+  
+  // Formatear fecha fin para el input (YYYY-MM-DD)
+  const yearFin = fechaFin.getFullYear();
+  const monthFin = String(fechaFin.getMonth() + 1).padStart(2, '0');
+  const dayFin = String(fechaFin.getDate()).padStart(2, '0');
+  const fechaFinStr = `${yearFin}-${monthFin}-${dayFin}`;
+
+  document.getElementById('periodo_fin').value = fechaFinStr;
+
+  // Calcular nombre del mes final
+  const mesFinIdx = (mesInicioIdx + cantidad - 1) % 12; 
+  // Nota: Simple cálculo de nombre, no asume salto de año para el nombre, solo para la fecha
+  document.getElementById('mes_final_text').value = MESES[mesFinIdx];
+
+  // Generar lista de meses (Ej: Enero, Febrero, Marzo)
+  let listaMeses = [];
+  for (let i = 0; i < cantidad; i++) {
+    let idx = (mesInicioIdx + i) % 12;
+    listaMeses.push(MESES[idx]);
+  }
+  
+  // Si pasa un año, podríamos añadir el año, pero por simplicidad mantenemos los nombres
+  document.getElementById('resumen-meses-texto').innerText = listaMeses.join(', ');
+  
+  // Actualizar campo oculto 'mes_pago' con el primer mes para compatibilidad
+  document.getElementById('mes_pago').value = MESES[mesInicioIdx];
+}
+
+// ==========================
+// CARGA DE DATOS (Sin cambios mayores)
 // ==========================
 
 async function cargarPagos() {
@@ -57,7 +145,7 @@ async function cargarJugadoresSelect() {
 }
 
 // ==========================
-// UTILIDADES DE FECHA Y HORARIO
+// UTILIDADES DE FECHA
 // ==========================
 
 function obtenerSaludo() {
@@ -67,19 +155,28 @@ function obtenerSaludo() {
   return "Buenas noches";
 }
 
-function obtenerMesSiguiente(mesActual) {
-  const meses = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-  const index = meses.indexOf(mesActual);
+// Formatea fecha YYYY-MM-DD a DD/MM/YYYY
+function formatearFecha(fechaStr) {
+  if (!fechaStr) return '';
+  const [y, m, d] = fechaStr.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+// Calcula el siguiente mes a partir de una fecha "YYYY-MM-DD"
+function obtenerProximoPagoStr(fechaFinStr) {
+  if (!fechaFinStr) return '';
+  const fecha = new Date(fechaFinStr + 'T12:00:00'); // Mediodía para evitar problemas de zona horaria
+  fecha.setMonth(fecha.getMonth() + 1); // Sumar 1 mes a la fecha fin
   
-  // Si no encuentra el mes o es diciembre, pasa a enero
-  if (index === -1) return "el próximo mes"; 
-  if (index === 11) return "Enero";
+  const mesNombre = MESES[fecha.getMonth()];
+  const year = fecha.getFullYear();
+  const day = String(fecha.getDate()).padStart(2, '0');
   
-  return meses[index + 1];
+  return `El ${day} de ${mesNombre} de ${year}`;
 }
 
 // ==========================
-// WHATSAPP CORDIAL Y DETALLADO
+// WHATSAPP MEJORADO
 // ==========================
 function enviarWhatsapp(idPago) {
   const pago = todosLosPagos.find(p => p.id === idPago);
@@ -95,54 +192,56 @@ function enviarWhatsapp(idPago) {
   }
 
   const nombre = pago.jugador;
-  const saludo = obtenerSaludo(); // Mañana/Tarde/Noche
+  const saludo = obtenerSaludo(); 
   const monto = Number(pago.monto).toLocaleString();
   const concepto = pago.tipo.toUpperCase();
   const fecha = pago.fecha.split('T')[0];
   const obs = pago.observacion ? `Obs: ${pago.observacion}` : '';
-  const mes = pago.mes_pago ? `Mes: ${pago.mes_pago}` : '';
+  
   let mensaje = '';
 
-  // Calculamos el próximo mes de pago
-  let infoProximoPago = '';
-  if (pago.mes_pago) {
-    const proximo = obtenerMesSiguiente(pago.mes_pago);
-    infoProximoPago = `Tu próximo pago será para ${proximo}. 📆`;
-  }
+  // Detectar si es pago múltiple por la existencia de periodo_fin
+  const esPagoMultiple = pago.cantidad_meses > 1 && pago.periodo_fin;
 
-  // Estructura del mensaje según cantidad de meses
-  if (pago.cantidad_meses >= 3) {
-    // --- CASO 1: 3 O MÁS MESES ---
-    mensaje = `${saludo} ${nombre}, ¡Muchas gracias por pagar ${pago.cantidad_meses} meses por adelantado! 🚀🌟%0A`;
-    mensaje += `Tu compromiso y apoyo con el club son excelentes. Tu estado está al día.%0A%0A`;
-    mensaje += `💰 *Valor:* $${monto}%0A`;
-    mensaje += `📅 *Fecha:* ${fecha}%0A`;
-    if (mes) mensaje += `🏷️ *Cobertura:* ${mes}%0A`;
-    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
+  if (esPagoMultiple) {
+    // --- CASO: PAGO ADELANTADO (Varios meses) ---
+    const inicio = formatearFecha(pago.periodo_inicio);
+    const fin = formatearFecha(pago.periodo_fin);
+    const proximoPago = obtenerProximoPagoStr(pago.periodo_fin);
+    const mesesPagados = pago.cantidad_meses;
+
+    mensaje = `${saludo} ${nombre}, ¡Muchas gracias por pagar ${mesesPagados} meses por adelantado! 🚀✨%0A`;
+    mensaje += `Tu apoyo es fundamental para el club. Aquí están los detalles de tu pago:%0A%0A`;
+    mensaje += `💰 *Monto Pagado:* $${monto}%0A`;
+    mensaje += `📅 *Fecha de Pago:* ${fecha}%0A`;
     mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
+    mensaje += `📆 *Periodo Cubierto:* Desde el ${inicio} hasta el ${fin}.%0A`;
+    mensaje += `📢 *Tu próximo pago vence el:* ${proximoPago}.%0A`; // Cálculo exacto
     if (obs) mensaje += `📝 ${obs}%0A`;
-    mensaje += `¡Te esperamos en el entrenamiento! ⚽`;
-  
-  } else if (pago.cantidad_meses === 2) {
-    // --- CASO 2: 2 MESES (ADELANTADO) ---
-    mensaje = `${saludo} ${nombre}, muchas gracias por adelantar 2 meses de mensualidad! ✨%0A`;
-    mensaje += `Gracias por tu apoyo, tu cuenta está al día por dos periodos.%0A%0A`;
-    mensaje += `💰 *Monto:* $${monto}%0A`;
-    mensaje += `📅 *Fecha:* ${fecha}%0A`;
-    if (mes) mensaje += `🏷️ *Cobertura:* ${mes}%0A`;
-    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
-    mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-    if (obs) mensaje += `📝 ${obs}%0A`;
-    mensaje += `¡Nos vemos en la cancha! 🏟️`;
+    mensaje += `%0A¡Gracias por tu compromiso! ⚽`;
 
   } else {
-    // --- CASO 3: PAGO NORMAL (1 MES) ---
+    // --- CASO: PAGO NORMAL (1 mes o único) ---
+    // Intentamos calcular el próximo mes basado en mes_pago si existe, o fecha
+    let infoProximo = '';
+    if (pago.mes_pago) {
+      // Si solo tenemos el nombre del mes (viejo estilo)
+      const index = MESES.indexOf(pago.mes_pago);
+      const nextIndex = (index + 1) % 12;
+      infoProximo = `Tu próximo pago corresponde a ${MESES[nextIndex]}.`;
+    } else if (pago.periodo_inicio) {
+      // Si tenemos fecha de inicio, asumimos un mes
+      const fechaFin = new Date(pago.periodo_inicio + 'T12:00:00');
+      fechaFin.setMonth(fechaFin.getMonth() + 1);
+      infoProximo = `Tu próximo pago será el ${String(fechaFin.getDate()).padStart(2,'0')} de ${MESES[fechaFin.getMonth()]}.`;
+    }
+
     mensaje = `${saludo} ${nombre}, confirmamos tu pago en EFUSA.%0A`;
     mensaje += `💰 *Valor:* $${monto}%0A`;
     mensaje += `📅 *Fecha:* ${fecha}%0A`;
     mensaje += `🏷️ *Concepto:* ${concepto}%0A`;
-    if (mes) mensaje += `📆 ${mes}.%0A`;
-    if (infoProximoPago) mensaje += `📢 ${infoProximoPago}%0A`;
+    if (pago.mes_pago) mensaje += `📆 *Mes:* ${pago.mes_pago}.%0A`;
+    if (infoProximo) mensaje += `📢 ${infoProximo}%0A`;
     if (obs) mensaje += `📝 ${obs}`;
   }
 
@@ -150,7 +249,7 @@ function enviarWhatsapp(idPago) {
 }
 
 // ==========================
-// RENDERIZAR RESUMEN (ESTADO DE CUENTAS)
+// RENDERIZAR RESUMEN (Sin cambios lógicos, solo visual)
 // ==========================
 function renderizarResumen(tipo) {
   const tbody = document.getElementById('tabla-resumen');
@@ -169,7 +268,6 @@ function renderizarResumen(tipo) {
     listaFiltrada = jugadoresList.filter(j => j.mensualidad >= 50000);
   }
 
-  // Ordenar
   listaFiltrada.sort((a, b) => b.mensualidad - a.mensualidad);
 
   if (listaFiltrada.length === 0) {
@@ -290,17 +388,32 @@ function actualizarTotal(pagos) {
 async function guardarPago(e) {
   e.preventDefault();
   
+  const esMultiple = document.querySelector('input[name="pago_multiple"]:checked').value === 'si';
+  
+  // Construcción del payload base
   const payload = {
     jugador_id: document.getElementById('jugador_id').value,
     monto: Number(document.getElementById('monto').value),
     fecha: document.getElementById('fecha').value,
     tipo: document.getElementById('tipo').value,
     observacion: document.getElementById('observacion').value,
-    mes_pago: document.getElementById('mes_pago').value,
-    cantidad_meses: Number(document.getElementById('cantidad_meses').value),
-    periodo_inicio: document.getElementById('periodo_inicio').value,
-    periodo_fin: document.getElementById('periodo_fin').value
+    mes_pago: document.getElementById('mes_pago').value, // Se llena con la lógica multiple
+    cantidad_meses: 1,
+    periodo_inicio: null,
+    periodo_fin: null
   };
+
+  // Si es pago múltiple, sobreescribimos con los datos calculados
+  if (esMultiple) {
+    payload.cantidad_meses = Number(document.getElementById('cantidad_meses').value);
+    payload.periodo_inicio = document.getElementById('periodo_inicio').value;
+    payload.periodo_fin = document.getElementById('periodo_fin').value;
+    // mes_pago ya está calculado en initMultipleMonthsLogic
+  } else {
+    // Si es pago simple, periodo_inicio es la fecha de pago, periodo_fin null
+    // Opcional: podrías poner periodo_fin = 1 mes después, pero por ahora null es más seguro
+    payload.periodo_inicio = payload.fecha; 
+  }
 
   if (!payload.jugador_id) {
     mostrarNotificacion('Seleccione un jugador', 'error');
@@ -315,6 +428,10 @@ async function guardarPago(e) {
     
     mostrarNotificacion('✅ Pago registrado correctamente');
     document.getElementById('formPago').reset();
+    // Resetear estado UI de multiple
+    document.getElementById('pago-multiple-wrapper').classList.add('hidden');
+    document.querySelector('input[name="pago_multiple"][value="no"]').checked = true;
+    
     await cargarPagos();
     filtrarPagos();
     await cargarJugadoresSelect();
@@ -425,14 +542,10 @@ function renderPagos(pagos) {
   });
 }
 
-// Utilidad simple para notificaciones
 function mostrarNotificacion(msg, type = 'success') {
     console.log(`[${type}] ${msg}`);
 }
 
-// ==========================
-// EXPORTS
-// ==========================
 window.eliminarPago = eliminarPago;
 window.limpiarFiltros = limpiarFiltros;
 window.irAPagar = irAPagar;

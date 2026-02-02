@@ -17,7 +17,7 @@ export default async function handler(req, res) {
           p.id,
           p.jugador_id,
           j.nombre AS jugador,
-          j.telefono AS jugador_telefono, -- IMPORTANTE: Traemos el telefono para WhatsApp
+          j.telefono AS jugador_telefono,
           j.categoria AS jugador_categoria,
           p.monto,
           p.fecha,
@@ -47,7 +47,13 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Jugador, monto y fecha son obligatorios' });
       }
 
-      // 1. Insertar el pago con los nuevos campos
+      // Validar si es pago multiple para asegurar coherencia
+      let cantMeses = cantidad_meses || 1;
+      if (cantMeses > 1 && (!periodo_inicio || !periodo_fin)) {
+         return res.status(400).json({ error: 'Para pagos múltiples, debe definir el periodo de inicio y fin.' });
+      }
+
+      // 1. Insertar el pago
       const { rows } = await pool.query(
         `
         INSERT INTO pagos
@@ -62,7 +68,7 @@ export default async function handler(req, res) {
           tipo || 'abono', 
           observacion || null,
           mes_pago || null,
-          cantidad_meses || 1,
+          cantMeses,
           periodo_inicio || null,
           periodo_fin || null
         ]
