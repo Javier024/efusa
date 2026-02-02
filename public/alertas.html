@@ -33,7 +33,7 @@
   <style>
     body { font-family: 'Inter', sans-serif; background-color: #F8FAFC; }
     
-    /* NAVEGACIÓN OCULTA (SIDEBAR) */
+    /* NAVEGACIÓN OCULTA (LEFT SIDEBAR) */
     #nav-backdrop {
       position: fixed; inset: 0; background: rgba(0,0,0,0.3); backdrop-filter: blur(2px);
       z-index: 40; opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
@@ -48,22 +48,20 @@
     }
     .sidebar-menu.active { transform: translateX(0); }
 
-    /* BOTÓN TRIGGER (PULSO) */
+    /* BOTÓN TRIGGER (Izquierda) */
     .nav-trigger {
       position: fixed; z-index: 45;
       background: white; color: #64748b;
       border: 1px solid rgba(0,0,0,0.05);
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      box-shadow: 4px 0 12px rgba(0,0,0,0.05);
       transition: all 0.2s;
     }
-    .nav-trigger:hover { transform: scale(1.05); color: #e11d48; }
+    .nav-trigger:hover { transform: translateX(4px); color: #e11d48; }
     
-    /* Desktop: Centro izquierda */
     @media (min-width: 768px) {
       .nav-trigger { top: 50%; left: 0; transform: translateY(-50%) translateX(-50%); border-radius: 0 8px 8px 0; padding: 12px 6px; cursor: pointer; }
-      .nav-trigger:hover { transform: translateY(-50%) translateX(0) scale(1.05); }
+      .nav-trigger:hover { transform: translateY(-50%) translateX(0); }
     }
-    /* Mobile: Esquina inferior izquierda */
     @media (max-width: 767px) {
       .nav-trigger { bottom: 24px; left: 20px; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
     }
@@ -86,10 +84,7 @@
 
   <!-- MENÚ LATERAL (Oculto por defecto) -->
   <nav class="sidebar-menu">
-    <div class="mb-6 pl-2">
-      <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Menú EFUSA</span>
-    </div>
-
+    <div class="mb-6 pl-2"><span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Menú EFUSA</span></div>
     <a href="/index.html" class="nav-link" onclick="toggleMenu()">
       <i class="ph ph-house text-xl"></i> Inicio
     </a>
@@ -102,7 +97,6 @@
     <a href="/alertas.html" class="nav-link active" onclick="toggleMenu()">
       <i class="ph ph-bell text-xl"></i> Alertas
     </a>
-
     <div class="mt-auto pt-6 border-t border-slate-100">
        <button onclick="toggleMenu()" class="w-full text-left px-4 py-2 text-sm text-slate-400 hover:text-slate-600">
          <i class="ph ph-x-circle text-lg mr-2"></i> Cerrar menú
@@ -205,5 +199,6 @@
 
 <!-- JS Original del archivo -->
 <script type="module" src="/recursos/js/alertas.js"></script>
+
 </body>
 </html>
