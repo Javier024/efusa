@@ -7,6 +7,7 @@ let jugadoresList = [];
 let listaPagos = [];
 let paginaActual = 1;
 const FILAS_POR_PAGINA = 8;
+// Usamos la misma constante que en tu backend
 const MENSUALIDAD_OBJETIVO = 50000;
 
 // Referencias DOM
@@ -47,11 +48,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================
-// LÓGICA DE DATOS (SIN MOCKS)
+// LÓGICA DE DATOS
 // ==========================
 async function cargarDatos() {
   try {
-    // Conexión a tus endpoints reales
+    // Conexión a tus endpoints
     const resultados = await Promise.allSettled([
       apiFetch('/api/jugadores'),
       apiFetch('/api/pagos')
@@ -151,7 +152,7 @@ function renderTabla() {
       const valor = Number(j.mensualidad || 0);
       let estadoHtml = '';
       
-      // --- LÓGICA DE ESTADO CORREGIDA ---
+      // --- LÓGICA DE ESTADO (Pago / Abono / Pendiente) ---
       if (valor >= MENSUALIDAD_OBJETIVO) {
         // PAGO
         estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
@@ -166,7 +167,7 @@ function renderTabla() {
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
       
-      // --- COLUMNAS CORREGIDAS (Sin Acción) ---
+      // --- COLUMNAS: Jugador, Categoría, Contacto, Estado ---
       tr.innerHTML = `
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
@@ -176,7 +177,7 @@ function renderTabla() {
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
-        <!-- Contacto -->
+        <!-- Contacto (Teléfono) -->
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
           ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
         </td>
