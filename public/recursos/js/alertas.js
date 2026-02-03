@@ -1,7 +1,10 @@
-// recursos/js/alertas.js
 import { apiFetch } from './configuracion.js';
 
 let deudores = [];
+
+// Variables Globales para Paginación
+let paginaActual = 1;
+const FILAS_POR_PAGINA = 5; // Mostramos 5 alertas por página
 
 document.addEventListener('DOMContentLoaded', () => {
   cargarAlertas();
@@ -23,9 +26,25 @@ async function cargarAlertas() {
   }
 }
 
+// FUNCIÓN DE PAGINACIÓN PARA USAR DESDE EL HTML
+window.cambiarPaginaAlerta = function(delta) {
+  if (deudores.length === 0) return;
+  
+  const totalPages = Math.ceil(deudores.length / FILAS_POR_PAGINA) || 1;
+  paginaActual += delta;
+
+  if (paginaActual > totalPages) paginaActual = totalPages;
+  if (paginaActual < 1) paginaActual = 1;
+  
+  renderizarAlertas();
+};
+
 function renderizarAlertas() {
   const tbody = document.getElementById('tabla-alertas');
   const containerMovil = document.getElementById('vista-movil-alertas');
+  const infoPaginacion = document.getElementById('info-paginacion-alertas');
+  const btnPrev = document.getElementById('btn-prev-alerta');
+  const btnNext = document.getElementById('btn-next-alerta');
   
   if (!tbody || !containerMovil) return;
   
@@ -41,10 +60,31 @@ function renderizarAlertas() {
   document.getElementById('sin-alertas').classList.add('hidden');
   document.getElementById('con-alertas').classList.remove('hidden');
 
+  // 1. LÓGICA DE PAGINACIÓN
+  const totalItems = deudores.length;
+  const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
+  
+  // Validar límites
+  if (paginaActual > totalPages) paginaActual = totalPages;
+  if (paginaActual < 1) paginaActual = 1;
+
+  const inicio = (paginaActual - 1) * FILAS_POR_PAGINA;
+  const fin = inicio + FILAS_POR_PAGINA;
+  // Aquí cortamos el array para mostrar solo los datos de esta página
+  const datosPagina = deudores.slice(inicio, fin);
+
+  // 2. RENDERIZAR SI NO HAY DATOS EN ESTA PÁGINA
+  if (datosPagina.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No hay alertas en esta página.</td></tr>`;
+    containerMovil.innerHTML = `<div class="text-center py-8 text-slate-400">Sin alertas en esta página.</div>`;
+    return; 
+  }
+
   // Obtener nombre del mes actual para mensajes de vencimiento
   const nombreMesActual = new Date().toLocaleDateString('es-ES', { month: 'long' });
 
-  deudores.forEach(j => {
+  // 3. RENDERIZAR DATOS (USAMOS datosPagina, NO deudores)
+  datosPagina.forEach(j => {
     const esVencimiento = j.tipo_alerta === 'VENCIMIENTO';
     
     // Estilos según tipo de alerta
@@ -158,6 +198,13 @@ function renderizarAlertas() {
     `;
     containerMovil.appendChild(card);
   });
+
+  // 4. ACTUALIZAR PAGINACIÓN (TEXTOS Y BOTONES)
+  if (infoPaginacion) {
+    infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} alertas)`;
+  }
+  if (btnPrev) btnPrev.disabled = paginaActual === 1;
+  if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
 
 // Función mejorada para WhatsApp con manejo de vencimiento
