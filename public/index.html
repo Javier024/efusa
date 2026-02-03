@@ -5,7 +5,6 @@
   <title>Panel Principal | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <!-- FAVORITO VERDE SOLICITADO -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2216a34a%22>⚽</text></svg>">
 
   <!-- Tailwind CSS -->
@@ -97,13 +96,13 @@
       <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
         <i class="ph ph-squares-four text-lg"></i> Panel Principal
       </a>
-      <a href="jugadores.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-users-three text-lg"></i> Gestión Jugadores
       </a>
-      <a href="pagos.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-money text-lg"></i> Gestión Pagos
       </a>
-      <a href="alertas.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-warning-octagon text-lg"></i> Alertas
       </a>
     </nav>
@@ -144,7 +143,6 @@
         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-card border border-slate-100">
           <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
-              <!-- ID AQUÍ: El script modificará este texto -->
               <h2 id="saludo-dinamico" class="text-2xl md:text-3xl font-extrabold text-slate-800 anim-saludo">Bienvenido, Admin</h2>
               <p class="text-slate-500 mt-1 max-w-md">Panel de control administrativo. Gestiona jugadores, pagos y alertas.</p>
               <div class="mt-4 flex items-center gap-2 text-sm text-slate-400">
@@ -153,7 +151,7 @@
               </div>
             </div>
             
-            <!-- Logo decorativo grande para elegante -->
+            <!-- Logo decorativo grande -->
             <div class="hidden md:flex items-center justify-center w-32 h-32 bg-brand-50 rounded-2xl text-brand-600">
                 <i class="ph ph-soccer-ball text-6xl"></i>
             </div>
@@ -282,38 +280,439 @@
     </main>
   </div>
 
-  <!-- TU LÓGICA EXTERNA ORIGINAL (Mantenido sin tocar) -->
-  <script type="module" src="recursos/js/dashboard.js"></script>
-
-  <!-- SCRIPT AÑADIDO PARA EL SALUDO DINÁMICO -->
+  <!-- SCRIPT DE LÓGICA -->
   <script>
+    // ==========================
+    // MOCK DATA (Simulación de Backend)
+    // ==========================
+    // Generamos datos falsos para que la tabla se llene sin necesidad de archivos externos
+    const categorias = ["Sub 17-18", "Sub 16-15", "Sub 14-13", "Sub 12-11", "Sub 10-9", "Sub 8-7"];
+    const nombres = ["Juan Pérez", "Carlos López", "Luis Rodríguez", "Marta Díaz", "Andrés García", "Sofía Martínez", "Diego Fernández", "Lucía Gómez", "Mateo Ruiz", "Valentina Castro", "Sebastián Morales", "Isabella Jiménez", "Samuel Ortega", "Alejandro Bravo", "Camila Silva"];
+    
+    function generarJugadores(cantidad) {
+      const datos = [];
+      for(let i=1; i<=cantidad; i++) {
+        const nombre = nombres[Math.floor(Math.random() * nombres.length)] + ' ' + i;
+        const categoria = categorias[Math.floor(Math.random() * categorias.length)];
+        const telefono = "300 " + Math.floor(1000000 + Math.random() * 9000000);
+        // Aleatorio entre 0 y 60000 para probar estado
+        const mensualidad = Math.random() > 0.3 ? 50000 : Math.floor(Math.random() * 40000); 
+        
+        datos.push({
+          id: i,
+          nombre: nombre,
+          numero_identificacion: 'ID-' + (1000 + i),
+          categoria: categoria,
+          telefono: telefono,
+          mensualidad: mensualidad
+        });
+      }
+      return datos;
+    }
+
+    function generarPagos(cantidad) {
+      const datos = [];
+      for(let i=1; i<=cantidad; i++) {
+        const jugador = nombres[Math.floor(Math.random() * nombres.length)];
+        datos.push({
+          jugador: jugador,
+          monto: 50000,
+          fecha: new Date().toISOString(), // Hoy
+          tipo: 'mensualidad'
+        });
+      }
+      return datos;
+    }
+
+    // Simulación de la función apiFetch
+    async function mockApiFetch(endpoint) {
+      return new Promise((resolve) => {
+        setTimeout(() => {
+          if (endpoint.includes('jugadores')) {
+            resolve(generarJugadores(45)); // Generar 45 jugadores
+          } else if (endpoint.includes('pagos')) {
+            resolve(generarPagos(10));
+          } else {
+            resolve([]);
+          }
+        }, 500); // Retraso pequeño para simular red
+      });
+    }
+
+    // ==========================
+    // ESTADO GLOBAL
+    // ==========================
+    let jugadoresList = [];
+    let listaPagos = [];
+    let paginaActual = 1;
+    const FILAS_POR_PAGINA = 8;
+    const MENSUALIDAD_OBJETIVO = 50000;
+
+    // Referencias DOM
+    let tabla, buscador, filtroCategoria, infoPaginacion, btnPrev, btnNext;
+    let containerActividad;
+
+    // ==========================
+    // INICIALIZACIÓN
+    // ==========================
     document.addEventListener('DOMContentLoaded', () => {
-      // 1. Lógica para el Saludo Dinámico
+      // Referencias DOM (Cacheamos para mejor rendimiento)
+      tabla = document.getElementById('tabla-jugadores');
+      buscador = document.getElementById('buscador');
+      filtroCategoria = document.getElementById('filtro-categoria');
+      infoPaginacion = document.getElementById('info-paginacion');
+      btnPrev = document.getElementById('btn-prev');
+      btnNext = document.getElementById('btn-next');
+      containerActividad = document.getElementById('actividad-feed');
+
+      // Event Listeners
+      if (buscador) buscador.addEventListener('input', filtrar);
+      if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
+
+      // Eventos Sidebar
+      const sidebar = document.getElementById('mobile-sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      const btnOpen = document.getElementById('open-sidebar');
+      const btnClose = document.getElementById('close-sidebar');
+
+      if (btnOpen && btnClose) {
+        btnOpen.addEventListener('click', () => toggleSidebar(true));
+        btnClose.addEventListener('click', () => toggleSidebar(false));
+      }
+      if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
+
+      // Saludo Dinámico
       const ahora = new Date();
       const hora = ahora.getHours();
       const elementoSaludo = document.getElementById('saludo-dinamico');
-      
-      let textoSaludo = 'Buenos días'; // Por defecto (0:00 - 11:59)
+      let textoSaludo = 'Buenos días';
+      if (hora >= 12 && hora < 18) textoSaludo = 'Buenas tardes';
+      else if (hora >= 18) textoSaludo = 'Buenas noches';
+      if (elementoSaludo) elementoSaludo.textContent = `${textoSaludo}, Admin`;
 
-      if (hora >= 12 && hora < 18) {
-        textoSaludo = 'Buenas tardes';
-      } else if (hora >= 18) {
-        textoSaludo = 'Buenas noches';
-      }
-
-      if (elementoSaludo) {
-        // Mantiene la clase de animación para que se vea suave
-        elementoSaludo.textContent = `${textoSaludo}, Admin`; 
-      }
-
-      // 2. Pequeño extra: Cargar fecha actual si tu archivo dashboard.js no lo hace automáticamente
       const fechaElemento = document.getElementById('fecha-actual');
-      if (fechaElemento && fechaElemento.textContent === 'Cargando fecha...') {
+      if (fechaElemento) {
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         fechaElemento.textContent = ahora.toLocaleDateString('es-ES', opciones);
       }
-    });
-  </script>
 
+      // Carga inicial
+      cargarDatos();
+    });
+
+    // ==========================
+    // LÓGICA DE DATOS
+    // ==========================
+    async function cargarDatos() {
+      try {
+        // Usamos mockApiFetch en lugar de apiFetch real para este ejemplo autocontenido
+        const resultados = await Promise.allSettled([
+          mockApiFetch('/jugadores'),
+          mockApiFetch('/pagos')
+        ]);
+
+        // 1. Manejar Jugadores
+        if (resultados[0].status === 'fulfilled') {
+          jugadoresList = Array.isArray(resultados[0].value) ? resultados[0].value : [];
+        } else {
+          console.warn('No se pudieron cargar jugadores:', resultados[0].reason);
+          jugadoresList = [];
+        }
+
+        // 2. Manejar Pagos
+        if (resultados[1].status === 'fulfilled') {
+          listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
+          listaPagos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+        } else {
+          console.warn('No se pudieron cargar pagos:', resultados[1].reason);
+          listaPagos = [];
+        }
+
+        actualizarEstadisticas();
+        renderTabla();
+        renderActividad();
+
+      } catch (error) {
+        console.error('Error crítico en dashboard:', error);
+        mostrarErrorCritico();
+      }
+    }
+
+    // ==========================
+    // ESTADÍSTICAS
+    // ==========================
+    function actualizarEstadisticas() {
+      const total = jugadoresList.length;
+      const activos = jugadoresList.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
+      const deudores = jugadoresList.filter(j => Number(j.mensualidad) < MENSUALIDAD_OBJETIVO).length;
+      const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad || 0), 0);
+
+      const elTotal = document.getElementById('stat-total');
+      const elDinero = document.getElementById('stat-dinero');
+      const elActivos = document.getElementById('stat-activos');
+      const elDeudores = document.getElementById('stat-deudores');
+
+      if (elTotal) elTotal.innerText = total;
+      if (elDinero) elDinero.innerText = '$' + dinero.toLocaleString();
+      if (elActivos) elActivos.innerText = activos;
+      if (elDeudores) elDeudores.innerText = deudores;
+    }
+
+    // ==========================
+    // RENDERIZADO TABLA Y FILTROS (CORREGIDO)
+    // ==========================
+    function filtrar() {
+      paginaActual = 1;
+      renderTabla();
+    }
+
+    function renderTabla() {
+      if (!tabla) return;
+      tabla.innerHTML = '';
+
+      const texto = buscador ? buscador.value.toLowerCase() : '';
+      const cat = filtroCategoria ? filtroCategoria.value : '';
+
+      // 1. Filtrar datos
+      const filtrados = jugadoresList.filter(j => {
+        const matchNombre = j.nombre && j.nombre.toLowerCase().includes(texto);
+        const matchCat = cat === '' || j.categoria === cat;
+        return matchNombre && matchCat;
+      });
+
+      // 2. Calcular paginación
+      const totalItems = filtrados.length;
+      const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
+
+      if (paginaActual > totalPages) paginaActual = totalPages;
+      if (paginaActual < 1) paginaActual = 1;
+
+      const inicio = (paginaActual - 1) * FILAS_POR_PAGINA;
+      const fin = inicio + FILAS_POR_PAGINA;
+      const datosPagina = filtrados.slice(inicio, fin);
+
+      // 3. Renderizar filas
+      if (datosPagina.length === 0) {
+        if (jugadoresList.length === 0) {
+          tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">Error de conexión o sin datos.</td></tr>`;
+        } else {
+          tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
+        }
+      } else {
+        datosPagina.forEach(j => {
+          const estado = Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO;
+          const estadoHtml = estado 
+            ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Al día</span>'
+            : '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
+
+          const tr = document.createElement('tr');
+          tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
+          
+          // --- AQUI ESTABA EL ERROR Y AHORA ESTA CORREGIDO ---
+          tr.innerHTML = `
+            <!-- Columna 1: Jugador -->
+            <td class="px-4 py-3">
+              <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre || 'Sin nombre'}</div>
+              ${j.numero_identificacion ? `<div class="text-[10px] text-slate-400">${j.numero_identificacion}</div>` : ''}
+            </td>
+            
+            <!-- Columna 2: Categoría (Antes salía Teléfono) -->
+            <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
+              ${j.categoria || '-'}
+            </td>
+            
+            <!-- Columna 3: Contacto (Antes salía Estado) -->
+            <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
+              ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
+            </td>
+            
+            <!-- Columna 4: Estado (Antes salía Ver más) -->
+            <td class="px-4 py-3 text-center">
+              ${estadoHtml}
+              <div class="text-[9px] text-slate-400 mt-0.5">$${Number(j.mensualidad || 0).toLocaleString()}</div>
+            </td>
+            
+            <!-- Columna 5: Acción (Antes vacía) -->
+            <td class="px-4 py-3 text-center">
+              <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm bg-white border border-brand-200 hover:border-brand-400 px-3 py-1 rounded-md transition shadow-sm">Ver más</a>
+            </td>
+          `;
+          // -----------------------------------------------
+
+          tabla.appendChild(tr);
+        });
+      }
+
+      // 4. Actualizar controles de paginación
+      if (infoPaginacion) infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} registros)`;
+      if (btnPrev) btnPrev.disabled = paginaActual === 1;
+      if (btnNext) btnNext.disabled = paginaActual === totalPages;
+    }
+
+    function cambiarPagina(delta) {
+      paginaActual += delta;
+      renderTabla();
+    }
+
+    // ==========================
+    // ACTIVIDAD RECIENTE
+    // ==========================
+    function renderActividad() {
+      if (!containerActividad) return;
+      containerActividad.innerHTML = '';
+
+      if (!listaPagos || listaPagos.length === 0) {
+        containerActividad.innerHTML = '<div class="text-center text-xs text-slate-400 py-8 italic">No hay pagos registrados recientemente.</div>';
+        return;
+      }
+
+      const ultimos5 = listaPagos.slice(0, 5);
+
+      ultimos5.forEach((p, index) => {
+        const fechaObj = new Date(p.fecha);
+        const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        const fechaCorta = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+
+        const item = document.createElement('div');
+        item.className = "activity-item relative pl-8 pb-6 last:pb-0";
+        
+        let icono = 'ph-money';
+        let colorFondo = 'bg-brand-50 text-brand-600';
+        if (p.tipo === 'inscripcion') { icono = 'ph-id-card'; colorFondo = 'bg-blue-50 text-blue-600'; }
+        if (p.tipo === 'uniforme') { icono = 'ph-t-shirt'; colorFondo = 'bg-purple-50 text-purple-600'; }
+
+        item.innerHTML = `
+          <div class="absolute left-0 top-0 w-8 h-8 rounded-full ${colorFondo} border-2 border-white shadow-sm flex items-center justify-center z-10 ring-4 ring-slate-50">
+            <i class="ph ${icono} text-sm font-bold"></i>
+          </div>
+          <div class="pl-3">
+            <div class="flex justify-between items-start">
+              <p class="text-xs font-bold text-slate-700 leading-tight">
+                ${p.jugador || 'Jugador desconocido'}
+              </p>
+              <span class="text-[10px] text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">
+                ${fechaCorta}
+              </span>
+            </div>
+            <div class="flex items-center justify-between mt-1">
+              <p class="text-[10px] text-slate-500">Pago de mensualidad</p>
+              <span class="text-xs font-bold text-emerald-600">$${Number(p.monto).toLocaleString()}</span>
+            </div>
+            <p class="text-[10px] text-slate-400 mt-0.5">${hora}</p>
+          </div>
+        `;
+        containerActividad.appendChild(item);
+      });
+    }
+
+    // ==========================
+    // EXPORTACIÓN A EXCEL
+    // ==========================
+    function exportarExcel() {
+      if (typeof XLSX === 'undefined') {
+        alert("La librería de Excel (XLSX) no está cargada.");
+        return;
+      }
+      if (jugadoresList.length === 0) {
+        alert("No hay datos de jugadores para exportar.");
+        return;
+      }
+
+      try {
+        const datosExportar = jugadoresList.map(j => ({
+          "Nombre Completo": j.nombre || '',
+          "Categoría": j.categoria || '-',
+          "Teléfono": j.telefono || '-',
+          "Mensualidad": Number(j.mensualidad),
+          "Estado": Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Pagado' : 'Pendiente'
+        }));
+
+        const hoja = XLSX.utils.json_to_sheet(datosExportar);
+        const libro = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(libro, hoja, "Jugadores EFUSA");
+
+        const fecha = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(libro, `Reporte_Jugadores_${fecha}.xlsx`);
+      } catch (error) {
+        console.error(error);
+        alert("Error al generar Excel.");
+      }
+    }
+
+    // ==========================
+    // EXPORTACIÓN A PDF
+    // ==========================
+    function exportarPDF() {
+      if (typeof window.jspdf === 'undefined') {
+        alert("La librería jsPDF no está cargada.");
+        return;
+      }
+      if (jugadoresList.length === 0) {
+        alert("No hay datos para exportar a PDF.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      doc.setFontSize(16);
+      doc.text("Reporte de Jugadores - EFUSA", 14, 20);
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
+
+      const datosTabla = jugadoresList.map(j => [
+        j.nombre || '-',
+        j.categoria || '-',
+        j.telefono || '-',
+        Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Al día' : 'Pendiente',
+        `$${Number(j.mensualidad).toLocaleString()}`
+      ]);
+
+      doc.autoTable({
+        head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Pagado']],
+        body: datosTabla,
+        startY: 35,
+        headStyles: { fillColor: [22, 163, 74] }, // Verde
+        styles: { fontSize: 9 }
+      });
+
+      doc.save(`Reporte_Jugadores_${new Date().toISOString().slice(0,10)}.pdf`);
+    }
+
+    // ==========================
+    // UTILIDADES
+    // ==========================
+    function toggleSidebar(abrir) {
+      const sidebar = document.getElementById('mobile-sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      
+      if (abrir) {
+        sidebar.classList.remove('-translate-x-full');
+        overlay.classList.remove('hidden', 'opacity-0');
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+      } else {
+        sidebar.classList.add('-translate-x-full');
+        overlay.classList.add('opacity-0');
+        setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for transition
+      }
+    }
+
+    function mostrarErrorCritico() {
+      if (tabla) {
+        tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-600 font-bold">
+          Error Crítico: No se pudieron cargar los datos.<br>
+          <span class="text-xs text-rose-400 font-normal">Verifica tu conexión y que los archivos backend (api/*.js) estén subidos.</span>
+        </td></tr>`;
+      }
+    }
+
+    // Exportar funciones globales para que el HTML pueda usarlas
+    window.cambiarPagina = cambiarPagina;
+    window.exportarExcel = exportarExcel;
+    window.exportarPDF = exportarPDF;
+    window.toggleSidebar = () => toggleSidebar(true);
+
+  </script>
 </body>
 </html>

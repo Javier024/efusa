@@ -47,30 +47,32 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================
-// LÓGICA DE DATOS (CORREGIDA)
+// LÓGICA DE DATOS (CONEXIÓN REAL)
 // ==========================
 async function cargarDatos() {
   try {
-    // Usamos Promise.allSettled para que si una API falla (ej. jugadores), 
-    // la otra (pagos) siga funcionando y no se caiga todo el dashboard.
+    // Usamos Promise.allSettled para que si una API falla, la otra siga funcionando.
+    // Nota: Las rutas deben coincidir con tu estructura de archivos en Vercel/Backend
     const resultados = await Promise.allSettled([
-      apiFetch('/jugadores'),
-      apiFetch('/pagos')
+      apiFetch('/api/jugadores'), 
+      apiFetch('/api/pagos')
     ]);
 
     // 1. Manejar Jugadores
     if (resultados[0].status === 'fulfilled') {
+      // Tu API devuelve un array directo con id, nombre, apellidos, categoria, etc.
       jugadoresList = Array.isArray(resultados[0].value) ? resultados[0].value : [];
     } else {
-      console.warn('No se pudieron cargar jugadores (¿Falta api/jugadores.js?):', resultados[0].reason);
-      jugadoresList = []; // Dejamos lista vacía para evitar crash
+      console.warn('No se pudieron cargar jugadores:', resultados[0].reason);
+      jugadoresList = [];
     }
 
     // 2. Manejar Pagos
     if (resultados[1].status === 'fulfilled') {
       listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
-      // ORDENAR PAGOS por fecha descendente (Nuevo -> Viejo) para la actividad reciente
-      listaPagos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+      // Tu API pagos devuelve created_at, usamos eso o 'fecha' si existe.
+      // Según tu API pagos.js, devuelve 'fecha' y 'created_at'. Ordenamos por 'fecha' o 'created_at' DESC.
+      listaPagos.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha));
     } else {
       console.warn('No se pudieron cargar pagos:', resultados[1].reason);
       listaPagos = [];
@@ -110,7 +112,7 @@ function actualizarEstadisticas() {
 }
 
 // ==========================
-// RENDERIZADO TABLA Y FILTROS
+// RENDERIZADO TABLA Y FILTROS (CORREGIDO)
 // ==========================
 function filtrar() {
   paginaActual = 1;
@@ -126,7 +128,9 @@ function renderTabla() {
 
   // 1. Filtrar datos
   const filtrados = jugadoresList.filter(j => {
-    const matchNombre = j.nombre && j.nombre.toLowerCase().includes(texto);
+    // Concatenamos nombre y apellidos porque tu API los devuelve separados
+    const nombreCompleto = `${j.nombre || ''} ${j.apellidos || ''}`.toLowerCase();
+    const matchNombre = nombreCompleto.includes(texto);
     const matchCat = cat === '' || j.categoria === cat;
     return matchNombre && matchCat;
   });
@@ -144,9 +148,8 @@ function renderTabla() {
 
   // 3. Renderizar filas
   if (datosPagina.length === 0) {
-    // Mensaje específico si la lista general está vacía vs si es solo el filtro
     if (jugadoresList.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">Error de conexión o sin datos.</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos de jugadores.</td></tr>`;
     } else {
       tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
     }
@@ -159,25 +162,38 @@ function renderTabla() {
 
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
+      
+      // --- CORRECCIÓN DE COLUMNAS SEGÚN TU API ---
       tr.innerHTML = `
+        <!-- Columna 1: Jugador (Nombre + Apellidos) -->
         <td class="px-4 py-3">
-          <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre || 'Sin nombre'}</div>
+          <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
           ${j.numero_identificacion ? `<div class="text-[10px] text-slate-400">${j.numero_identificacion}</div>` : ''}
         </td>
+        
+        <!-- Columna 2: Categoría (Ahora muestra categoria real) -->
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
+        
+        <!-- Columna 3: Contacto (Ahora muestra telefono real) -->
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
-          ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600">${j.telefono}</a>` : '-'}
+          ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
         </td>
+        
+        <!-- Columna 4: Estado (Ahora muestra el Badge) -->
         <td class="px-4 py-3 text-center">
           ${estadoHtml}
           <div class="text-[9px] text-slate-400 mt-0.5">$${Number(j.mensualidad || 0).toLocaleString()}</div>
         </td>
+        
+        <!-- Columna 5: Acción (Ahora muestra el botón) -->
         <td class="px-4 py-3 text-center">
-          <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm">Ver más</a>
+          <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm bg-white border border-brand-200 hover:border-brand-400 px-3 py-1 rounded-md transition shadow-sm">Ver más</a>
         </td>
       `;
+      // -----------------------------------------------
+
       tabla.appendChild(tr);
     });
   }
@@ -194,7 +210,7 @@ function cambiarPagina(delta) {
 }
 
 // ==========================
-// ACTIVIDAD RECIENTE (MEJORADA)
+// ACTIVIDAD RECIENTE (AJUSTADA A TU API PAGOS)
 // ==========================
 function renderActividad() {
   if (!containerActividad) return;
@@ -205,21 +221,18 @@ function renderActividad() {
     return;
   }
 
-  // Tomamos los primeros 5 (ya están ordenados por fecha en cargarDatos)
+  // Tu API pagos devuelve "jugador" (nombre completo) y "fecha" entre otros.
   const ultimos5 = listaPagos.slice(0, 5);
 
   ultimos5.forEach((p, index) => {
-    // Formatear fecha legible
-    const fechaObj = new Date(p.fecha);
-    // Ej: 14:30 • Hoy
+    // Usamos created_at si fecha no viene, pero tu API devuelve ambas
+    const fechaObj = new Date(p.fecha || p.created_at);
     const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
     const fechaCorta = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
-    // Estructura para el Timeline CSS (activity-line)
     const item = document.createElement('div');
     item.className = "activity-item relative pl-8 pb-6 last:pb-0";
     
-    // Lógica de icono según tipo
     let icono = 'ph-money';
     let colorFondo = 'bg-brand-50 text-brand-600';
     if (p.tipo === 'inscripcion') { icono = 'ph-id-card'; colorFondo = 'bg-blue-50 text-blue-600'; }
@@ -231,6 +244,7 @@ function renderActividad() {
       </div>
       <div class="pl-3">
         <div class="flex justify-between items-start">
+          <!-- p.jugador viene del JOIN en tu API pagos.js -->
           <p class="text-xs font-bold text-slate-700 leading-tight">
             ${p.jugador || 'Jugador desconocido'}
           </p>
@@ -264,7 +278,7 @@ function exportarExcel() {
 
   try {
     const datosExportar = jugadoresList.map(j => ({
-      "Nombre Completo": j.nombre || '',
+      "Nombre Completo": `${j.nombre} ${j.apellidos}`,
       "Categoría": j.categoria || '-',
       "Teléfono": j.telefono || '-',
       "Mensualidad": Number(j.mensualidad),
@@ -306,7 +320,7 @@ function exportarPDF() {
   doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
 
   const datosTabla = jugadoresList.map(j => [
-    j.nombre || '-',
+    `${j.nombre} ${j.apellidos || ''}`,
     j.categoria || '-',
     j.telefono || '-',
     Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Al día' : 'Pendiente',
@@ -346,7 +360,7 @@ function mostrarErrorCritico() {
   if (tabla) {
     tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-600 font-bold">
       Error Crítico: No se pudieron cargar los datos.<br>
-      <span class="text-xs text-rose-400 font-normal">Verifica tu conexión y que los archivos backend (api/*.js) estén subidos.</span>
+      <span class="text-xs text-rose-400 font-normal">Verifica tu conexión.</span>
     </td></tr>`;
   }
 }
