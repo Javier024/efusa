@@ -42,16 +42,16 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
 
-  // Carga inicial (Mantiene tu conexión original)
+  // Carga inicial
   cargarDatos();
 });
 
 // ==========================
-// LÓGICA DE DATOS
+// LÓGICA DE DATOS (SIN MOCKS)
 // ==========================
 async function cargarDatos() {
   try {
-    // Conexión a tus endpoints /api/jugadores y /api/pagos
+    // Conexión a tus endpoints reales
     const resultados = await Promise.allSettled([
       apiFetch('/api/jugadores'),
       apiFetch('/api/pagos')
@@ -68,7 +68,6 @@ async function cargarDatos() {
     // 2. Manejar Pagos
     if (resultados[1].status === 'fulfilled') {
       listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
-      // Ordenar por fecha descendente
       listaPagos.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha));
     } else {
       console.warn('Error cargando pagos:', resultados[1].reason);
@@ -90,9 +89,8 @@ async function cargarDatos() {
 // ==========================
 function actualizarEstadisticas() {
   const total = jugadoresList.length;
-  // Consideramos 'Pago' como >= objetivo, 'Deudor' como 0
   const activos = jugadoresList.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
-  const deudores = jugadoresList.filter(j => Number(j.mensualidad) === 0).length;
+  const deudores = jugadoresList.filter(j => Number(j.mensualidad) < MENSUALIDAD_OBJETIVO).length;
   const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad || 0), 0);
 
   const elTotal = document.getElementById('stat-total');
@@ -133,7 +131,6 @@ function renderTabla() {
   const totalItems = filtrados.length;
   const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
 
-  // Validar límites de página
   if (paginaActual > totalPages) paginaActual = totalPages;
   if (paginaActual < 1) paginaActual = 1;
 
@@ -143,7 +140,7 @@ function renderTabla() {
 
   // 3. Renderizar filas
   if (datosPagina.length === 0) {
-    // Nota: El colspan debe ser 4 si eliminaste la columna Acción del HTML, si no, déjalo en 5
+    // colspan="4" porque eliminamos la columna Acción
     if (jugadoresList.length === 0) {
       tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
     } else {
@@ -154,7 +151,7 @@ function renderTabla() {
       const valor = Number(j.mensualidad || 0);
       let estadoHtml = '';
       
-      // --- LÓGICA DE ESTADO SOLICITADA ---
+      // --- LÓGICA DE ESTADO CORREGIDA ---
       if (valor >= MENSUALIDAD_OBJETIVO) {
         // PAGO
         estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
@@ -169,7 +166,7 @@ function renderTabla() {
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
       
-      // --- COLUMNAS CORREGIDAS ---
+      // --- COLUMNAS CORREGIDAS (Sin Acción) ---
       tr.innerHTML = `
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
@@ -179,7 +176,7 @@ function renderTabla() {
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
-        <!-- Contacto (Teléfono) -->
+        <!-- Contacto -->
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
           ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
         </td>
@@ -189,7 +186,6 @@ function renderTabla() {
           <div class="text-[9px] text-slate-400 mt-0.5">$${valor.toLocaleString()}</div>
         </td>
       `;
-      // Ya no se genera la columna Acción
       tabla.appendChild(tr);
     });
   }
@@ -261,7 +257,7 @@ function renderActividad() {
 }
 
 // ==========================
-// EXPORTACIÓN A EXCEL (Actualizada con lógica de Abono)
+// EXPORTACIÓN A EXCEL
 // ==========================
 function exportarExcel() {
   if (typeof XLSX === 'undefined') {
@@ -276,7 +272,6 @@ function exportarExcel() {
   try {
     const datosExportar = jugadoresList.map(j => {
       const valor = Number(j.mensualidad);
-      // Aplicamos la misma lógica de estado para el reporte
       let estado = 'Pendiente';
       if (valor >= MENSUALIDAD_OBJETIVO) estado = 'Pago';
       else if (valor > 0) estado = 'Abono';
@@ -303,7 +298,7 @@ function exportarExcel() {
 }
 
 // ==========================
-// EXPORTACIÓN A PDF (Actualizada con lógica de Abono)
+// EXPORTACIÓN A PDF
 // ==========================
 function exportarPDF() {
   if (typeof window.jspdf === 'undefined') {
@@ -370,7 +365,7 @@ function toggleSidebar(abrir) {
 
 function mostrarErrorCritico() {
   if (tabla) {
-    // Ajustar colspan a 4
+    // colspan="4"
     tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-600 font-bold">
       Error Crítico: No se pudieron cargar los datos.<br>
       <span class="text-xs text-rose-400 font-normal">Verifica tu conexión.</span>
@@ -378,7 +373,7 @@ function mostrarErrorCritico() {
   }
 }
 
-// Exportar funciones globales para el HTML
+// Exportar funciones globales
 window.cambiarPagina = cambiarPagina;
 window.exportarExcel = exportarExcel;
 window.exportarPDF = exportarPDF;
