@@ -7,7 +7,6 @@ let jugadoresList = [];
 let listaPagos = [];
 let paginaActual = 1;
 const FILAS_POR_PAGINA = 8;
-// Importamos la constante desde configuración.js
 
 // Referencias DOM
 let tabla, buscador, filtroCategoria, infoPaginacion, btnPrev, btnNext;
@@ -114,6 +113,11 @@ function filtrar() {
 
 function renderTabla() {
   if (!tabla) return;
+  
+  // Referencia para móvil (Añadido para soporte dual)
+  const containerMovil = document.getElementById('vista-movil-jugadores');
+  if(containerMovil) containerMovil.innerHTML = '';
+  
   tabla.innerHTML = '';
 
   const texto = buscador ? buscador.value.toLowerCase() : '';
@@ -138,20 +142,18 @@ function renderTabla() {
   const fin = inicio + FILAS_POR_PAGINA;
   const datosPagina = filtrados.slice(inicio, fin);
 
-  // 3. Renderizar filas
+  // 3. Renderizar filas (Lógica Doble)
   if (datosPagina.length === 0) {
-    // colspan="4"
-    if (jugadoresList.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
-    } else {
-      tabla.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
-    }
+    // Mensaje PC
+    tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
+    // Mensaje Móvil
+    if(containerMovil) containerMovil.innerHTML = `<div class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos.</div>`;
   } else {
     datosPagina.forEach(j => {
       const valor = Number(j.mensualidad || 0);
       let estadoHtml = '';
       
-      // LÓGICA DE ESTADO
+      // Lógica de Estado
       if (valor >= MENSUALIDAD_OBJETIVO) {
         estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
       } else if (valor > 0) {
@@ -160,10 +162,9 @@ function renderTabla() {
         estadoHtml = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
       }
 
+      // --- RENDERIZADO ESCRITORIO (TABLA) ---
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
-      
-      // COLUMNAS
       tr.innerHTML = `
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
@@ -184,6 +185,38 @@ function renderTabla() {
         </td>
       `;
       tabla.appendChild(tr);
+
+      // --- RENDERIZADO MÓVIL (TARJETAS) ---
+      if(containerMovil) {
+        const card = document.createElement('div');
+        card.className = "bg-white rounded-xl border border-slate-200 shadow-sm p-4 flex flex-col gap-2";
+        
+        // Calculamos estilo del borde izquierdo según estado
+        let borderClass = "border-l-4 border-l-rose-500";
+        if(valor >= MENSUALIDAD_OBJETIVO) borderClass = "border-l-4 border-l-emerald-500";
+        else if (valor > 0) borderClass = "border-l-4 border-l-amber-500";
+        
+        card.classList.add(...borderClass.split(' '));
+
+        card.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <h4 class="font-bold text-slate-900 text-base leading-tight">${j.nombre} ${j.apellidos || ''}</h4>
+              <p class="text-xs text-slate-500 mt-0.5">${j.categoria || '-'}</p>
+            </div>
+            ${estadoHtml}
+          </div>
+          
+          <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+            <div class="flex items-center gap-2">
+              <i class="ph ph-phone text-slate-400"></i>
+              <a href="tel:${j.telefono}" class="text-sm font-semibold text-slate-700 hover:text-brand-600">${j.telefono || '-'}</a>
+            </div>
+            <div class="text-xs font-bold text-slate-500">$${valor.toLocaleString()}</div>
+          </div>
+        `;
+        containerMovil.appendChild(card);
+      }
     });
   }
 

@@ -252,26 +252,39 @@
               </div>
             </div>
 
-            <div id="contenedor-tabla" class="overflow-y-auto custom-scroll flex-1">
-              <table class="w-full text-left text-xs">
-                <thead class="bg-slate-50 sticky top-0 z-10 text-slate-500 uppercase font-bold shadow-sm">
-                  <tr>
-                    <th class="px-4 py-3 border-b border-slate-200">Jugador</th>
-                    <th class="px-4 py-3 border-b border-slate-200">Categoría</th>
-                    <th class="px-4 py-3 border-b border-slate-200">Contacto</th>
-                    <th class="px-4 py-3 border-b border-slate-200">Estado</th>
-                    <!-- ACCIÓN ELIMINADA -->
-                  </tr>
-                </thead>
-                <tbody id="tabla-jugadores" class="divide-y divide-slate-100"></tbody>
-              </table>
+            <div id="contenedor-tabla" class="overflow-y-auto custom-scroll flex-1 relative">
+              
+              <!-- VISTA ESCRITORIO (TABLA) -->
+              <div class="hidden md:block h-full">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-50 sticky top-0 z-10 text-slate-500 uppercase font-bold shadow-sm">
+                    <tr>
+                      <th class="px-4 py-3 border-b border-slate-200">Jugador</th>
+                      <th class="px-4 py-3 border-b border-slate-200">Categoría</th>
+                      <th class="px-4 py-3 border-b border-slate-200">Contacto</th>
+                      <th class="px-4 py-3 border-b border-slate-200">Estado</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tabla-jugadores" class="divide-y divide-slate-100"></tbody>
+                </table>
+              </div>
+
+              <!-- VISTA MÓVIL (TARJETAS) -->
+              <div id="vista-movil-jugadores" class="md:hidden p-4 space-y-4 pb-20">
+                <!-- JS Render -->
+              </div>
             </div>
 
-            <div class="px-5 md:px-6 py-3 border-t border-slate-100 flex justify-between items-center bg-white">
-              <span id="info-paginacion" class="text-[10px] text-slate-500 font-medium"></span>
-              <div class="flex gap-1">
-                <button id="btn-prev" onclick="cambiarPagina(-1)" class="px-2 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="ph ph-caret-left"></i></button>
-                <button id="btn-next" onclick="cambiarPagina(1)" class="px-2 py-1 bg-white border border-slate-200 rounded text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition"><i class="ph ph-caret-right"></i></button>
+            <!-- PAGINACIÓN MEJORADA -->
+            <div class="px-5 md:px-6 py-4 md:py-4 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center bg-white gap-4">
+              <span id="info-paginacion" class="text-xs md:text-sm text-slate-500 font-medium text-center md:text-left">Página 1</span>
+              <div class="flex w-full md:w-auto gap-3">
+                <button id="btn-prev" onclick="cambiarPagina(-1)" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold shadow-sm active:scale-95">
+                  <i class="ph ph-caret-left text-lg"></i> Anterior
+                </button>
+                <button id="btn-next" onclick="cambiarPagina(1)" class="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 border border-brand-600 rounded-lg text-white hover:bg-brand-700 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-semibold shadow-md active:scale-95">
+                  Siguiente <i class="ph ph-caret-right text-lg"></i>
+                </button>
               </div>
             </div>
           </section>
@@ -301,6 +314,7 @@
       if (elementoSaludo) {
         elementoSaludo.textContent = `${textoSaludo}, Admin`; 
       }
+
       const fechaElemento = document.getElementById('fecha-actual');
       if (fechaElemento && fechaElemento.textContent === 'Cargando fecha...') {
         const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -308,5 +322,6 @@
       }
     });
   </script>
+
 </body>
 </html>
