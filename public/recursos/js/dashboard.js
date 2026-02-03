@@ -17,7 +17,7 @@ let containerActividad;
 // INICIALIZACIÓN
 // ==========================
 document.addEventListener('DOMContentLoaded', () => {
-  // Referencias DOM
+  // Referencias DOM (Cacheamos para mejor rendimiento)
   tabla = document.getElementById('tabla-jugadores');
   buscador = document.getElementById('buscador');
   filtroCategoria = document.getElementById('filtro-categoria');
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (buscador) buscador.addEventListener('input', filtrar);
   if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
 
-  // Sidebar
+  // Eventos Sidebar
   const sidebar = document.getElementById('mobile-sidebar');
   const overlay = document.getElementById('sidebar-overlay');
   const btnOpen = document.getElementById('open-sidebar');
@@ -47,26 +47,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ==========================
-// LÓGICA DE DATOS
+// LÓGICA DE DATOS (CORREGIDA)
 // ==========================
 async function cargarDatos() {
   try {
-    // Cargamos ambos para KPIs y Tablas
-    const [jugadores, pagos] = await Promise.all([
+    // Usamos Promise.allSettled para que si una API falla (ej. jugadores), 
+    // la otra (pagos) siga funcionando y no se caiga todo el dashboard.
+    const resultados = await Promise.allSettled([
       apiFetch('/jugadores'),
       apiFetch('/pagos')
     ]);
 
-    jugadoresList = Array.isArray(jugadores) ? jugadores : [];
-    listaPagos = Array.isArray(pagos) ? pagos : [];
+    // 1. Manejar Jugadores
+    if (resultados[0].status === 'fulfilled') {
+      jugadoresList = Array.isArray(resultados[0].value) ? resultados[0].value : [];
+    } else {
+      console.warn('No se pudieron cargar jugadores (¿Falta api/jugadores.js?):', resultados[0].reason);
+      jugadoresList = []; // Dejamos lista vacía para evitar crash
+    }
+
+    // 2. Manejar Pagos
+    if (resultados[1].status === 'fulfilled') {
+      listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
+      // ORDENAR PAGOS por fecha descendente (Nuevo -> Viejo) para la actividad reciente
+      listaPagos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+    } else {
+      console.warn('No se pudieron cargar pagos:', resultados[1].reason);
+      listaPagos = [];
+    }
 
     actualizarEstadisticas();
     renderTabla();
     renderActividad();
 
   } catch (error) {
-    console.error('Error cargando dashboard:', error);
-    if (tabla) tabla.innerHTML = `<tr><td colspan="5" class="text-center text-rose-500 p-4">Error de conexión.</td></tr>`;
+    console.error('Error crítico en dashboard:', error);
+    mostrarErrorCritico();
   }
 }
 
@@ -75,12 +91,12 @@ async function cargarDatos() {
 // ==========================
 function actualizarEstadisticas() {
   const total = jugadoresList.length;
-  const activos = jugadoresList.filter(j => j.activo).length;
-  // Calculamos deudores basados en cuota vs pagado
+  // Usamos mensualidad >= 50000 como 'activo' financieramente
+  const activos = jugadoresList.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
   const deudores = jugadoresList.filter(j => Number(j.mensualidad) < MENSUALIDAD_OBJETIVO).length;
   
-  // Calculamos total recaudado
-  const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad), 0);
+  // Total dinero en caja actual (según tabla jugadores)
+  const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad || 0), 0);
 
   const elTotal = document.getElementById('stat-total');
   const elDinero = document.getElementById('stat-dinero');
@@ -97,7 +113,6 @@ function actualizarEstadisticas() {
 // RENDERIZADO TABLA Y FILTROS
 // ==========================
 function filtrar() {
-  // Reiniciar a página 1 al filtrar
   paginaActual = 1;
   renderTabla();
 }
@@ -111,7 +126,7 @@ function renderTabla() {
 
   // 1. Filtrar datos
   const filtrados = jugadoresList.filter(j => {
-    const matchNombre = j.nombre.toLowerCase().includes(texto) || (j.apellidos && j.apellidos.toLowerCase().includes(texto));
+    const matchNombre = j.nombre && j.nombre.toLowerCase().includes(texto);
     const matchCat = cat === '' || j.categoria === cat;
     return matchNombre && matchCat;
   });
@@ -129,7 +144,12 @@ function renderTabla() {
 
   // 3. Renderizar filas
   if (datosPagina.length === 0) {
-    tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
+    // Mensaje específico si la lista general está vacía vs si es solo el filtro
+    if (jugadoresList.length === 0) {
+      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">Error de conexión o sin datos.</td></tr>`;
+    } else {
+      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
+    }
   } else {
     datosPagina.forEach(j => {
       const estado = Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO;
@@ -141,20 +161,21 @@ function renderTabla() {
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
       tr.innerHTML = `
         <td class="px-4 py-3">
-          <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre}</div>
+          <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre || 'Sin nombre'}</div>
           ${j.numero_identificacion ? `<div class="text-[10px] text-slate-400">${j.numero_identificacion}</div>` : ''}
         </td>
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
-          ${j.telefono || '-'}
+          ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600">${j.telefono}</a>` : '-'}
         </td>
         <td class="px-4 py-3 text-center">
           ${estadoHtml}
+          <div class="text-[9px] text-slate-400 mt-0.5">$${Number(j.mensualidad || 0).toLocaleString()}</div>
         </td>
         <td class="px-4 py-3 text-center">
-          <a href="jugadores.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm">Ver más</a>
+          <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm">Ver más</a>
         </td>
       `;
       tabla.appendChild(tr);
@@ -162,7 +183,7 @@ function renderTabla() {
   }
 
   // 4. Actualizar controles de paginación
-  if (infoPaginacion) infoPaginacion.innerText = `Página ${paginaActual} de ${totalPaginas} (${totalItems} registros)`;
+  if (infoPaginacion) infoPaginacion.innerText = `Página ${paginaActual} de ${totalPages} (${totalItems} registros)`;
   if (btnPrev) btnPrev.disabled = paginaActual === 1;
   if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
@@ -173,32 +194,56 @@ function cambiarPagina(delta) {
 }
 
 // ==========================
-// ACTIVIDAD RECIENTE
+// ACTIVIDAD RECIENTE (MEJORADA)
 // ==========================
 function renderActividad() {
   if (!containerActividad) return;
   containerActividad.innerHTML = '';
 
   if (!listaPagos || listaPagos.length === 0) {
-    containerActividad.innerHTML = '<div class="text-center text-xs text-slate-400 py-8 italic">No hay actividad reciente.</div>';
+    containerActividad.innerHTML = '<div class="text-center text-xs text-slate-400 py-8 italic">No hay pagos registrados recientemente.</div>';
     return;
   }
 
-  const recientes = listaPagos.slice(0, 5);
+  // Tomamos los primeros 5 (ya están ordenados por fecha en cargarDatos)
+  const ultimos5 = listaPagos.slice(0, 5);
 
-  recientes.forEach(p => {
+  ultimos5.forEach((p, index) => {
+    // Formatear fecha legible
     const fechaObj = new Date(p.fecha);
-    const hora = fechaObj.toLocaleTimeString('es-ES', { hour: 'numeric', minute: '2-digit' });
-    const fecha = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+    // Ej: 14:30 • Hoy
+    const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    const fechaCorta = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
+    // Estructura para el Timeline CSS (activity-line)
     const item = document.createElement('div');
-    item.className = "activity-item relative pl-8 pb-6"; // pl-8 para dejar espacio a la línea vertical
+    item.className = "activity-item relative pl-8 pb-6 last:pb-0";
+    
+    // Lógica de icono según tipo
+    let icono = 'ph-money';
+    let colorFondo = 'bg-brand-50 text-brand-600';
+    if (p.tipo === 'inscripcion') { icono = 'ph-id-card'; colorFondo = 'bg-blue-50 text-blue-600'; }
+    if (p.tipo === 'uniforme') { icono = 'ph-t-shirt'; colorFondo = 'bg-purple-50 text-purple-600'; }
+
     item.innerHTML = `
-      <div class="absolute left-0 top-0 w-8 h-8 rounded-full bg-brand-100 text-brand-600 flex items-center justify-center shadow-sm ring-4 ring-white z-10">
-        <i class="ph ph-money text-lg"></i>
+      <div class="absolute left-0 top-0 w-8 h-8 rounded-full ${colorFondo} border-2 border-white shadow-sm flex items-center justify-center z-10 ring-4 ring-slate-50">
+        <i class="ph ${icono} text-sm font-bold"></i>
       </div>
-      <p class="text-xs font-bold text-slate-700 pl-2">Pago de <span class="text-brand-600">${p.jugador}</span></p>
-      <p class="text-[10px] text-slate-400 pl-2 mt-0.5">${hora} • ${fecha}</p>
+      <div class="pl-3">
+        <div class="flex justify-between items-start">
+          <p class="text-xs font-bold text-slate-700 leading-tight">
+            ${p.jugador || 'Jugador desconocido'}
+          </p>
+          <span class="text-[10px] text-slate-400 font-medium bg-slate-50 px-1.5 py-0.5 rounded ml-2 whitespace-nowrap">
+            ${fechaCorta}
+          </span>
+        </div>
+        <div class="flex items-center justify-between mt-1">
+          <p class="text-[10px] text-slate-500">Pago de mensualidad</p>
+          <span class="text-xs font-bold text-emerald-600">$${Number(p.monto).toLocaleString()}</span>
+        </div>
+        <p class="text-[10px] text-slate-400 mt-0.5">${hora}</p>
+      </div>
     `;
     containerActividad.appendChild(item);
   });
@@ -208,46 +253,45 @@ function renderActividad() {
 // EXPORTACIÓN A EXCEL
 // ==========================
 function exportarExcel() {
-  if (!jugadoresList || jugadoresList.length === 0) {
+  if (typeof XLSX === 'undefined') {
+    alert("La librería de Excel (XLSX) no está cargada.");
+    return;
+  }
+  if (jugadoresList.length === 0) {
     alert("No hay datos de jugadores para exportar.");
     return;
   }
 
   try {
-    // Preparar datos limpios
-    const datosExportar = [
-      { "Nombre Completo": "NOMBRE COMPLETO", "Categoría": "CATEGORÍA", "Teléfono": "TELÉFONO", "Estado": "ESTADO", "Acumulado": "ACUMULADO" }
-    ];
+    const datosExportar = jugadoresList.map(j => ({
+      "Nombre Completo": j.nombre || '',
+      "Categoría": j.categoria || '-',
+      "Teléfono": j.telefono || '-',
+      "Mensualidad": Number(j.mensualidad),
+      "Estado": Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Pagado' : 'Pendiente'
+    }));
 
-    jugadoresList.forEach(j => {
-      datosExportar.push({
-        "Nombre Completo": `${j.nombre} ${j.apellidos || ''}`,
-        "Categoría": j.categoria,
-        "Teléfono": j.telefono || '-',
-        "Estado": Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Pagado' : 'Pendiente',
-        "Acumulado": Number(j.mensualidad)
-      });
-    });
-
-    // Crear hoja de trabajo
     const hoja = XLSX.utils.json_to_sheet(datosExportar);
     const libro = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(libro, hoja, "Jugadores EFUSA");
 
-    // Guardar archivo
-    XLSX.writeFile("reporte_jugadores_efusa.xlsx", libro);
-    console.log("Excel exportado correctamente");
+    const fecha = new Date().toISOString().slice(0,10);
+    XLSX.writeFile(libro, `Reporte_Jugadores_${fecha}.xlsx`);
   } catch (error) {
-    console.error("Error en Excel:", error);
-    alert("Hubo un error inesperado al generar el Excel.");
+    console.error(error);
+    alert("Error al generar Excel.");
   }
 }
 
 // ==========================
-// EXPORTACIÓN A PDF (USANDO AUTOTABLE)
+// EXPORTACIÓN A PDF
 // ==========================
 function exportarPDF() {
-  if (!jugadoresList || jugadoresList.length === 0) {
+  if (typeof window.jspdf === 'undefined') {
+    alert("La librería jsPDF no está cargada.");
+    return;
+  }
+  if (jugadoresList.length === 0) {
     alert("No hay datos para exportar a PDF.");
     return;
   }
@@ -256,13 +300,13 @@ function exportarPDF() {
   const doc = new jsPDF();
   
   doc.setFontSize(16);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(22, 163, 74); // Verde EFUSA
   doc.text("Reporte de Jugadores - EFUSA", 14, 20);
-  
-  // Cuerpo de la tabla
+  doc.setFontSize(10);
+  doc.setTextColor(100);
+  doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
+
   const datosTabla = jugadoresList.map(j => [
-    `${j.nombre} ${j.apellidos || ''}`,
+    j.nombre || '-',
     j.categoria || '-',
     j.telefono || '-',
     Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Al día' : 'Pendiente',
@@ -272,15 +316,12 @@ function exportarPDF() {
   doc.autoTable({
     head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Pagado']],
     body: datosTabla,
-    startY: 30,
-    theme: 'grid',
-    headStyles: { fillColor: [22, 163, 74] }, // Verde tabla header
-    styles: { fontSize: 10 },
-    margin: { top: 10, right: 10, bottom: 10, left: 10 }
+    startY: 35,
+    headStyles: { fillColor: [22, 163, 74] }, // Verde
+    styles: { fontSize: 9 }
   });
 
-  doc.save("reporte_jugadores_efusa.pdf");
-  console.log("PDF exportado correctamente");
+  doc.save(`Reporte_Jugadores_${new Date().toISOString().slice(0,10)}.pdf`);
 }
 
 // ==========================
@@ -293,13 +334,24 @@ function toggleSidebar(abrir) {
   if (abrir) {
     sidebar.classList.remove('-translate-x-full');
     overlay.classList.remove('hidden', 'opacity-0');
+    setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
   } else {
     sidebar.classList.add('-translate-x-full');
-    overlay.classList.add('hidden', 'opacity-0');
+    overlay.classList.add('opacity-0');
+    setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for transition
   }
 }
 
-// Exportar funciones globales para HTML
+function mostrarErrorCritico() {
+  if (tabla) {
+    tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-600 font-bold">
+      Error Crítico: No se pudieron cargar los datos.<br>
+      <span class="text-xs text-rose-400 font-normal">Verifica tu conexión y que los archivos backend (api/*.js) estén subidos.</span>
+    </td></tr>`;
+  }
+}
+
+// Exportar funciones globales para que el HTML pueda usarlas
 window.cambiarPagina = cambiarPagina;
 window.exportarExcel = exportarExcel;
 window.exportarPDF = exportarPDF;
