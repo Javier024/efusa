@@ -9,7 +9,7 @@ let todosLosJugadores = [];
 let paginaActual = 1;
 
 // Elementos DOM
-let modal, backdrop, panel, form, tbody, containerMovil, infoPaginacion, btnPrev, btnNext;
+let modal, backdrop, panel, form, tbody, infoPaginacion, btnPrev, btnNext;
 
 // ==========================
 // INICIALIZACIÓN
@@ -20,10 +20,38 @@ document.addEventListener('DOMContentLoaded', () => {
   panel = document.getElementById('modal-panel'); 
   form = document.getElementById('formJugador');
   tbody = document.getElementById('tabla-jugadores');
-  containerMovil = document.getElementById('vista-movil');
   infoPaginacion = document.getElementById('info-paginacion');
   btnPrev = document.getElementById('btn-prev');
   btnNext = document.getElementById('btn-next');
+
+  // Listener para Calcular Edad
+  const fechaNacInput = document.getElementById('fecha_nacimiento');
+  if (fechaNacInput) {
+    fechaNacInput.addEventListener('change', (e) => {
+      const valor = e.target.value;
+      const display = document.getElementById('edad-display');
+      if (!valor) {
+        if(display) { display.style.opacity = '0'; }
+        return;
+      }
+      
+      const hoy = new Date();
+      const nacimiento = new Date(valor + 'T00:00:00'); // Hora local para evitar problemas de zona horaria
+      
+      let edad = hoy.getFullYear() - nacimiento.getFullYear();
+      const diferenciaMeses = hoy.getMonth() - nacimiento.getMonth();
+      
+      // Ajustar si aún no ha cumplido años este año
+      if (diferenciaMeses < 0 || (diferenciaMeses === 0 && hoy.getDate() < nacimiento.getDate())) {
+        edad--;
+      }
+
+      if (display) {
+        display.innerHTML = `<i class="ph ph-cake"></i> ${edad} años`;
+        display.style.opacity = '1';
+      }
+    });
+  }
 
   if (form) form.addEventListener('submit', guardarJugador);
   if (modal && backdrop) backdrop.addEventListener('click', cerrarModal);
@@ -103,10 +131,11 @@ function calcularEstado(pagado) {
 }
 
 function renderTabla() {
-  if (!tbody || !containerMovil) return;
+  if (!tbody) return;
 
   tbody.innerHTML = '';
-  containerMovil.innerHTML = '';
+  
+  // ELIMINADO: containerMovil para evitar lista repetida
   
   const totalItems = todosLosJugadores.length;
   const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
@@ -120,16 +149,15 @@ function renderTabla() {
 
   if (datosPagina.length === 0) {
     tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-slate-400">No hay jugadores registrados.</td></tr>`;
-    containerMovil.innerHTML = `<div class="text-center py-8 text-slate-400">No hay registros.</div>`;
     return;
   }
 
-  // Render Desktop
+  // Render Desktop (Y Mobile via scroll horizontal)
   datosPagina.forEach(j => {
     const estado = calcularEstado(j.mensualidad);
     const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
     
-    // CORRECCIÓN DE FORMATO FECHA (guiones en vez de barras)
+    // Formato Fecha de Nacimiento: DD-MM-AAAA
     const fechaVisual = j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('-') : '-';
     
     const tr = document.createElement('tr');
@@ -154,54 +182,7 @@ function renderTabla() {
     `;
     tbody.appendChild(tr);
 
-    // RENDERIZADO MÓVIL (TARJETA)
-    const card = document.createElement('div');
-    card.className = "bg-white rounded-xl border border-slate-200 p-4 shadow-sm mb-4";
-    
-    // Color de borde según estado
-    const borderClass = j.mensualidad >= MENSUALIDAD_OBJETIVO ? 'border-l-4 border-l-emerald-500' : (j.mensualidad > 0 ? 'border-l-4 border-l-amber-500' : 'border-l-4 border-l-rose-500');
-    card.classList.add(...borderClass.split(' '));
-
-    card.innerHTML = `
-      <div class="flex justify-between items-start mb-3">
-        <div>
-          <h3 class="font-bold text-slate-900 text-base">${nombreCompleto}</h3>
-          <p class="text-xs text-slate-500 mt-1">${j.numero_identificacion || 'Sin ID'}</p>
-        </div>
-        <button onclick="window.toggleMenuCard(${j.id})" class="text-slate-400 hover:text-slate-600">
-          <i class="ph ph-dots-three-vertical text-xl"></i>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3 mb-3 text-xs">
-         <div>
-            <span class="text-slate-400 block mb-0.5">Fecha Nac.</span>
-            <span class="font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded inline-block">${fechaVisual}</span>
-         </div>
-         <div>
-            <span class="text-slate-400 block mb-0.5">Categoría</span>
-            <span class="font-medium text-slate-700">${j.categoria}</span>
-         </div>
-      </div>
-
-      <div class="flex justify-between items-center pt-3 border-t border-slate-100">
-        <span class="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold ${estado.color}">
-          ${estado.texto}
-        </span>
-        <div class="flex gap-2">
-          <button onclick="editarJugador(${j.id})" class="p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100">
-            <i class="ph ph-pencil-simple text-lg"></i>
-          </button>
-        </div>
-      </div>
-      
-      <!-- Menú desplegable simple para móviles -->
-      <div id="menu-${j.id}" class="hidden mt-3 pt-3 border-t border-slate-100 flex gap-2">
-         <a href="https://wa.me/57${j.telefono}" target="_blank" class="flex-1 text-center py-2 bg-green-50 text-green-600 rounded-lg text-xs font-bold">WhatsApp</a>
-         <button onclick="eliminarJugador(${j.id})" class="px-4 py-2 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold">Eliminar</button>
-      </div>
-    `;
-    containerMovil.appendChild(card);
+    // ELIMINADO: Render Móvil (Cards) para no repetir lista
   });
 
   // Actualizar Paginación
@@ -229,6 +210,10 @@ function actualizarEstadisticas() {
 function abrirModal() {
   if (!form) return;
   form.reset();
+  // Resetear visual de edad
+  const display = document.getElementById('edad-display');
+  if(display) display.style.opacity = '0';
+
   document.getElementById('jugador-id').value = '';
   document.getElementById('modal-title').innerText = 'Registrar Jugador';
   document.getElementById('modal-icon').className = 'ph ph-user-plus text-blue-600';
@@ -268,6 +253,12 @@ function editarJugador(id) {
   document.getElementById('nombre').value = jugador.nombre || '';
   document.getElementById('apellidos').value = jugador.apellidos || '';
   document.getElementById('fecha_nacimiento').value = jugador.fecha_nacimiento || '';
+  
+  // Disparar evento change manual para recalcular edad
+  const fechaInput = document.getElementById('fecha_nacimiento');
+  const event = new Event('change');
+  fechaInput.dispatchEvent(event);
+
   document.getElementById('tipo_identificacion').value = jugador.tipo_identificacion || '';
   document.getElementById('numero_identificacion').value = jugador.numero_identificacion || '';
   document.getElementById('categoria').value = jugador.categoria;
@@ -339,9 +330,4 @@ window.toggleMenu = () => {
     menu.classList.toggle('active');
     backdrop.classList.toggle('active');
   }
-};
-// Función auxiliar para el menú de tarjeta móvil
-window.toggleMenuCard = (id) => {
-  const menu = document.getElementById(`menu-${id}`);
-  if(menu) menu.classList.toggle('hidden');
 };
