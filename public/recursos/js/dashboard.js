@@ -152,7 +152,7 @@ function renderTabla() {
       const valor = Number(j.mensualidad || 0);
       let estadoHtml = '';
       
-      // --- LÓGICA DE ESTADO (Pago / Abono / Pendiente) ---
+      // --- LÓGICA DE ESTADO CORREGIDA ---
       if (valor >= MENSUALIDAD_OBJETIVO) {
         // PAGO
         estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
