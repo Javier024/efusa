@@ -1,4 +1,4 @@
-import { apiFetch } from './configuracion.js';
+import { apiFetch, MENSUALIDAD_OBJETIVO } from './configuracion.js';
 
 // ==========================
 // ESTADO GLOBAL
@@ -7,8 +7,7 @@ let jugadoresList = [];
 let listaPagos = [];
 let paginaActual = 1;
 const FILAS_POR_PAGINA = 8;
-// Usamos la misma constante que en tu backend
-const MENSUALIDAD_OBJETIVO = 50000;
+// Importamos la constante desde configuración.js
 
 // Referencias DOM
 let tabla, buscador, filtroCategoria, infoPaginacion, btnPrev, btnNext;
@@ -52,10 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // ==========================
 async function cargarDatos() {
   try {
-    // Conexión a tus endpoints
+    // CONEXIÓN CORREGIDA: Solo '/jugadores' y '/pagos' (sin /api/ adelante)
     const resultados = await Promise.allSettled([
-      apiFetch('/api/jugadores'),
-      apiFetch('/api/pagos')
+      apiFetch('/jugadores'),
+      apiFetch('/pagos')
     ]);
 
     // 1. Manejar Jugadores
@@ -141,7 +140,7 @@ function renderTabla() {
 
   // 3. Renderizar filas
   if (datosPagina.length === 0) {
-    // colspan="4" porque eliminamos la columna Acción
+    // colspan="4"
     if (jugadoresList.length === 0) {
       tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
     } else {
@@ -152,22 +151,19 @@ function renderTabla() {
       const valor = Number(j.mensualidad || 0);
       let estadoHtml = '';
       
-      // --- LÓGICA DE ESTADO CORREGIDA ---
+      // LÓGICA DE ESTADO
       if (valor >= MENSUALIDAD_OBJETIVO) {
-        // PAGO
         estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
       } else if (valor > 0) {
-        // ABONO (Parcial)
         estadoHtml = '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold border border-amber-200">Abono</span>';
       } else {
-        // PENDIENTE
         estadoHtml = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
       }
 
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
       
-      // --- COLUMNAS: Jugador, Categoría, Contacto, Estado ---
+      // COLUMNAS
       tr.innerHTML = `
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
@@ -177,7 +173,7 @@ function renderTabla() {
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
-        <!-- Contacto (Teléfono) -->
+        <!-- Contacto -->
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
           ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
         </td>
@@ -366,7 +362,6 @@ function toggleSidebar(abrir) {
 
 function mostrarErrorCritico() {
   if (tabla) {
-    // colspan="4"
     tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-600 font-bold">
       Error Crítico: No se pudieron cargar los datos.<br>
       <span class="text-xs text-rose-400 font-normal">Verifica tu conexión.</span>
