@@ -36,7 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       const hoy = new Date();
-      const nacimiento = new Date(valor + 'T00:00:00'); // Hora local para evitar problemas de zona horaria
+      const nacimiento = new Date(valor + 'T00:00:00'); 
       
       let edad = hoy.getFullYear() - nacimiento.getFullYear();
       const diferenciaMeses = hoy.getMonth() - nacimiento.getMonth();
@@ -136,6 +136,7 @@ function renderTabla() {
   tbody.innerHTML = '';
   
   // ELIMINADO: containerMovil para evitar lista repetida
+  // (Se elimina para evitar la lista doble)
   
   const totalItems = todosLosJugadores.length;
   const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
@@ -158,6 +159,7 @@ function renderTabla() {
     const nombreCompleto = `${j.apellidos || ''} ${j.nombre || ''}`.trim();
     
     // Formato Fecha de Nacimiento: DD-MM-AAAA
+    // IMPORTANTE: Ahora no usa hidden sm:table-cell para que se vea en móvil
     const fechaVisual = j.fecha_nacimiento ? j.fecha_nacimiento.split('-').reverse().join('-') : '-';
     
     const tr = document.createElement('tr');
@@ -167,7 +169,7 @@ function renderTabla() {
         <div class="font-bold text-slate-900 text-sm md:text-base">${nombreCompleto}</div>
         <div class="mt-1 text-xs text-slate-500">${j.numero_identificacion || 'Sin ID'}</div>
       </td>
-      <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600 hidden sm:table-cell font-medium">${fechaVisual}</td>
+      <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600 text-sm font-medium">${fechaVisual}</td> <!-- Ya no tiene la clase hidden -->
       <td class="px-4 md:px-6 py-3 md:py-4"><span class="inline-flex items-center rounded-md bg-slate-50 px-2 py-1 text-xs font-medium text-slate-600 ring-1 ring-inset ring-slate-500/10">${j.categoria}</span></td>
       <td class="px-4 md:px-6 py-3 md:py-4 text-slate-600">${j.telefono || '-'}</td>
       <td class="px-4 md:px-6 py-3 md:py-4 text-center">
