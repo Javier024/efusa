@@ -5,6 +5,7 @@
   <title>Panel Principal | EFUSA</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
+  <!-- FAVORITO VERDE -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22 fill=%2216a34a%22>⚽</text></svg>">
 
   <!-- Tailwind CSS -->
@@ -96,13 +97,13 @@
       <a href="#" class="nav-link active flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 rounded-lg transition-colors">
         <i class="ph ph-squares-four text-lg"></i> Panel Principal
       </a>
-      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="jugadores.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-users-three text-lg"></i> Gestión Jugadores
       </a>
-      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="pagos.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-money text-lg"></i> Gestión Pagos
       </a>
-      <a href="#" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
+      <a href="alertas.html" class="nav-link flex items-center gap-3 px-4 py-3 text-sm font-semibold text-slate-600 hover:bg-brand-50 hover:text-brand-900 rounded-lg transition-colors">
         <i class="ph ph-warning-octagon text-lg"></i> Alertas
       </a>
     </nav>
@@ -143,6 +144,7 @@
         <div class="bg-white p-6 md:p-8 rounded-2xl shadow-card border border-slate-100">
           <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
+              <!-- ID AQUÍ: El script modificará este texto -->
               <h2 id="saludo-dinamico" class="text-2xl md:text-3xl font-extrabold text-slate-800 anim-saludo">Bienvenido, Admin</h2>
               <p class="text-slate-500 mt-1 max-w-md">Panel de control administrativo. Gestiona jugadores, pagos y alertas.</p>
               <div class="mt-4 flex items-center gap-2 text-sm text-slate-400">
@@ -151,7 +153,7 @@
               </div>
             </div>
             
-            <!-- Logo decorativo grande -->
+            <!-- Logo decorativo grande para elegante -->
             <div class="hidden md:flex items-center justify-center w-32 h-32 bg-brand-50 rounded-2xl text-brand-600">
                 <i class="ph ph-soccer-ball text-6xl"></i>
             </div>
@@ -182,7 +184,7 @@
 
           <div class="bg-white p-5 md:p-6 rounded-xl md:rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between transition hover:shadow-md">
             <div>
-              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Activos</p>
+              <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider">Activos (Pago)</p>
               <h3 id="stat-activos" class="text-2xl md:text-3xl font-bold text-brand-600 mt-1">0</h3>
             </div>
             <div class="w-10 h-10 md:w-12 md:h-12 rounded-full bg-brand-50 text-brand-600 flex items-center justify-center">
@@ -225,10 +227,10 @@
               </h3>
               <div class="flex gap-2 md:gap-3">
                 <button onclick="exportarExcel()" class="text-[10px] md:text-xs font-bold px-3 py-1.5 border rounded-lg text-brand-700 bg-brand-50 hover:bg-brand-100 hover:shadow-sm transition-all flex items-center gap-2">
-                  <i class="ph ph-file-xls text-base"></i> <span class="hidden md:inline">Descargar Excel</span>
+                  <i class="ph ph-file-xls text-base"></i> <span class="hidden md:inline">Excel</span>
                 </button>
                 <button onclick="exportarPDF()" class="text-[10px] md:text-xs font-bold px-3 py-1.5 border rounded-lg text-rose-700 bg-rose-50 hover:bg-rose-100 hover:shadow-sm transition-all flex items-center gap-2">
-                  <i class="ph ph-file-pdf text-base"></i> <span class="hidden md:inline">Descargar PDF</span>
+                  <i class="ph ph-file-pdf text-base"></i> <span class="hidden md:inline">PDF</span>
                 </button>
               </div>
             </div>
@@ -258,8 +260,8 @@
                     <th class="px-4 py-3 border-b border-slate-200">Jugador</th>
                     <th class="px-4 py-3 border-b border-slate-200">Categoría</th>
                     <th class="px-4 py-3 border-b border-slate-200">Contacto</th>
+                    <!-- SE ELIMINÓ LA COLUMNA ACCIÓN COMO SOLICITÓ -->
                     <th class="px-4 py-3 border-b border-slate-200">Estado</th>
-                    <th class="px-4 py-3 border-b border-slate-200 text-center">Acción</th>
                   </tr>
                 </thead>
                 <tbody id="tabla-jugadores" class="divide-y divide-slate-100"></tbody>
@@ -280,62 +282,54 @@
     </main>
   </div>
 
-  <!-- SCRIPT DE LÓGICA -->
+  <!-- LÓGICA DEL DASHBOARD -->
   <script>
     // ==========================
-    // MOCK DATA (Simulación de Backend)
+    // CONFIGURACIÓN & UTILIDADES
     // ==========================
-    // Generamos datos falsos para que la tabla se llene sin necesidad de archivos externos
-    const categorias = ["Sub 17-18", "Sub 16-15", "Sub 14-13", "Sub 12-11", "Sub 10-9", "Sub 8-7"];
-    const nombres = ["Juan Pérez", "Carlos López", "Luis Rodríguez", "Marta Díaz", "Andrés García", "Sofía Martínez", "Diego Fernández", "Lucía Gómez", "Mateo Ruiz", "Valentina Castro", "Sebastián Morales", "Isabella Jiménez", "Samuel Ortega", "Alejandro Bravo", "Camila Silva"];
     
-    function generarJugadores(cantidad) {
-      const datos = [];
-      for(let i=1; i<=cantidad; i++) {
-        const nombre = nombres[Math.floor(Math.random() * nombres.length)] + ' ' + i;
-        const categoria = categorias[Math.floor(Math.random() * categorias.length)];
-        const telefono = "300 " + Math.floor(1000000 + Math.random() * 9000000);
-        // Aleatorio entre 0 y 60000 para probar estado
-        const mensualidad = Math.random() > 0.3 ? 50000 : Math.floor(Math.random() * 40000); 
-        
-        datos.push({
-          id: i,
-          nombre: nombre,
-          numero_identificacion: 'ID-' + (1000 + i),
-          categoria: categoria,
-          telefono: telefono,
-          mensualidad: mensualidad
-        });
-      }
-      return datos;
-    }
-
-    function generarPagos(cantidad) {
-      const datos = [];
-      for(let i=1; i<=cantidad; i++) {
-        const jugador = nombres[Math.floor(Math.random() * nombres.length)];
-        datos.push({
-          jugador: jugador,
-          monto: 50000,
-          fecha: new Date().toISOString(), // Hoy
-          tipo: 'mensualidad'
-        });
-      }
-      return datos;
-    }
-
-    // Simulación de la función apiFetch
-    async function mockApiFetch(endpoint) {
-      return new Promise((resolve) => {
+    // Simulación de API para que el código funcione standalone
+    // En producción, reemplazar esto con tu import real: import { apiFetch } from './configuracion.js';
+    function apiFetch(endpoint) {
+      return new Promise((resolve, reject) => {
+        // Simulamos un pequeño delay de red
         setTimeout(() => {
-          if (endpoint.includes('jugadores')) {
-            resolve(generarJugadores(45)); // Generar 45 jugadores
-          } else if (endpoint.includes('pagos')) {
-            resolve(generarPagos(10));
+          if (endpoint === '/api/jugadores') {
+            // Generar datos mock variados
+            const mockJugadores = Array.from({ length: 25 }, (_, i) => {
+              const pagoStatus = Math.random(); // 0 a 1
+              let mensualidad = 0;
+              
+              // Generar estados para probar la lógica visual
+              if (pagoStatus > 0.6) mensualidad = 50000; // Pago
+              else if (pagoStatus > 0.3) mensualidad = 25000; // Abono
+              else mensualidad = 0; // Pendiente
+
+              const categorias = ["Sub 17-18", "Sub 16-15", "Sub 14-13", "Sub 12-11", "Sub 10-9", "Sub 8-7"];
+              
+              return {
+                id: i + 1,
+                nombre: `Jugador ${i + 1}`,
+                apellidos: `Apellido ${i + 1}`,
+                categoria: categorias[i % categorias.length],
+                telefono: `300${Math.floor(100000 + Math.random() * 900000)}`,
+                mensualidad: mensualidad,
+                numero_identificacion: `10${i}`
+              };
+            });
+            resolve(mockJugadores);
+          } else if (endpoint === '/api/pagos') {
+            const mockPagos = Array.from({ length: 5 }, (_, i) => ({
+              jugador: `Jugador ${i + 1}`,
+              monto: 50000,
+              fecha: new Date().toISOString(),
+              tipo: 'mensualidad'
+            }));
+            resolve(mockPagos);
           } else {
-            resolve([]);
+            reject("Endpoint not found");
           }
-        }, 500); // Retraso pequeño para simular red
+        }, 500);
       });
     }
 
@@ -356,7 +350,7 @@
     // INICIALIZACIÓN
     // ==========================
     document.addEventListener('DOMContentLoaded', () => {
-      // Referencias DOM (Cacheamos para mejor rendimiento)
+      // Referencias DOM
       tabla = document.getElementById('tabla-jugadores');
       buscador = document.getElementById('buscador');
       filtroCategoria = document.getElementById('filtro-categoria');
@@ -365,7 +359,7 @@
       btnNext = document.getElementById('btn-next');
       containerActividad = document.getElementById('actividad-feed');
 
-      // Event Listeners
+      // Event Listeners Filtros
       if (buscador) buscador.addEventListener('input', filtrar);
       if (filtroCategoria) filtroCategoria.addEventListener('change', filtrar);
 
@@ -382,19 +376,7 @@
       if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
 
       // Saludo Dinámico
-      const ahora = new Date();
-      const hora = ahora.getHours();
-      const elementoSaludo = document.getElementById('saludo-dinamico');
-      let textoSaludo = 'Buenos días';
-      if (hora >= 12 && hora < 18) textoSaludo = 'Buenas tardes';
-      else if (hora >= 18) textoSaludo = 'Buenas noches';
-      if (elementoSaludo) elementoSaludo.textContent = `${textoSaludo}, Admin`;
-
-      const fechaElemento = document.getElementById('fecha-actual');
-      if (fechaElemento) {
-        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        fechaElemento.textContent = ahora.toLocaleDateString('es-ES', opciones);
-      }
+      configurarSaludo();
 
       // Carga inicial
       cargarDatos();
@@ -405,26 +387,26 @@
     // ==========================
     async function cargarDatos() {
       try {
-        // Usamos mockApiFetch en lugar de apiFetch real para este ejemplo autocontenido
+        // Conexión a endpoints
         const resultados = await Promise.allSettled([
-          mockApiFetch('/jugadores'),
-          mockApiFetch('/pagos')
+          apiFetch('/api/jugadores'),
+          apiFetch('/api/pagos')
         ]);
 
         // 1. Manejar Jugadores
         if (resultados[0].status === 'fulfilled') {
           jugadoresList = Array.isArray(resultados[0].value) ? resultados[0].value : [];
         } else {
-          console.warn('No se pudieron cargar jugadores:', resultados[0].reason);
+          console.warn('Error cargando jugadores:', resultados[0].reason);
           jugadoresList = [];
         }
 
         // 2. Manejar Pagos
         if (resultados[1].status === 'fulfilled') {
           listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
-          listaPagos.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+          listaPagos.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha));
         } else {
-          console.warn('No se pudieron cargar pagos:', resultados[1].reason);
+          console.warn('Error cargando pagos:', resultados[1].reason);
           listaPagos = [];
         }
 
@@ -433,7 +415,7 @@
         renderActividad();
 
       } catch (error) {
-        console.error('Error crítico en dashboard:', error);
+        console.error('Error crítico:', error);
         mostrarErrorCritico();
       }
     }
@@ -443,8 +425,10 @@
     // ==========================
     function actualizarEstadisticas() {
       const total = jugadoresList.length;
+      // Definimos Activo como quien tiene el pago completo
       const activos = jugadoresList.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
-      const deudores = jugadoresList.filter(j => Number(j.mensualidad) < MENSUALIDAD_OBJETIVO).length;
+      // Deudor es quien no ha pagado nada
+      const deudores = jugadoresList.filter(j => Number(j.mensualidad) === 0).length;
       const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad || 0), 0);
 
       const elTotal = document.getElementById('stat-total');
@@ -459,7 +443,7 @@
     }
 
     // ==========================
-    // RENDERIZADO TABLA Y FILTROS (CORREGIDO)
+    // RENDERIZADO TABLA Y FILTROS
     // ==========================
     function filtrar() {
       paginaActual = 1;
@@ -475,7 +459,8 @@
 
       // 1. Filtrar datos
       const filtrados = jugadoresList.filter(j => {
-        const matchNombre = j.nombre && j.nombre.toLowerCase().includes(texto);
+        const nombreCompleto = `${j.nombre || ''} ${j.apellidos || ''}`.toLowerCase();
+        const matchNombre = nombreCompleto.includes(texto);
         const matchCat = cat === '' || j.categoria === cat;
         return matchNombre && matchCat;
       });
@@ -493,52 +478,49 @@
 
       // 3. Renderizar filas
       if (datosPagina.length === 0) {
+        // Nota: Cambié colspan de 5 a 4 porque eliminé la columna Acción
         if (jugadoresList.length === 0) {
-          tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">Error de conexión o sin datos.</td></tr>`;
+          tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
         } else {
-          tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
+          tabla.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
         }
       } else {
         datosPagina.forEach(j => {
-          const estado = Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO;
-          const estadoHtml = estado 
-            ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Al día</span>'
-            : '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
+          const valor = Number(j.mensualidad || 0);
+          let estadoHtml = '';
+          
+          // LÓGICA ACTUALIZADA DE ESTADO
+          if (valor >= MENSUALIDAD_OBJETIVO) {
+            // PAGO
+            estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
+          } else if (valor > 0) {
+            // ABONO (Parcial)
+            estadoHtml = '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold border border-amber-200">Abono</span>';
+          } else {
+            // PENDIENTE
+            estadoHtml = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
+          }
 
           const tr = document.createElement('tr');
           tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
           
-          // --- AQUI ESTABA EL ERROR Y AHORA ESTA CORREGIDO ---
+          // COLUMNAS: Jugador, Categoría, Contacto, Estado
           tr.innerHTML = `
-            <!-- Columna 1: Jugador -->
             <td class="px-4 py-3">
-              <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre || 'Sin nombre'}</div>
+              <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
               ${j.numero_identificacion ? `<div class="text-[10px] text-slate-400">${j.numero_identificacion}</div>` : ''}
             </td>
-            
-            <!-- Columna 2: Categoría (Antes salía Teléfono) -->
             <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
               ${j.categoria || '-'}
             </td>
-            
-            <!-- Columna 3: Contacto (Antes salía Estado) -->
             <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
               ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
             </td>
-            
-            <!-- Columna 4: Estado (Antes salía Ver más) -->
             <td class="px-4 py-3 text-center">
               ${estadoHtml}
-              <div class="text-[9px] text-slate-400 mt-0.5">$${Number(j.mensualidad || 0).toLocaleString()}</div>
-            </td>
-            
-            <!-- Columna 5: Acción (Antes vacía) -->
-            <td class="px-4 py-3 text-center">
-              <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm bg-white border border-brand-200 hover:border-brand-400 px-3 py-1 rounded-md transition shadow-sm">Ver más</a>
+              <div class="text-[9px] text-slate-400 mt-0.5">$${valor.toLocaleString()}</div>
             </td>
           `;
-          // -----------------------------------------------
-
           tabla.appendChild(tr);
         });
       }
@@ -549,7 +531,11 @@
       if (btnNext) btnNext.disabled = paginaActual === totalPages;
     }
 
+    // ==========================
+    // NAVEGACIÓN
+    // ==========================
     function cambiarPagina(delta) {
+      if (jugadoresList.length === 0) return;
       paginaActual += delta;
       renderTabla();
     }
@@ -569,7 +555,7 @@
       const ultimos5 = listaPagos.slice(0, 5);
 
       ultimos5.forEach((p, index) => {
-        const fechaObj = new Date(p.fecha);
+        const fechaObj = new Date(p.fecha || p.created_at);
         const hora = fechaObj.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         const fechaCorta = fechaObj.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
 
@@ -619,13 +605,21 @@
       }
 
       try {
-        const datosExportar = jugadoresList.map(j => ({
-          "Nombre Completo": j.nombre || '',
-          "Categoría": j.categoria || '-',
-          "Teléfono": j.telefono || '-',
-          "Mensualidad": Number(j.mensualidad),
-          "Estado": Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Pagado' : 'Pendiente'
-        }));
+        const datosExportar = jugadoresList.map(j => {
+          // Reutilizamos la lógica de estado para el Excel
+          const valor = Number(j.mensualidad);
+          let estado = 'Pendiente';
+          if (valor >= MENSUALIDAD_OBJETIVO) estado = 'Pago';
+          else if (valor > 0) estado = 'Abono';
+
+          return {
+            "Nombre Completo": `${j.nombre} ${j.apellidos}`,
+            "Categoría": j.categoria || '-',
+            "Teléfono": j.telefono || '-',
+            "Estado": estado,
+            "Mensualidad": valor
+          };
+        });
 
         const hoja = XLSX.utils.json_to_sheet(datosExportar);
         const libro = XLSX.utils.book_new();
@@ -661,16 +655,23 @@
       doc.setTextColor(100);
       doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
 
-      const datosTabla = jugadoresList.map(j => [
-        j.nombre || '-',
-        j.categoria || '-',
-        j.telefono || '-',
-        Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Al día' : 'Pendiente',
-        `$${Number(j.mensualidad).toLocaleString()}`
-      ]);
+      const datosTabla = jugadoresList.map(j => {
+        const valor = Number(j.mensualidad);
+        let estado = 'Pendiente';
+        if (valor >= MENSUALIDAD_OBJETIVO) estado = 'Pago';
+        else if (valor > 0) estado = 'Abono';
+
+        return [
+          `${j.nombre} ${j.apellidos || ''}`,
+          j.categoria || '-',
+          j.telefono || '-',
+          estado,
+          `$${valor.toLocaleString()}`
+        ];
+      });
 
       doc.autoTable({
-        head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Pagado']],
+        head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Monto']],
         body: datosTabla,
         startY: 35,
         headStyles: { fillColor: [22, 163, 74] }, // Verde
@@ -681,7 +682,7 @@
     }
 
     // ==========================
-    // UTILIDADES
+    // UTILIDADES UI
     // ==========================
     function toggleSidebar(abrir) {
       const sidebar = document.getElementById('mobile-sidebar');
@@ -690,29 +691,52 @@
       if (abrir) {
         sidebar.classList.remove('-translate-x-full');
         overlay.classList.remove('hidden', 'opacity-0');
-        setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+        setTimeout(() => overlay.classList.remove('opacity-0'), 10);
       } else {
         sidebar.classList.add('-translate-x-full');
         overlay.classList.add('opacity-0');
-        setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for transition
+        setTimeout(() => overlay.classList.add('hidden'), 300);
       }
     }
 
     function mostrarErrorCritico() {
       if (tabla) {
-        tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-600 font-bold">
+        tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-600 font-bold">
           Error Crítico: No se pudieron cargar los datos.<br>
-          <span class="text-xs text-rose-400 font-normal">Verifica tu conexión y que los archivos backend (api/*.js) estén subidos.</span>
+          <span class="text-xs text-rose-400 font-normal">Verifica tu conexión.</span>
         </td></tr>`;
       }
     }
 
-    // Exportar funciones globales para que el HTML pueda usarlas
+    function configurarSaludo() {
+      const ahora = new Date();
+      const hora = ahora.getHours();
+      const elementoSaludo = document.getElementById('saludo-dinamico');
+      
+      let textoSaludo = 'Buenos días'; 
+
+      if (hora >= 12 && hora < 18) {
+        textoSaludo = 'Buenas tardes';
+      } else if (hora >= 18) {
+        textoSaludo = 'Buenas noches';
+      }
+
+      if (elementoSaludo) {
+        elementoSaludo.textContent = `${textoSaludo}, Admin`; 
+      }
+
+      const fechaElemento = document.getElementById('fecha-actual');
+      if (fechaElemento && fechaElemento.textContent === 'Cargando fecha...') {
+        const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        fechaElemento.textContent = ahora.toLocaleDateString('es-ES', opciones);
+      }
+    }
+
+    // Exportar funciones globales para onclick HTML
     window.cambiarPagina = cambiarPagina;
     window.exportarExcel = exportarExcel;
     window.exportarPDF = exportarPDF;
     window.toggleSidebar = () => toggleSidebar(true);
-
   </script>
 </body>
-</html> 
+</html>

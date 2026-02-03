@@ -17,7 +17,7 @@ let containerActividad;
 // INICIALIZACIÓN
 // ==========================
 document.addEventListener('DOMContentLoaded', () => {
-  // Referencias DOM (Cacheamos para mejor rendimiento)
+  // Referencias DOM
   tabla = document.getElementById('tabla-jugadores');
   buscador = document.getElementById('buscador');
   filtroCategoria = document.getElementById('filtro-categoria');
@@ -42,18 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (overlay) overlay.addEventListener('click', () => toggleSidebar(false));
 
-  // Carga inicial (Conecta a tu API Real)
+  // Carga inicial (Mantiene tu conexión original)
   cargarDatos();
 });
 
 // ==========================
-// LÓGICA DE DATOS (API REAL)
+// LÓGICA DE DATOS
 // ==========================
 async function cargarDatos() {
   try {
-    // Llamada real a tu Backend (Vercel/Express/Next)
+    // Conexión a tus endpoints /api/jugadores y /api/pagos
     const resultados = await Promise.allSettled([
-      apiFetch('/api/jugadores'), 
+      apiFetch('/api/jugadores'),
       apiFetch('/api/pagos')
     ]);
 
@@ -61,17 +61,17 @@ async function cargarDatos() {
     if (resultados[0].status === 'fulfilled') {
       jugadoresList = Array.isArray(resultados[0].value) ? resultados[0].value : [];
     } else {
-      console.warn('No se pudieron cargar jugadores:', resultados[0].reason);
-      jugadoresList = []; 
+      console.warn('Error cargando jugadores:', resultados[0].reason);
+      jugadoresList = [];
     }
 
     // 2. Manejar Pagos
     if (resultados[1].status === 'fulfilled') {
       listaPagos = Array.isArray(resultados[1].value) ? resultados[1].value : [];
-      // Ordenar por fecha (nuevo a viejo) usando 'created_at' o 'fecha'
+      // Ordenar por fecha descendente
       listaPagos.sort((a, b) => new Date(b.created_at || b.fecha) - new Date(a.created_at || a.fecha));
     } else {
-      console.warn('No se pudieron cargar pagos:', resultados[1].reason);
+      console.warn('Error cargando pagos:', resultados[1].reason);
       listaPagos = [];
     }
 
@@ -80,7 +80,7 @@ async function cargarDatos() {
     renderActividad();
 
   } catch (error) {
-    console.error('Error crítico en dashboard:', error);
+    console.error('Error crítico:', error);
     mostrarErrorCritico();
   }
 }
@@ -90,8 +90,9 @@ async function cargarDatos() {
 // ==========================
 function actualizarEstadisticas() {
   const total = jugadoresList.length;
+  // Consideramos 'Pago' como >= objetivo, 'Deudor' como 0
   const activos = jugadoresList.filter(j => Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO).length;
-  const deudores = jugadoresList.filter(j => Number(j.mensualidad) < MENSUALIDAD_OBJETIVO).length;
+  const deudores = jugadoresList.filter(j => Number(j.mensualidad) === 0).length;
   const dinero = jugadoresList.reduce((acc, curr) => acc + Number(curr.mensualidad || 0), 0);
 
   const elTotal = document.getElementById('stat-total');
@@ -106,7 +107,7 @@ function actualizarEstadisticas() {
 }
 
 // ==========================
-// RENDERIZADO TABLA Y FILTROS (CORREGIDO)
+// RENDERIZADO TABLA Y FILTROS
 // ==========================
 function filtrar() {
   paginaActual = 1;
@@ -120,7 +121,7 @@ function renderTabla() {
   const texto = buscador ? buscador.value.toLowerCase() : '';
   const cat = filtroCategoria ? filtroCategoria.value : '';
 
-  // 1. Filtrar datos (Buscando en Nombre + Apellidos)
+  // 1. Filtrar datos
   const filtrados = jugadoresList.filter(j => {
     const nombreCompleto = `${j.nombre || ''} ${j.apellidos || ''}`.toLowerCase();
     const matchNombre = nombreCompleto.includes(texto);
@@ -132,6 +133,7 @@ function renderTabla() {
   const totalItems = filtrados.length;
   const totalPages = Math.ceil(totalItems / FILAS_POR_PAGINA) || 1;
 
+  // Validar límites de página
   if (paginaActual > totalPages) paginaActual = totalPages;
   if (paginaActual < 1) paginaActual = 1;
 
@@ -141,52 +143,53 @@ function renderTabla() {
 
   // 3. Renderizar filas
   if (datosPagina.length === 0) {
+    // Nota: El colspan debe ser 4 si eliminaste la columna Acción del HTML, si no, déjalo en 5
     if (jugadoresList.length === 0) {
-      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en la base de datos.</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-500 text-sm font-bold">No hay datos en tu base de datos.</td></tr>`;
     } else {
-      tabla.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-slate-400">No se encontraron jugadores con ese filtro.</td></tr>`;
+      tabla.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-slate-400">No se encontraron jugadores.</td></tr>`;
     }
   } else {
     datosPagina.forEach(j => {
-      const estado = Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO;
-      const estadoHtml = estado 
-        ? '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Al día</span>'
-        : '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
+      const valor = Number(j.mensualidad || 0);
+      let estadoHtml = '';
+      
+      // --- LÓGICA DE ESTADO SOLICITADA ---
+      if (valor >= MENSUALIDAD_OBJETIVO) {
+        // PAGO
+        estadoHtml = '<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold border border-emerald-200">Pago</span>';
+      } else if (valor > 0) {
+        // ABONO (Parcial)
+        estadoHtml = '<span class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-bold border border-amber-200">Abono</span>';
+      } else {
+        // PENDIENTE
+        estadoHtml = '<span class="bg-rose-100 text-rose-700 px-2 py-1 rounded text-xs font-bold border border-rose-200">Pendiente</span>';
+      }
 
       const tr = document.createElement('tr');
       tr.className = "hover:bg-slate-50 border-b border-slate-100 transition duration-150";
       
-      // --- COLUMNAS CORREGIDAS SEGÚN TU API ---
+      // --- COLUMNAS CORREGIDAS ---
       tr.innerHTML = `
-        <!-- 1. Jugador (Nombre + Apellidos) -->
         <td class="px-4 py-3">
           <div class="font-bold text-slate-900 text-sm md:text-base">${j.nombre} ${j.apellidos || ''}</div>
           ${j.numero_identificacion ? `<div class="text-[10px] text-slate-400">${j.numero_identificacion}</div>` : ''}
         </td>
-        
-        <!-- 2. Categoría -->
+        <!-- Categoría -->
         <td class="px-4 py-3 text-slate-600 hidden sm:table-cell text-xs md:text-sm">
           ${j.categoria || '-'}
         </td>
-        
-        <!-- 3. Contacto (Teléfono) -->
+        <!-- Contacto (Teléfono) -->
         <td class="px-4 py-3 text-slate-600 text-xs md:text-sm">
           ${j.telefono ? `<a href="tel:${j.telefono}" class="hover:text-brand-600 hover:underline">${j.telefono}</a>` : '-'}
         </td>
-        
-        <!-- 4. Estado (Badge) -->
+        <!-- Estado -->
         <td class="px-4 py-3 text-center">
           ${estadoHtml}
-          <div class="text-[9px] text-slate-400 mt-0.5">$${Number(j.mensualidad || 0).toLocaleString()}</div>
-        </td>
-        
-        <!-- 5. Acción (Ver más) -->
-        <td class="px-4 py-3 text-center">
-          <a href="pagos.html" class="text-brand-600 hover:text-brand-800 font-bold text-xs md:text-sm bg-white border border-brand-200 hover:border-brand-400 px-3 py-1 rounded-md transition shadow-sm">Ver más</a>
+          <div class="text-[9px] text-slate-400 mt-0.5">$${valor.toLocaleString()}</div>
         </td>
       `;
-      // -----------------------------------------
-
+      // Ya no se genera la columna Acción
       tabla.appendChild(tr);
     });
   }
@@ -197,7 +200,11 @@ function renderTabla() {
   if (btnNext) btnNext.disabled = paginaActual === totalPages;
 }
 
+// ==========================
+// NAVEGACIÓN
+// ==========================
 function cambiarPagina(delta) {
+  if (jugadoresList.length === 0) return;
   paginaActual += delta;
   renderTabla();
 }
@@ -254,7 +261,7 @@ function renderActividad() {
 }
 
 // ==========================
-// EXPORTACIÓN A EXCEL
+// EXPORTACIÓN A EXCEL (Actualizada con lógica de Abono)
 // ==========================
 function exportarExcel() {
   if (typeof XLSX === 'undefined') {
@@ -267,13 +274,21 @@ function exportarExcel() {
   }
 
   try {
-    const datosExportar = jugadoresList.map(j => ({
-      "Nombre Completo": `${j.nombre} ${j.apellidos}`,
-      "Categoría": j.categoria || '-',
-      "Teléfono": j.telefono || '-',
-      "Mensualidad": Number(j.mensualidad),
-      "Estado": Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Pagado' : 'Pendiente'
-    }));
+    const datosExportar = jugadoresList.map(j => {
+      const valor = Number(j.mensualidad);
+      // Aplicamos la misma lógica de estado para el reporte
+      let estado = 'Pendiente';
+      if (valor >= MENSUALIDAD_OBJETIVO) estado = 'Pago';
+      else if (valor > 0) estado = 'Abono';
+
+      return {
+        "Nombre Completo": `${j.nombre} ${j.apellidos}`,
+        "Categoría": j.categoria || '-',
+        "Teléfono": j.telefono || '-',
+        "Estado": estado,
+        "Mensualidad": valor
+      };
+    });
 
     const hoja = XLSX.utils.json_to_sheet(datosExportar);
     const libro = XLSX.utils.book_new();
@@ -288,7 +303,7 @@ function exportarExcel() {
 }
 
 // ==========================
-// EXPORTACIÓN A PDF
+// EXPORTACIÓN A PDF (Actualizada con lógica de Abono)
 // ==========================
 function exportarPDF() {
   if (typeof window.jspdf === 'undefined') {
@@ -309,16 +324,23 @@ function exportarPDF() {
   doc.setTextColor(100);
   doc.text(`Generado: ${new Date().toLocaleDateString()}`, 14, 28);
 
-  const datosTabla = jugadoresList.map(j => [
-    `${j.nombre} ${j.apellidos || ''}`,
-    j.categoria || '-',
-    j.telefono || '-',
-    Number(j.mensualidad) >= MENSUALIDAD_OBJETIVO ? 'Al día' : 'Pendiente',
-    `$${Number(j.mensualidad).toLocaleString()}`
-  ]);
+  const datosTabla = jugadoresList.map(j => {
+    const valor = Number(j.mensualidad);
+    let estado = 'Pendiente';
+    if (valor >= MENSUALIDAD_OBJETIVO) estado = 'Pago';
+    else if (valor > 0) estado = 'Abono';
+
+    return [
+      `${j.nombre} ${j.apellidos || ''}`,
+      j.categoria || '-',
+      j.telefono || '-',
+      estado,
+      `$${valor.toLocaleString()}`
+    ];
+  });
 
   doc.autoTable({
-    head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Pagado']],
+    head: [['Nombre', 'Categoría', 'Teléfono', 'Estado', 'Monto']],
     body: datosTabla,
     startY: 35,
     headStyles: { fillColor: [22, 163, 74] }, // Verde
@@ -338,24 +360,25 @@ function toggleSidebar(abrir) {
   if (abrir) {
     sidebar.classList.remove('-translate-x-full');
     overlay.classList.remove('hidden', 'opacity-0');
-    setTimeout(() => overlay.classList.remove('opacity-0'), 10); // Fade in
+    setTimeout(() => overlay.classList.remove('opacity-0'), 10);
   } else {
     sidebar.classList.add('-translate-x-full');
     overlay.classList.add('opacity-0');
-    setTimeout(() => overlay.classList.add('hidden'), 300); // Wait for transition
+    setTimeout(() => overlay.classList.add('hidden'), 300);
   }
 }
 
 function mostrarErrorCritico() {
   if (tabla) {
-    tabla.innerHTML = `<tr><td colspan="5" class="text-center py-10 text-rose-600 font-bold">
+    // Ajustar colspan a 4
+    tabla.innerHTML = `<tr><td colspan="4" class="text-center py-10 text-rose-600 font-bold">
       Error Crítico: No se pudieron cargar los datos.<br>
-      <span class="text-xs text-rose-400 font-normal">Verifica tu conexión y que los archivos backend (api/*.js) estén subidos.</span>
+      <span class="text-xs text-rose-400 font-normal">Verifica tu conexión.</span>
     </td></tr>`;
   }
 }
 
-// Exportar funciones globales para que el HTML pueda usarlas
+// Exportar funciones globales para el HTML
 window.cambiarPagina = cambiarPagina;
 window.exportarExcel = exportarExcel;
 window.exportarPDF = exportarPDF;
