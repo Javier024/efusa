@@ -47,7 +47,6 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Jugador, monto y fecha son obligatorios' });
       }
 
-      // Validar si es pago multiple para asegurar coherencia
       let cantMeses = cantidad_meses || 1;
       if (cantMeses > 1 && (!periodo_inicio || !periodo_fin)) {
          return res.status(400).json({ error: 'Para pagos múltiples, debe definir el periodo de inicio y fin.' });
@@ -55,12 +54,10 @@ export default async function handler(req, res) {
 
       // 1. Insertar el pago
       const { rows } = await pool.query(
-        `
-        INSERT INTO pagos
-        (jugador_id, monto, fecha, tipo, observacion, mes_pago, cantidad_meses, periodo_inicio, periodo_fin)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *
-        `,
+        `INSERT INTO pagos
+         (jugador_id, monto, fecha, tipo, observacion, mes_pago, cantidad_meses, periodo_inicio, periodo_fin)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         RETURNING *`,
         [
           jugador_id, 
           monto, 
@@ -76,9 +73,7 @@ export default async function handler(req, res) {
 
       // 2. ACTUALIZAR AUTOMÁTICAMENTE EL JUGADOR
       await pool.query(
-        `UPDATE jugadores 
-         SET mensualidad = mensualidad + $1 
-         WHERE id = $2`,
+        `UPDATE jugadores SET mensualidad = mensualidad + $1 WHERE id = $2`,
         [monto, jugador_id]
       );
 
@@ -92,6 +87,7 @@ export default async function handler(req, res) {
       const { id } = req.query;
       if (!id) return res.status(400).json({ error: 'Falta ID del pago' });
 
+      // Buscar pago antes de borrar para saber el monto a restar
       const { rows: pagoData } = await pool.query('SELECT * FROM pagos WHERE id = $1', [id]);
       
       if (pagoData.length === 0) {
@@ -100,12 +96,12 @@ export default async function handler(req, res) {
       
       const pago = pagoData[0];
 
+      // Borrar pago
       await pool.query('DELETE FROM pagos WHERE id = $1', [id]);
 
+      // Restar saldo al jugador
       await pool.query(
-        `UPDATE jugadores 
-         SET mensualidad = mensualidad - $1 
-         WHERE id = $2`,
+        `UPDATE jugadores SET mensualidad = mensualidad - $1 WHERE id = $2`,
         [pago.monto, pago.jugador_id]
       );
 
