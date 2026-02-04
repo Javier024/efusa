@@ -137,19 +137,33 @@ async function cargarPagos() {
   }
 }
 
+// === FUNCIÓN MODIFICADA ===
 async function cargarJugadoresSelect() {
   try { 
     const data = await apiFetch('/jugadores'); 
+    
+    // 1. Guardamos la lista COMPLETA en la variable global.
+    // Esto es vital para que la tabla de resumen (Estado de Cuentas) siga mostrando a todos.
     jugadoresList = data; 
     
     if (DOM.selectJugador) { 
       DOM.selectJugador.innerHTML = '<option value="">Seleccione...</option>'; 
-      data.forEach(j => { 
-        DOM.selectJugador.innerHTML += `<option value="${j.id}">${j.nombre} (${j.categoria})</option>`; 
-      }); 
+      
+      // 2. FILTRADO: Solo agregamos al SELECT si deben dinero (< 50000)
+      const jugadoresDeudores = data.filter(j => j.mensualidad < 50000);
+      
+      if (jugadoresDeudores.length > 0) {
+        jugadoresDeudores.forEach(j => { 
+          DOM.selectJugador.innerHTML += `<option value="${j.id}">${j.nombre} (${j.categoria})</option>`; 
+        });
+      } else {
+        // Si nadie debe dinero, mostramos un mensaje informativo deshabilitado
+        DOM.selectJugador.innerHTML += `<option disabled selected>✅ Todos los jugadores al día</option>`;
+      }
     } 
   } catch(e) { console.error(e); }
 }
+// ==========================
 
 // --- FILTRADO Y RENDERIZADO HISTORIAL ---
 
@@ -388,7 +402,7 @@ async function guardarPago(e) {
     const radioNo = document.querySelector('input[name="pago_multiple"][value="no"]');
     if(radioNo) radioNo.checked = true;
     
-    await Promise.all([cargarPagos(), cargarJugadoresSelect()]);
+    await Promise.all([cargarPagos(), cargarJugadoresSelect()]); // Esto recargará el select aplicando el filtro
     filtrarPagos(); 
     renderizarResumen(document.querySelector('input[name="filtro-resumen"]:checked').value || 'todos');
     
@@ -413,7 +427,7 @@ async function eliminarPago(id) {
   try {
     await apiFetch(`/pagos?id=${id}`, {method:'DELETE'});
     mostrarNotificacion('Pago eliminado', 'success');
-    await Promise.all([cargarPagos(), cargarJugadoresSelect()]);
+    await Promise.all([cargarPagos(), cargarJugadoresSelect()]); // Esto recargará el select reapareciendo el jugador si debía aparecer
     filtrarPagos();
     renderizarResumen(document.querySelector('input[name="filtro-resumen"]:checked').value || 'todos');
   } catch(e) {
@@ -484,6 +498,9 @@ function mostrarNotificacion(mensaje, tipo = 'info') {
 
 // Exponer al scope global
 window.irAPagar = (id) => { 
+  // Nota: Si intentas pagar a alguien "al día", esta función intentará seleccionarlo,
+  // pero el filtro en cargarJugadoresSelect evitará que se seleccione correctamente 
+  // o actualizará la lista. Esto es comportamiento deseado.
   if(DOM.selectJugador) DOM.selectJugador.value = id; 
   if(DOM.formPago) DOM.formPago.scrollIntoView({behavior:'smooth'}); 
 };
