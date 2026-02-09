@@ -1,60 +1,75 @@
-const API_BASE = '/api';
+// recursos/js/configuracion.js
 
-// ==========================
-// CONSTANTES GLOBALES
-// ==========================
-// Esta línea es necesaria para que dashboard.js funcione.
-// Si cambias este valor (ej: a 60000), se actualiza en toda la app automáticamente.
+// PEGA AQUÍ TU NUEVA URL DE GOOGLE
+const API_BASE = 'https://script.google.com/macros/s/AKfycbwlf9holXsV1cmJEr7IkZWvc3JKawphi5T_fmd79WdNSI3pPLsesQeiYa1NdVQeYuCO-g/exec';
+
+// Constante global que usa dashboard.js
 export const MENSUALIDAD_OBJETIVO = 50000;
 
-// ==========================
-// FUNCIÓN DE CONEXIÓN
-// ==========================
 export async function apiFetch(endpoint, options = {}) {
-  const url = `${API_BASE}${endpoint}`;
+  // 1. Construir la URL con los parámetros necesarios para Google
+  const url = new URL(API_BASE);
+  
+  // Le decimos a Google qué "ruta" queremos usando el parámetro ?path=...
+  // Ejemplo: /jugadores se convierte en ?path=jugadores
+  const cleanEndpoint = endpoint.replace(/^\//, ''); 
+  url.searchParams.append('path', cleanEndpoint);
 
-  // 1. Configuración de Headers
+  // 2. Manejo de Métodos (Tunneling)
+  // Google Apps Script solo acepta GET o POST directamente.
+  // Si quieres usar PUT o DELETE, lo enviamos vía POST pero le avisamos con ?method=PUT
+  let method = options.method || 'GET';
+  
+  if (method === 'PUT' || method === 'DELETE') {
+    url.searchParams.append('method', method);
+    method = 'POST'; // Forzamos POST para la petición real HTTP
+  }
+
+  // 3. Configuración de Headers
+  // Usamos 'text/plain' en lugar de 'application/json' para evitar errores de CORS complejos (pre-flight)
   const headers = {
-    'Content-Type': 'application/json',
-    ...options.headers,
+    'Content-Type': 'text/plain',
+    ...options.headers
   };
 
-  // 2. Lógica del Body
+  // 4. Preparar el Cuerpo (Body)
   let body = options.body;
-  
-  // Convertimos a JSON si es un objeto simple (no es FormData)
-  if (body && typeof body === 'object' && !(body instanceof FormData)) {
+  if (body && typeof body === 'object') {
     body = JSON.stringify(body);
   }
 
   try {
-    const response = await fetch(url, {
-      ...options, 
-      headers: headers, 
-      body: body, 
+    // 5. Ejecutar la petición
+    const response = await fetch(url.toString(), {
+      method: method,
+      headers: headers,
+      body: method === 'POST' ? body : undefined
     });
 
-    // Intentar leer la respuesta
-    let responseData;
-    const contentType = response.headers.get("content-type");
+    // 6. Leer la respuesta (Google devuelve texto, no JSON directo a veces)
+    const text = await response.text();
     
-    if (contentType && contentType.indexOf("application/json") !== -1) {
-      responseData = await response.json();
-    } else {
-      responseData = await response.text();
-    }
-
-    if (!response.ok) {
-      console.error('❌ Error API (Status', response.status, '):', responseData);
+    // Intentar convertir a JSON
+    try {
+      const data = JSON.parse(text);
       
-      // Extraemos el mensaje de error del backend
-      const msg = (responseData && responseData.detalle) || responseData.error || 'Error desconocido en el servidor';
-      throw new Error(msg);
+      // Si Google devuelve un error interno, lo lanzamos
+      if (data.error) {
+        throw new Error(data.error);
+      }
+      
+      return data;
+    } catch (e) {
+      // Si no es JSON (raro pero posible), devolvemos el texto crudo o el error
+      if (e instanceof SyntaxError) {
+         console.warn("La respuesta no era JSON:", text);
+         return text;
+      }
+      throw e;
     }
 
-    return responseData;
   } catch (error) {
-    console.error('❌ Error en apiFetch (Red):', error);
+    console.error('❌ Error de conexión con Google:', error);
     throw error;
   }
 }

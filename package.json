@@ -10,8 +10,7 @@
     "start": "node api/index.js"
   },
   "dependencies": {
+    "google-spreadsheet": "^5.0.2",
     "pg": "^8.17.2"
   }
 }
-
-
