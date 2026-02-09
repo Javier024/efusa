@@ -3,7 +3,7 @@
 // PEGA AQUÍ TU NUEVA URL DE GOOGLE
 // recursos/js/configuracion.js
 
-const API_BASE = 'https://script.google.com/macros/s/AKfycbykcyqg1O9VdinPz2JpqC-Xobhrp6zK4tRhBCZOFxTgoP3m-WSQ2uMSBvkaNBDib_NSOg/exec';
+const API_BASE = 'https://script.google.com/macros/s/AKfycbyUEPm1ajeT_josdA-krwJIpDBLg9ZO_bQ1M9GgQhh2NcYK9XKUGkaR8d05599VhXviAg/exec';
 
 
 // Constante global que usa dashboard.js
