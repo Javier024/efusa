@@ -1,7 +1,10 @@
 // recursos/js/configuracion.js
 
 // PEGA AQUÍ TU NUEVA URL DE GOOGLE
-const API_BASE = 'https://script.google.com/macros/s/AKfycbwlf9holXsV1cmJEr7IkZWvc3JKawphi5T_fmd79WdNSI3pPLsesQeiYa1NdVQeYuCO-g/exec';
+// recursos/js/configuracion.js
+
+const API_BASE = 'https://script.google.com/macros/s/AKfycbykcyqg1O9VdinPz2JpqC-Xobhrp6zK4tRhBCZOFxTgoP3m-WSQ2uMSBvkaNBDib_NSOg/exec';
+
 
 // Constante global que usa dashboard.js
 export const MENSUALIDAD_OBJETIVO = 50000;
